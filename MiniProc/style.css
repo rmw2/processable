@@ -113,17 +113,17 @@ a:hover {
 
 #controls {
 	left: 10%;
-	bottom: 20%;
+	bottom: 10%;
 	width: 20%;
-	height: 10%;
+	height: 20%;
 
 	background-color: #999;
 }
 
 .control-btn {
-	position: relative;
-	vertical-align: middle;
-	height: 50%;
+	position: absolute;
+/*	float: left;
+*/	vertical-align: middle;
 	border-radius: 10px;
 	background-color: #ddd;
 	border: 1px solid #FFF;
@@ -131,6 +131,9 @@ a:hover {
 	font-family: 'Ubuntu', sans-serif;
 	font-size: 8pt;
 	cursor: pointer;
+
+	width: 35%;
+	height: 35%;
 }
 
 .btn-img {
@@ -139,17 +142,24 @@ a:hover {
 }
 
 #step-btn {
-	left: 30%;
-	width: 25%;
-	top: 25%;
+	left: 10%;
+	top: 10%;
 }
 
 #reset-btn {
-	left: 15%;
-	width: 25%;
-	top: 25%;
+	left: 55%;
+	top: 10%;
 }
 
+#play-btn {
+	left: 10%;
+	top: 55%;
+}
+
+#pause-btn {
+	left: 55%;
+	top: 55%;
+}
 /**********************************************************************
  * stack styles
  *********************************************************************/

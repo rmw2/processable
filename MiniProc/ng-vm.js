@@ -1,5 +1,5 @@
 var vm = angular.module('vm', [])
-	.controller('processCtrl', function ($scope) {
+	.controller('processCtrl', function ($scope, $interval) {
 		$scope.P = new Process([
 			'push $1',
 			'push $1 ',
@@ -10,5 +10,5 @@ var vm = angular.module('vm', [])
 			'add %r2 %r1',
 			'push %r1',
 			'jmp loop'
-		]);
+		], $interval);
 	});

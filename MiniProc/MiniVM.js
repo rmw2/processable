@@ -7,13 +7,12 @@
  * process simply gets a stack pointer and a text section, with the rest of memory
  * unmapped.
  */
-var Process = function Process(text, interpretter) {
-
+var Process = function Process(text, $interval) {
 	// Instance variables for helping with angular
 	// probably can find a more elegant way to do this
 	var stack; // return a reference to the same array each time
 	var changed = true;
-	var ready = false;
+	var running;
 
 	// Dictionary of labeled addresses in memory
 	this.labels = {};
@@ -66,8 +65,6 @@ var Process = function Process(text, interpretter) {
 
 		// Number of instructions executed
 		this.instsExecuted = 0;
-
-		ready = true;
 	};
 
 	this.setup(text);
@@ -242,9 +239,25 @@ var Process = function Process(text, interpretter) {
 	}
 
 	/**
+	 * Continuously step at interval provided
+	 */
+	this.run = function(interval) {
+		running = $interval(
+			this.step.bind(this),
+			interval
+		);
+	}
+
+	/**
+	 * Pause a running program
+	 */
+	this.pause = function() {
+		$interval.cancel(running);
+	}
+
+	/**
 	 * Return each item on the stack
 	 */
-
 	 this.stackItems = function() {
 	 	if (!changed) return stack;
 	 	stack = [];

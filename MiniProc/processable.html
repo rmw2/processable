@@ -37,11 +37,17 @@
     <div id="controls" class="section round">
     <div class="section-title">controls</div>
         <div class="content">
-            <button id="reset-btn" class="control-btn" ng-click="P.start()">
-                restart <img class="btn-img" src="restart.png"/>
-            </button>
             <button id="step-btn" class="control-btn" ng-click="P.step()">
-                step <img class="btn-img" src="step.png" />
+                <img class="btn-img" src="step.png" /> step
+            </button>
+            <button id="reset-btn" class="control-btn" ng-click="P.start()">
+                <img class="btn-img" src="restart.png"/> restart
+            </button>
+            <button id="play-btn" class="control-btn" ng-click="P.run(500)">
+                <img class="btn-img" src="run.png" /> run
+            </button>
+            <button id="pause-btn" class="control-btn" ng-click="P.pause()">
+                <img class="btn-img" src="pause.png" /> pause
             </button>
         </div>
     </div>
