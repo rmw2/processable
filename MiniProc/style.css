@@ -92,6 +92,7 @@ a:hover {
 	background-color: #000;
 	color: #FFF;
 	font-weight: bold;
+	text-align: center;
 	padding: 2px;
 	border-radius: 3px;
 }
@@ -213,20 +214,42 @@ a:hover {
 	height: 30%;
 
 	background-color: #DDD;
+	font-size: 10pt;
 }
 
 .inst {
 	display: block;
-	padding: 2px;
+	position: relative;
+	width: 100%;
+}
+
+.inst-text, .inst-addr, .inst-op, .inst-label {
+	position: relative;
+	display: inline-block;
+}
+
+.inst-label {
+	width: 8%;
+	text-align: right;
+	font-weight: bold;
+	color: #aaa;
 }
 
 .inst-text {
+	width: 70%;
 	font-weight: bold;
-	padding: 2px;
+	padding: 1%;
+
 }
 
 .inst-addr {
 	color: #aaa;
+	text-align: right;
+	width: 8%;
+}
+
+.inst-op {
+	width: 33%;
 }
 
 .current-inst {

@@ -13,9 +13,11 @@ var Process = function Process(text, interpretter) {
 	// probably can find a more elegant way to do this
 	var stack; // return a reference to the same array each time
 	var changed = true;
+	var ready = false;
 
 	// Dictionary of labeled addresses in memory
 	this.labels = {};
+	this.labeled = {};
 	this.STACK_INIT = 1000;
 	this.WORD_SIZE = 4;
 
@@ -29,7 +31,22 @@ var Process = function Process(text, interpretter) {
 
 		// Text section, held separately from process memory
 		// (cannot edit program during execution)
-		this.text = text;
+		this.text = [];
+		var addr = 0;
+		for (var i = 0; i < text.length; i++) {
+			var tokens = text[i].split(' ');
+
+			if (tokens[0].indexOf(':') !== -1) {
+				var l = tokens.shift().slice(0, -1);
+				this.labels[l] = addr;
+				this.labeled[addr.toString()] = l;
+			}
+
+			if (tokens.length > 0) {
+				this.text.push(tokens);
+				addr++;
+			}
+		}
 	}
 
 	/**
@@ -49,11 +66,12 @@ var Process = function Process(text, interpretter) {
 
 		// Number of instructions executed
 		this.instsExecuted = 0;
+
+		ready = true;
 	};
 
 	this.setup(text);
 	this.start();
-
 
 	/**
 	 * Execute the next instruction in the program.
@@ -86,9 +104,9 @@ var Process = function Process(text, interpretter) {
 	 * The interpreter is implemented here.  Take an instrunction and
 	 * operands as a string, parse it, and produce its effect on the simulated process.
 	 */
-	this.evaluate = function(inst) {
+	this.evaluate = function(tokens) {
 		// Separate instrunction into tokens
-		var tokens = inst.split(' ');
+		// var tokens = inst.split(' ');
 
 		switch (tokens[0]) {
 			case 'mov':
@@ -216,10 +234,10 @@ var Process = function Process(text, interpretter) {
 	 * @param {string} label -- the name of the label to jump to
 	 */
 	this.find = function(label) {
-		if (parseInt(label) !== undefined) {
-			return parseInt(label);
-		} else {
+		if (isNaN(label)) {
 			return this.labels[label];
+		} else {
+			return parseInt(label);
 		}
 	}
 
@@ -249,6 +267,18 @@ var Process = function Process(text, interpretter) {
 	  */
 	 this.where = function() {
 	 	return this.regs.get('rip');
+	 }
+
+	 /**
+	  * Return the label of a given address or the empty
+	  * string if the address is unlabeled
+	  */
+
+	 this.labelFor = function(addr) {
+ 		var l = this.labeled[addr.toString()];
+ 		if (l !== undefined) {
+ 			return l + ':';
+ 		} else return '';
 	 }
 }
 

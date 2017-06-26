@@ -3,10 +3,12 @@ var vm = angular.module('vm', [])
 		$scope.P = new Process([
 			'push $1',
 			'push $1 ',
-			'mov 4(%rsp) %r0',
-			'mov (%rsp) %r1',
-			'add %r1 %r0',
-			'push %r0',
-			'jmp 2'
+			'mov $0 %r0',
+			'loop: add $1 %r0',
+			'mov 4(%rsp) %r1',
+			'mov (%rsp) %r2',
+			'add %r2 %r1',
+			'push %r1',
+			'jmp loop'
 		]);
 	});
