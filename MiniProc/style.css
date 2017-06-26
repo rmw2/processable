@@ -27,6 +27,43 @@
 	margin-top: -30pt;
 }
 
+h1 {
+	font-family: 'Ubuntu Mono', courier, monospace;
+	text-decoration: underline;
+	color: #aaa;
+	margin: 0;
+}
+
+a {
+	text-decoration: none;
+	color: #aaa;
+}
+
+a:hover {
+	text-decoration: underline;
+	color: #444;
+}
+
+/**********************************************************************
+ * about styles
+ *********************************************************************/
+
+#title {
+	position: absolute;
+	top: 5%;
+	left: 25%;
+}
+
+#menu {
+	position: relative;
+	font-family: 'Ubuntu', sans-serif;
+	left: 80%;
+}
+
+#about {
+	display: none;
+}
+
 /**********************************************************************
  * register styles
  *********************************************************************/
@@ -132,27 +169,37 @@
 	margin: 10%;
 }
 
+.stack-word {
+	position: relative;
+	width: 100%;
+}
 
 .stack-item {
 	position: relative;
-	width: 80%;
-	margin: 0 10% 0 10%;
+	display: inline-block;
+	width: 70%;
+	margin: 0 0 0 0;
 	height: 12pt;
 
 	background-color: #fff;
+	border-top: 1px solid rgba(0,0,0,.2);
 	text-align: center;
 }
 
 .stack-addr {
 	position: relative;
-	float: left;
-	font-size: 6pt;
+	display: inline-block;
+	overflow: visible;
+	width: 20%;
+
+	color: #aaa;
+	font-size: 10pt;
 	font-weight: bold;
 	vertical-align: middle;
 }
 
 .stack-pointer {
-	color: red;
+	color: #333;
 }
 
 /**********************************************************************
@@ -188,3 +235,4 @@
 
 	color: #FFF;
 }
+

@@ -7,12 +7,22 @@
   <script src="ng-vm.js"></script>
 </head>
 <body ng-controller="processCtrl">
+    <div id="title">
+        <h1>processable</h1>
+        <div id="menu">
+            <a id="about-link" href="http://github.com/rmw2/Processable" class="menu-btn">about</a>
+        </div>
+        <div id="about">
+            <!---->
+        </div>
+    </div>
+
     <div id="text" class="section round">
         <div class="section-title">.text</div>
         <div class="content">
             <div class="inst" ng-repeat="inst in P.text">
                 <span class="inst-addr">{{$index}}</span>
-                <span class="inst-text" ng-class="{'current-inst': $index==P.regs.regs.rip}">{{inst}}</span>
+                <span class="inst-text" ng-class="{'current-inst': $index==P.where()}">{{inst}}</span>
             </div>
         </div>
     </div>
@@ -44,7 +54,7 @@
         <div class="content">
             <div id="stack-contents">
                 <div class="stack-word" ng-repeat="item in P.stackItems()">
-                    <div id="stack-addr" ng-class="{'stack-pointer' : item.addr==P.regs.get('rsp')}">
+                    <div class="stack-addr" ng-class="{'stack-pointer' : item.addr==P.regs.get('rsp')}">
                         {{item.addr}}
                     </div>
                     <div class="stack-item">
@@ -54,6 +64,8 @@
             </div>
         </div>
     </div>
+
+
 
 </body>
 </html>

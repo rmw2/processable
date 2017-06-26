@@ -8,6 +8,12 @@
  * unmapped.
  */
 var Process = function Process(text, interpretter) {
+
+	// Instance variables for helping with angular
+	// probably can find a more elegant way to do this
+	var stack; // return a reference to the same array each time
+	var changed = true;
+
 	// Dictionary of labeled addresses in memory
 	this.labels = {};
 	this.STACK_INIT = 1000;
@@ -31,6 +37,7 @@ var Process = function Process(text, interpretter) {
 	 * Can be called on a running process to start it over.
 	 */
 	this.start = function() {
+		changed = true;
 		// Get a blank set of Virtual Registers
 		this.regs = new Registers();
 
@@ -71,6 +78,7 @@ var Process = function Process(text, interpretter) {
 		this.evaluate(inst);
 		this.instsExecuted++;
 
+		changed = true;
 		return true;
 	};
 
@@ -86,6 +94,7 @@ var Process = function Process(text, interpretter) {
 			case 'mov':
 				// memory access
 				var src = this.access(tokens[1]);
+				console.log('MOVE: first token evaluated to ' + src);
 				this.update(tokens[2], src);
 				break;
 
@@ -154,21 +163,24 @@ var Process = function Process(text, interpretter) {
 	this.access = function(op) {
 		// Literal operand
 		if (op.startsWith('$')) {
+			console.log('ACCESS: literal operand');
 			return parseInt(op.slice(1));
 		}
 
 		// Memory operand
 		var idx = op.indexOf('(');
 		if (idx !== -1) {
+			console.log('ACCESS: offset operand');
 			// parse memory access
 			var offset = parseInt(op.slice(0, idx)) || 0;
 			// get register value
-			var reg = this.regs.get(op.slice(idx+1, -1));
-
+			var reg = this.regs.get(op.slice(idx+2, -1));
+			console.log('ACCESS: offset = ' + offset + '; reg = ' + reg);
 			return this.mem.get(offset + reg);
 		}
 
 		// Register operand
+		console.log('ACCESS: register operands');
 		return this.regs.get(op.slice(1));
 	};
 
@@ -204,14 +216,20 @@ var Process = function Process(text, interpretter) {
 	 * @param {string} label -- the name of the label to jump to
 	 */
 	this.find = function(label) {
-		return this.labels[label];
+		if (parseInt(label) !== undefined) {
+			return parseInt(label);
+		} else {
+			return this.labels[label];
+		}
 	}
 
 	/**
 	 * Return each item on the stack
 	 */
+
 	 this.stackItems = function() {
-	 	var stack = [];
+	 	if (!changed) return stack;
+	 	stack = [];
 	 	for (var addr = this.STACK_INIT - this.WORD_SIZE;
 	 		addr >= this.regs.get('rsp');
 	 		addr -= this.WORD_SIZE) {
@@ -222,7 +240,15 @@ var Process = function Process(text, interpretter) {
 	 		});
 	 	}
 
+	 	changed = false;
 	 	return stack;
+	 }
+
+	 /**
+	  * Return the current instruction address
+	  */
+	 this.where = function() {
+	 	return this.regs.get('rip');
 	 }
 }
 
@@ -321,5 +347,7 @@ function Memory(wordSize) {
 			// Set value of specified address
 			this.contents[addr] = val;
 		}
+
+		return addr;
 	}
 }
