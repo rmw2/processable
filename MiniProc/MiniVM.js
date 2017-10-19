@@ -29,7 +29,7 @@ var Process = function Process(text, $interval) {
 		this.mem = new Memory(this.WORD_SIZE);
 
 		// Text section, held separately from process memory
-		// (cannot edit program during execution)
+		// (cannot edit program during execution) 
 		this.text = [];
 		var addr = 0;
 		for (var i = 0; i < text.length; i++) {
@@ -46,7 +46,7 @@ var Process = function Process(text, $interval) {
 				addr++;
 			}
 		}
-	}
+	};
 
 	/**
 	 * Set the values to their default values at process start.
@@ -104,32 +104,32 @@ var Process = function Process(text, $interval) {
 	this.evaluate = function(tokens) {
 		// Separate instrunction into tokens
 		// var tokens = inst.split(' ');
-
+      	var src, dest, addr;
 		switch (tokens[0]) {
 			case 'mov':
 				// memory access
-				var src = this.access(tokens[1]);
+				src = this.access(tokens[1]);
 				console.log('MOVE: first token evaluated to ' + src);
 				this.update(tokens[2], src);
 				break;
 
 			case 'add':
 				// addtion, dest += src
-				var src = this.access(tokens[1]);
-				var dest = this.access(tokens[2]);
+				src = this.access(tokens[1]);
+				dest = this.access(tokens[2]);
 				this.update(tokens[2], src + dest);
 				break;
 
 			case 'sub':
 				// subtraction, dest -= src
-				var src = this.access(tokens[1]);
-				var dest = this.access(tokens[2]);
+				src = this.access(tokens[1]);
+				dest = this.access(tokens[2]);
 				this.update(tokens[2], src - dest);
 				break;
 
 			case 'jmp':
 				// jump to address specified by label
-				var addr = this.find(tokens[1]);
+				addr = this.find(tokens[1]);
 				this.regs.set('rip', addr);
 				break;
 
@@ -138,35 +138,35 @@ var Process = function Process(text, $interval) {
 				var stack = this.regs.get('rsp');
 				this.regs.set('rsp', stack - this.WORD_SIZE);
 				// put value on top
-				var src = this.access(tokens[1]);
+				src = this.access(tokens[1]);
 				this.update('(%rsp)', src);
 				break;
 
 			case 'pop':
 				// get top of stack
-				var src = this.access('(%rsp)');
+				src = this.access('(%rsp)');
 				this.update(tokens[1], src);
 				// update stack pointer
 				var stack = this.regs.get('rsp');
-				this.regs.set('rsp', stack + this.WORD_SIZE)
+				this.regs.set('rsp', stack + this.WORD_SIZE);
 				break;
 
 			case 'call':
 				// push current address onto stack
 				var stack = this.regs.get('rsp');
 				this.regs.set('rsp', stack - this.WORD_SIZE);
-				this.update('(%rsp)', this.regs.get('rip'))
+				this.update('(%rsp)', this.regs.get('rip'));
 				// jump to label
-				var addr = this.find(tokens[1]);
+				addr = this.find(tokens[1]);
 				this.regs.set('rip', addr);
 				break;
 
 			case 'ret':
 				// pop from stack to instruction pointer
-				var addr = this.access('(%rsp)');
+				addr = this.access('(%rsp)');
 				this.regs.set('rip', addr);
 				var stack = this.regs.get('rsp');
-				this.regs.set('rsp', stack + this.WORD_SIZE)
+				this.regs.set('rsp', stack + this.WORD_SIZE);
 				break;
 		}
 	};

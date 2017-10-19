@@ -1,14 +1,18 @@
 <html ng-app="vm">
 <head>
-  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono|Ubuntu:700" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <!--
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="interact.js"></script>
-  -->
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
-  <script src="MiniVM.js"></script>
-  <script src="ng-vm.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono|Ubuntu:700" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="interact.js"></script>
+    -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+    <script type="text/javascript">
+        // fallback
+        window.angular || document.write('<script src="lib/angular.min.js">\x3C/script>');
+    </script>
+    <script src="MiniVM.js"></script>
+    <script src="ng-vm.js"></script>
 </head>
 <body ng-controller="processCtrl">
     <div id="title">
@@ -25,7 +29,7 @@
         <div class="section-title">.text</div>
         <div class="content">
             <div class="inst" ng-repeat="inst in P.text">
-                <div class="inst-label"><span class="inst-label-text">{{P.labelFor($index)}}</span></div>
+                <div class="inst-label" ng-if="P.labelFor($index)!=''"><span class="inst-label-text">{{P.labelFor($index)}}</span></div>
                 <div class="inst-addr">{{$index}}</div>
                 <div class="inst-text" ng-class="{'current-inst': $index==P.where()}">
                     <div class="inst-op" ng-repeat="op in inst"><span class="inst-op-text">{{op}}</span></div>

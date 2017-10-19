@@ -1,3 +1,5 @@
+window.angular || document.write('<script src="lib/angular.min.js">\x3C/script>');
+
 var vm = angular.module('vm', [])
 	.controller('processCtrl', function ($scope, $interval) {
 		$scope.P = new Process([
