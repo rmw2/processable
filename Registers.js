@@ -1,46 +1,54 @@
+let { Int64 } = require('./Int64.js');
+
+/**
+ * Indicates a failure to read from a hardware register
+ */
+class RegisterError extends Error {
+    constructor(reg, msg) {
+        super(`Invalid Access @${reg}: ${msg}`);
+        this.name = 'InvalidAccess';
+        this.reg = reg;
+    }
+}
+
 /**
  * A class to represent a set of potentially overlapping registers of
  * various bit-lengths.
  *
  * Supports read and write operations.
  */
-class Registers {
-
+class RegisterSet {
 	/**
 	 * Create a set of registers from an object which gives 
 	 * register names mapped to byte offsets and byte lengths
 	 * for each available register.  The word size and endianness
 	 * can also be specified at construction.
 	 */
-	constructor(regInfo, wordSize = 8, littleEndian = true) {
-		let nRegs = Object.keys(regInfo).length;
+	constructor(registerInfo, wordSize = 8, littleEndian = true) {
+		let nRegs = Object.keys(registerInfo).length;
 		
 		this.littleEndian = littleEndian;
 
-		this.regInfo = regInfo;
-		this.regbuf = new ArrayBuffer(wordSize * nRegs);
-		this.regs = new DataView(this.regbuf);
+		this.registerInfo = registerInfo;
+		this.registerBuffer = new ArrayBuffer(wordSize * nRegs);
+		this.registerView = new DataView(this.registerBuffer);
 	}
 
 	/**
 	 * Return the value held in the specified register.
 	 */
 	read(reg) {
-		let [idx, size]  = this.regInfo[reg];
+		let [idx, size]  = this.registerInfo[reg];
 
 		switch (size) {
 			case 1:
-				return this.regs.getUint8(idx, this.littleEndian);
+				return this.registerView.getUint8(idx, this.littleEndian);
 			case 2: 
-				return this.regs.getUint16(idx, this.littleEndian);
+				return this.registerView.getUint16(idx, this.littleEndian);
 			case 4:
-				return this.regs.getUint32(idx, this.littleEndian);
+				return this.registerView.getUint32(idx, this.littleEndian);
 			case 8:
-				throw new NotImplementedError();
-
-				let lowerHalf = this.regs.getUint32(idx, this.littleEndian);
-				let upperHalf = this.regs.getUint32(idx + 4, this.littleEndian);
-				return new Int64(lowerHalf, upperHalf);
+				return this.registerView.getUint64(idx, this.littleEndian);
 		}
 	}
 
@@ -49,21 +57,31 @@ class Registers {
 	 * with the appropriate number of bytes.
 	 */
 	write(reg, value) {
-		let [idx, size]  = this.regInfo[reg];
+		let idx, size;
+
+		try {
+			[idx, size]  = this.registerInfo[reg];
+		} catch (Error) {
+			throw new RegisterError(reg, 'Does not exist');
+		}
 
 		switch (size) {
 			case 1:
-				return this.regs.setUint8(idx, value, this.littleEndian);
+				this.registerView.setUint8(idx, value, this.littleEndian);
+				break;
 			case 2: 
-				return this.regs.setUint16(idx, value, this.littleEndian);
+				this.registerView.setUint16(idx, value, this.littleEndian);
+				break;
 			case 4:
-				return this.regs.setUint32(idx, value, this.littleEndian);
+				this.registerView.setUint32(idx, value, this.littleEndian);
+				break;
 			case 8:
-				let lowerHalf = this.regs.getUint32(idx, this.littleEndian);
-				let upperHalf = this.regs.getUint32(idx + 4, this.littleEndian);
-				return new Int64(lowerHalf, upperHalf);
+				// Determine if value is already an Int64
+				if (value.name !== 'Int64') value = new Int64(value, 0);
+				this.registerView.setUint64(idx, value, this.littleEndian);
+				break;
 		}
 	}
 }
 
-module.exports = { Registers };
+module.exports = { RegisterSet };

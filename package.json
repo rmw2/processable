@@ -12,5 +12,9 @@
     "build": "react-scripts build",
     "test": "jest",
     "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "int64-native-node12": "^0.4.0",
+    "node-int64": "^0.4.0"
   }
 }

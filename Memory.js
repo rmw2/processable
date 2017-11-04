@@ -1,29 +1,43 @@
+
+// Package for handling 64-bit data
+let { Int64 } = require('./Int64.js');
+
 /**
  * An error to throw for a page fault in our virtual memory scheme
  */
 class SegFault extends Error {
-	constructor(addr, size) {
-		super(`Attempt to access ${size} bytes at address ${addr} generated a segmentation fault.`);
+	constructor(addr, msg) {
+		super(`Segmentation Fault @${addr}: ${msg}`);
 		this.name = 'SegFault';
 		this.addr = addr;
 	}
 }
 
+class InvalidAccess extends Error {
+    constructor(addr, msg) {
+        super(`Invalid Access @${addr}: ${msg}`);
+        this.name = 'InvalidAccess';
+        this.addr = addr;
+    }
+}
+
 /**
  * An object to represent byte-addressable memory
- * Implemented by creating several views of different sizes on an ArrayBuffer
+ * Implemented by creating a dataview on a 
  */
-class MemorySpace {
+class MemorySegment {
 
-	constructor(hiAddr, size = 1024, resizable = false) {
+	constructor(hiAddr, size = 1024, name='') { //, resizable = false) {
 		// Size of memory, in bytes
 		this.size = size;
-		
-		// Can the memory resize?
-		this.resizable = resizable
+        // Name of the section
+		this.name = name;
 
-		// A 4-byte addresses that corresponds to the beginning and end of the array
-		// Accesses outside of this range will throw a page fault
+		// Can the memory resize?
+		// this.resizable = resizable
+
+		// 4-byte addresses that corresponds to the beginning and end of the array
+		// Accesses outside of this range will throw a segmentation fault
 		this.hiAddr = hiAddr;
 		this.loAddr = hiAddr - size;
 
@@ -33,28 +47,28 @@ class MemorySpace {
 		// Define a view into the buffer which will be used to read values
 		this.mem = new DataView(this.buf);
 	}
-
+	
 	/**
 	 * Double the size of the underlying ArrayBuffer.  Copy the old
 	 * ArrayBuffer into the top or bottom half of the new one depending
 	 * on whether addr is above or below the currently mapped address space.
 	 */
-	resize(addr) {
-		// Double the size of the buffer
-		this.buf = ArrayBuffer.transfer(this.buf, 2*this.size);
+	// resize(addr) {
+	// 	// Double the size of the buffer
+	// 	this.buf = ArrayBuffer.transfer(this.buf, 2*this.size);
 
-		if (addr < this.loAddr) {
-			// Move the contents into the second half of the buffer
-			let tmpView = new Uint8Array(this.buf);
-			tmpView.copyWithin(this.size, 0);
-			this.loAddr -= this.size;
-		} else {
-			// First half of the buffer is already correct
-			this.hiAddr += this.size;
-		}
+	// 	if (addr < this.loAddr) {
+	// 		// Move the contents into the second half of the buffer
+	// 		let tmpView = new Uint8Array(this.buf);
+	// 		tmpView.copyWithin(this.size, 0);
+	// 		this.loAddr -= this.size;
+	// 	} else {
+	// 		// First half of the buffer is already correct
+	// 		this.hiAddr += this.size;
+	// 	}
 
-		this.size *= 2;
-	}
+	// 	this.size *= 2;
+	// }
 
 	/**
 	 * Verify that a requested address is currently mapped by the memory
@@ -67,10 +81,12 @@ class MemorySpace {
 		// Otherwise resize
 		if (addr + size > this.hiAddr) 
 			throw new SegFault(addr, size);
+
 		else if (addr < this.loAddr) {
-			if (this.resizable)
-				this.resize(addr);
-			else throw new SegFault(addr, size);
+            // Perhaps add support for resizing at some point
+			// if (this.resizable)
+			// 	   this.resize(addr);
+			throw new SegFault(addr, size);
 		}
 
 		return (this.hiAddr - addr - size);
@@ -80,33 +96,30 @@ class MemorySpace {
 	 * Return the value of the given size at the specified address
 	 */
 	read(addr, size) {
-		let idx = this.addrToIdx(addr, size),
-			value;
+		let idx = this.addrToIdx(addr, size);
 
 		switch (size) {
 			case 1:
-				value = this.mem.getUint8(idx, /* littleEndian = */ false);
-				break;
-			case 2:
-				value = this.mem.getUint16(idx, /* littleEndian = */ false);
-				break;
-			case 4:
-				value = this.mem.getUint32(idx, /* littleEndian = */ false);
-				break;
-			case 8:
-				// TODO
-				break;
-			default:
-				throw new InvalidAccess();
-		}
+				return this.mem.getUint8(idx, /* littleEndian = */ false);
 
-		return value;
+			case 2:
+				return this.mem.getUint16(idx, /* littleEndian = */ false);
+
+			case 4:
+				return this.mem.getUint32(idx, /* littleEndian = */ false);
+
+			case 8:
+				return this.mem.getUint64(idx, /* littleEndian = */ false)
+
+			default:
+				throw new InvalidAccess(addr, `Cannot read memory in units of ${size} bytes`);
+		}
 	}
 
 	/**
 	 * Store value at the specified address encoded with [size] bytes
 	 */
-	write(addr, value, size) {
+	write(value, addr, size) {
 		let idx = this.addrToIdx(addr, size);
 
 		switch (size) {
@@ -120,10 +133,82 @@ class MemorySpace {
 				this.mem.setUint32(idx, value, /* littleEndian = */ false);
 				break;
 			case 8:
-				// TODO
+				if (!value.name === 'Int64') value = new Int64(value, 0);
+				this.mem.setUint64(idx, value, /* littleEndian = */ false)
 				break;
+			default:
+				throw new InvalidAccess(addr, `Cannot read memory in units of ${size} bytes`);
 		}
+
 	}
 }
 
-module.exports = { MemorySpace };
+/**
+ * An object to represent addressable text.  Text will be stored as an 
+ * array of string instructions.
+ */
+class TextSegment {
+    constructor(instructions, addresses) {
+        // Validate provided addresses
+        if (addresses && instructions.length != adresses.length)
+            throw new TypeError('addresses must be same length as instructions')
+
+        // Intiialize mapping from address to instruction list index
+        this.addrToIdx = {};
+        for (let i = 0; i < instructions.length; i++) {
+            if (addresses)
+                this.addrToIdx[addresses[i]] = i;
+            else {
+                this.addrToIdx[i] = i;
+            }
+        }
+        
+        this.loAddr = addresses[0] || 0;
+    }
+
+    read(addr) {
+        if (!(addr in this.addrToIdx))
+            throw new InvalidAccess(addr, 'Unaligned read from text section');
+
+        return this.instructions[this.addrToIdx[addr]];
+    }
+
+    /* Refuse writing to text section */
+    write() {
+        throw new SegFault(addr, 8);
+    }
+}
+
+class Memory {
+
+    constructor() {
+        // Initialize text segment
+        this.text = new TextSegment();
+
+        // Initialize data segment
+        // TODO
+        // Initialize bss segment
+        // TODO
+
+        // Initialize stack segment and randomize stack pointer
+        this.stack = new MemorySegment();
+
+        this.segments = [
+
+        ]		
+    }
+
+    getSegment(addr) {
+
+    }
+
+    read(addr, size) {
+    	return getSegment(addr).read(addr, size);
+    }
+
+    write(value, addr, size) {
+    	getSegment(addr).write(value, addr, size);
+    }
+}
+
+module.exports = { MemorySegment, TextSegment };
