@@ -1,125 +1,192 @@
+const WORD_SIZE = 8;
+
 const Chip = function () {
 	return {
 		/******************************************************************
 		 * The almighty move
 		 *****************************************************************/
-		mov : () => {
 
+		mov : (operands, size) => {
+			let src = this.read(operands[0], size);
+			this.write(operands[1], src, size);
 		},
 
-		push : () => {
-
+		push : (operands, size) => {
+			let src = this.read(operands[0], size);
+			let rsp = this.read('%rsp');
+			this.write('%rsp', rsp - size);
+			this.write('(%rsp)', src, size);
 		},
 
-		pop : () => {
-
+		pop : (operands, size) => {
+			let dest = this.read('(%rsp)');
+			let rsp = this.read('%rsp');
+			this.write('%rsp', rsp + size);
+			this.write(operands[0], dest, size);
 		},
 
 		/******************************************************************
 		 * Arithmetic
 		 *****************************************************************/
 
-		add : () => {
-
+		add : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], src + dest, size)
 		},
 
-		sub : () => {
-
+		sub : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], src - dest, size)
 		},
 
-		imul : () => {
-
+		imul : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: set flags
+			this.write(operands[1], src * dest, size)
 		},
 
-		idiv : () => {
-
+		idiv : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			this.write(operands[1], src / dest, size);
 		},
 
-		adc : () => {
-
+		adc : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], src + dest + this.flags.CF, size)
 		},
 
-		leaq : () => {
-			
+		lea : (operands, size) => {
+			let address = this.parseMemoryOperand(operands[0]);
+			this.write(operands[1], address, size);
 		},
 
 		/******************************************************************
 		 * Logical
 		 *****************************************************************/
 
-		xor : () => {
-
+		xor : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], src ^ dest, size);
 		},
 
-		or : () => {
-			
+		or : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], src | dest, size);
 		},
 
-		and : () => {
-			
+		and : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], src & dest, size);
 		},
 
 		/******************************************************************
 		 * Unary Operations
 		 *****************************************************************/
 
-		inc : () => {
-
+		inc : (operands, size) => {
+			let dest = this.read(operands[0]);
+			// TODO: Set flags
+			this.write(operands[0], dest + 1, size);
 		},
 
-		dec : () => {
-
+		dec : (operands, size) => {
+			let dest = this.read(operands[0]);
+			// TODO: Set flags
+			this.write(operands[0], dest - 1, size);
 		},
 
-		not : () => {
-
+		not : (operands, size) => {
+			let dest = this.read(operands[0]);
+			// TODO: Set flags
+			this.write(operands[0], ~dest, size);
 		},
 
-		neg : () => {
-
+		neg : (operands, size) => {
+			let dest = this.read(operands[0]);
+			// TODO: Set flags
+			this.write(operands[0], -dest, size)
 		},
 
 		/******************************************************************
 		 * Control flow
 		 *****************************************************************/
 
-		call : () => {
-
+		call : (operands, size) => {
+			let rsp = this.read('%rsp');
+			this.write('%rsp', rsp - WORD_SIZE);
+			this.write('(%rsp)', this.rip, WORD_SIZE);
+			this.jump(operands[0]);
 		},
 
-		ret : () => {
-
+		ret : (operands, size) => {
+			// TODO: add optional immediate operand value to the stack 
+			let ret = this.read('(%rsp)', WORD_SIZE);
+			let rsp = this.read('%rsp')
+			this.write('%rsp', rsp + WORD_SIZE);
+			this.jump(ret);
 		},
 
-		jmp : () => {
-
+		jmp : (operands, size) => {
+			this.jump(operands[0]);
 		},
 
 		/******************************************************************
 		 * Shifts
 		 *****************************************************************/
 
-		shl : () => {
-
+		shl : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], dest << src, size);
 		},
 
-		shr : () => {
-
+		shr : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], dest >>> src, size);
 		},
 
-		sal : () => {
+		sal : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], dest << src, size);
+		},
 
+		sar : (operands, size) => {
+			let src = this.read(operands[0]);
+			let dest = this.read(operands[1]);
+			// TODO: Set flags
+			this.write(operands[1], dest >> src, size);
 		},
 
 		/******************************************************************
 		 * Condition Testing
 		 *****************************************************************/
 
-		cmp : () => {
+		cmp : (operands, size) => {
+			// Set flags according to src - dest
 
 		},
 
-		test : () => {
+		test : (operands, size) => {
+			// Set flags according to src & dest
 
 		}
 	}
