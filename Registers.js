@@ -84,4 +84,16 @@ class RegisterSet {
 	}
 }
 
-module.exports = { RegisterSet };
+/**
+ * Status flags register
+ */
+let Flags = {
+	OF: false,
+	SF: false,
+	ZF: false,
+	AF: false,
+	CF: false,
+	PF: false,
+}
+
+module.exports = { RegisterSet, Flags };
