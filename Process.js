@@ -14,12 +14,19 @@ class AsmSyntaxError extends Error {
 }
 
 class Process {
-    constructor(instructions, registers, verbose = false) {
+    constructor(instructions, labels, verbose = false) {
         this.mem  = new MemorySegment();
-        this.text = new TextSegment();
+        this.text = new TextSegment(instructions);
         this.regs = new RegisterSet(x86.Registers);
+        this.labels = labels;
+
+        // Begin at the beginning
+        this.rip = 0;
     }
 
+    /**
+     * 
+     */
     read(operand, size) {
         // Immediate Operand
         if (operand.startsWith('$')) {
@@ -36,6 +43,9 @@ class Process {
         return this.mem.read(address, size);
     }
 
+    /**
+     * 
+     */
     write(operand, value, size) {
         // Immediate Operand
         if (operand.startsWith('$')) {
@@ -52,15 +62,20 @@ class Process {
         this.mem.write(value, address, size);
     }
 
+    /**
+     * 
+     */
     jump(operand) {
-        let address;
         // Indirect jump to address held in register
-        if (operand.startwith('*')) {
-            address = this.regs.read(operand.slice(1));
+        if (operand.startsWith('*')) {
+            this.rip = this.read(operand.slice(1));
+        } else if (parseInt(operand)) {
+            this.rip = parseInt(operand);
+        } else {
+            let address = this.labels[operand];
+            if (!address) throw new AsmSyntaxError(`Unkown label: ${operand}`)
+            this.rip = address;
         }
-
-
-
     }
 
     /** 
@@ -71,7 +86,7 @@ class Process {
      */
     parseMemoryOperand(operand) {
         // GNARLY regular expression to match indirect memory accesses in all their forms
-        let offset = /([x0-9]*)\(%([a-z1-9]+)(?:,%([a-z1-9]+))?(?:,((?:0x)?[1248]))?\)/;
+        let offset = /((?:0x)?[0-9]+)?\(%([a-z1-9]+)(?:,%([a-z1-9]+))?(?:,((?:0x)?[1248]))?\)/;
         let matches = operand.match(offset);
 
         if (!matches) throw new AsmSyntaxError(`Invalid address format: ${operand}`);
