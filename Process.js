@@ -1,10 +1,17 @@
+"use strict";
 /** 
  * Module that defines a single-threaded processor
  * to execute instructions
  */
+
 let { MemorySegment, TextSegment } = require('./Memory.js');
 let { RegisterSet } = require('./Registers.js');
+let { Int64 } = require('./Int64.js');
 let x86 = require('./x86.js');
+
+const SUFFIXES = ['b', 'w', 'l', 'q'];
+const SIZES = [1, 2, 4, 8];
+const STACK_START = 0xF000;
 
 class AsmSyntaxError extends Error {
     constructor(message) {
@@ -14,18 +21,30 @@ class AsmSyntaxError extends Error {
 }
 
 class Process {
-    constructor(instructions, labels, verbose = false) {
-        this.mem  = new MemorySegment();
-        this.text = new TextSegment(instructions);
+    constructor(instructions, labels, chip, verbose = false) {
+        // Intitialize memory and registers
+        this.mem  = new MemorySegment(STACK_START);
         this.regs = new RegisterSet(x86.Registers);
+        this.regs.write('rsp', STACK_START);
+
+        // Keep instruction pointer separate from registers, initialize to zero
+        this.rip = 0;
+
+        // Initialize the code segments
+        this.text = new TextSegment(instructions);
         this.labels = labels;
 
-        // Begin at the beginning
-        this.rip = 0;
+        // Object containing handlers indexed by instruction
+        this.chip = chip.call(this);
+
+        // Intialize breakpoint dictionary
+        this.breakpoints = {};
     }
 
     /**
-     * 
+     * Read the value in memory at the location specified by the operand.
+     * The operand is a string defining a register, immediate, or memory
+     * address as the information source
      */
     read(operand, size) {
         // Immediate Operand
@@ -39,12 +58,16 @@ class Process {
         }
 
         // Memory operand
-        let address = parseMemoryOperand(operand);
+        let address = this.parseMemoryOperand(operand);
         return this.mem.read(address, size);
+
+        // TODO: Allow read from labeled memory address
     }
 
     /**
-     * 
+     * Write the value to the location in memory specified by the operand.
+     * Operand is a string that defines either a register destination or 
+     * a memory address
      */
     write(operand, value, size) {
         // Immediate Operand
@@ -55,15 +78,20 @@ class Process {
         // Register operand
         if (operand.startsWith('%')) {
             this.regs.write(operand.slice(1), value);
+            return;
         }
 
         // Memory operand
-        let address = parseMemoryOperand(operand);
+        let address = this.parseMemoryOperand(operand);
         this.mem.write(value, address, size);
+
+        // TODO: allow write from labeled address
     }
 
     /**
-     * 
+     * Change the program counter to the value specified in the operand.
+     * Operand can be a string representing an indirect memory access,
+     * a label, or a literal address.
      */
     jump(operand) {
         // Indirect jump to address held in register
@@ -73,7 +101,7 @@ class Process {
             this.rip = parseInt(operand);
         } else {
             let address = this.labels[operand];
-            if (!address) throw new AsmSyntaxError(`Unkown label: ${operand}`)
+            if (address === undefined) throw new AsmSyntaxError(`Unkown label: ${operand}`)
             this.rip = address;
         }
     }
@@ -99,4 +127,41 @@ class Process {
 
         return disp + base + (idx * scale);
     }
+
+    /**
+     * Fetch the next instruction and transfer control to the proper instruction handler
+     */
+    step() {
+        let [mnemonic, ...operands] = this.text.read(this.rip);
+        this.rip++;
+
+        if (mnemonic in this.chip) {
+            this.chip[mnemonic](operands);
+        } else {
+            let suffixIdx = SUFFIXES.indexOf(mnemonic.slice(-1));
+
+            if (suffixIdx > -1) {
+                this.chip[mnemonic.slice(0,-1)](operands, SIZES[suffixIdx]);
+            } else {
+                throw new AsmSyntaxError(`Unknown mnemonic: ${mnemonic}`);
+            }
+        }
+    }
+
+    /**
+     * Run the process one instruction at a time.  Pause for delay ms between executing each.
+     */
+    run(delay) {
+        // TODO
+    }
+
+    /**
+     * Dump current state
+     */
+    print() {
+        console.log('PC: ' + this.rip);
+        console.log(this.text.read(this.rip));
+    }
 }
+
+module.exports = { Process };

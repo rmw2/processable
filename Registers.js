@@ -1,3 +1,4 @@
+"use strict";
 let { Int64 } = require('./Int64.js');
 
 /**

@@ -1,4 +1,7 @@
+"use strict";
 const MAX_INT32 = 0xFFFFFFFF;
+const MAX_INT53 = 0x1FFFFFFFFFFFFF;
+const MAX_INT64 = 0xFFFFFFFFFFFFFFFF;
 
 /**
  * Indicates a failure to read from a hardware register
@@ -14,12 +17,15 @@ class Int64 {
 	constructor(lo, hi) {
 		if (lo > MAX_INT32) {
 			if (hi) throw new Int64Error('Components must be less than 2^32');
-			hi = lo >> 32;
+			if (lo > MAX_INT64) throw new Int64Error('Value must be less than 2^64');
+			// Chop off the low bits
+			hi  = Math.floor(lo / (MAX_INT32 + 1));
+			// Stick the low bits back in
 			lo &= MAX_INT32;
 		}
 		
 		if (hi > MAX_INT32)
-			throw new Int64Error('Components must be less than 2^32');
+			throw new Int64Error('Value must be less than 2^64');
 
 		// Save hi and lo as 32 bit values
 		this.lo = lo || 0;
@@ -38,7 +44,12 @@ class Int64 {
 	}
 
 	val() {
-		return (this.hi << 32) + this.lo;
+		let val = this.hi * (MAX_INT32 + 1) + this.lo;
+
+		if (val > MAX_INT53) 
+			throw new Int64Error(`Value ${val} is too large to store accurately`);
+
+		return val;
 	}
 }
 

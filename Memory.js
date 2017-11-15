@@ -1,4 +1,4 @@
-
+"use strict";
 // Package for handling 64-bit data
 let { Int64 } = require('./Int64.js');
 
@@ -150,11 +150,13 @@ class MemorySegment {
 class TextSegment {
     constructor(instructions, addresses) {
         // Validate provided addresses
-        if (addresses && instructions.length != adresses.length)
+        if (addresses && instructions.length != addresses.length)
             throw new TypeError('addresses must be same length as instructions')
 
         // Intiialize mapping from address to instruction list index
         this.addrToIdx = {};
+        this.instructions = instructions;
+
         for (let i = 0; i < instructions.length; i++) {
             if (addresses)
                 this.addrToIdx[addresses[i]] = i;
@@ -163,7 +165,7 @@ class TextSegment {
             }
         }
         
-        this.loAddr = addresses[0] || 0;
+        this.loAddr = addresses ? addresses[0] : 0;
     }
 
     read(addr) {
@@ -179,6 +181,10 @@ class TextSegment {
     }
 }
 
+
+/**
+ * Memory in general, wrapping several segments of different types
+ */
 class Memory {
 
     constructor() {

@@ -13,14 +13,14 @@ const Chip = function () {
 
 		push : (operands, size) => {
 			let src = this.read(operands[0], size);
-			let rsp = this.read('%rsp');
+			let rsp = this.read('%rsp').val();
 			this.write('%rsp', rsp - size);
 			this.write('(%rsp)', src, size);
 		},
 
 		pop : (operands, size) => {
-			let dest = this.read('(%rsp)');
-			let rsp = this.read('%rsp');
+			let dest = this.read('(%rsp)', size);
+			let rsp = this.read('%rsp').val();
 			this.write('%rsp', rsp + size);
 			this.write(operands[0], dest, size);
 		},
@@ -242,10 +242,10 @@ const Registers = {
 	'r8w'  : [64, 2],
 	'r8b'  : [64, 1],
 
-	'r9'  : [72, 8],
-	'r9d' : [72, 4],
-	'r9w' : [72, 2],
-	'r9b' : [72, 1],
+	'r9'   : [72, 8],
+	'r9d'  : [72, 4],
+	'r9w'  : [72, 2],
+	'r9b'  : [72, 1],
 
 	'r10'  : [80, 8],
 	'r10d' : [80, 4],
