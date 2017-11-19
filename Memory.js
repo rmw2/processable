@@ -77,6 +77,10 @@ class MemorySegment {
 	 * the index into the new version.
 	 */
 	addrToIdx(addr, size) {
+		// Cap addresses at 2^53 and get values of Int64 objects
+		if (addr.name === 'Int64')
+			addr = addr.val();
+
 		// Throw a segfault for accessing memory above current range
 		// Otherwise resize
 		if (addr + size > this.hiAddr) 
@@ -133,7 +137,7 @@ class MemorySegment {
 				this.mem.setUint32(idx, value, /* littleEndian = */ false);
 				break;
 			case 8:
-				if (!value.name === 'Int64') value = new Int64(value, 0);
+				if (value.name !== 'Int64') value = new Int64(value, 0);
 				this.mem.setUint64(idx, value, /* littleEndian = */ false)
 				break;
 			default:
@@ -151,23 +155,31 @@ class TextSegment {
     constructor(instructions, addresses) {
         // Validate provided addresses
         if (addresses && instructions.length != addresses.length)
-            throw new TypeError('addresses must be same length as instructions')
+            throw new TypeError('addresses must be same length as instructions');
 
         // Intiialize mapping from address to instruction list index
         this.addrToIdx = {};
+        this.idxToAddr = [];
         this.instructions = instructions;
 
         for (let i = 0; i < instructions.length; i++) {
-            if (addresses)
+            if (addresses) {
+            	if (addresses[i] <= addresses[i-1]) 
+            		throw new TypeError('addresses must be increasing');
+
+            	// Keep track of forward and reverse mapping
                 this.addrToIdx[addresses[i]] = i;
-            else {
+	            this.idxToAddr.push(addresses[i]);
+            } else {
                 this.addrToIdx[i] = i;
+                this.idxToAddr.push(i);
             }
         }
         
         this.loAddr = addresses ? addresses[0] : 0;
     }
 
+    /* Return the instruction at the specified address */
     read(addr) {
         if (!(addr in this.addrToIdx))
             throw new InvalidAccess(addr, 'Unaligned read from text section');
@@ -175,9 +187,14 @@ class TextSegment {
         return this.instructions[this.addrToIdx[addr]];
     }
 
+    /* Return the address of the next instruction after the specified instruction */
+    next(addr) {
+    	return this.idxToAddr[this.addrToIdx[addr] + 1];
+    }
+
     /* Refuse writing to text section */
     write() {
-        throw new SegFault(addr, 8);
+        throw new SegFault(addr, 0);
     }
 }
 
@@ -185,36 +202,36 @@ class TextSegment {
 /**
  * Memory in general, wrapping several segments of different types
  */
-class Memory {
+// class Memory {
 
-    constructor() {
-        // Initialize text segment
-        this.text = new TextSegment();
+//     constructor() {
+//         // Initialize text segment
+//         this.text = new TextSegment();
 
-        // Initialize data segment
-        // TODO
-        // Initialize bss segment
-        // TODO
+//         // Initialize data segment
+//         // TODO
+//         // Initialize bss segment
+//         // TODO
 
-        // Initialize stack segment and randomize stack pointer
-        this.stack = new MemorySegment();
+//         // Initialize stack segment and randomize stack pointer
+//         this.stack = new MemorySegment();
 
-        this.segments = [
+//         this.segments = [
 
-        ]		
-    }
+//         ]		
+//     }
 
-    getSegment(addr) {
+//     getSegment(addr) {
 
-    }
+//     }
 
-    read(addr, size) {
-    	return getSegment(addr).read(addr, size);
-    }
+//     read(addr, size) {
+//     	return getSegment(addr).read(addr, size);
+//     }
 
-    write(value, addr, size) {
-    	getSegment(addr).write(value, addr, size);
-    }
-}
+//     write(value, addr, size) {
+//     	getSegment(addr).write(value, addr, size);
+//     }
+// }
 
 module.exports = { MemorySegment, TextSegment };

@@ -75,7 +75,6 @@ describe('MemorySegment', () => {
 });
 
 
-
 describe('TextSegment', () => {
 	let instr = [
 		['movq', '$1', '%rax'],
@@ -86,14 +85,33 @@ describe('TextSegment', () => {
 
 	let Text = new TextSegment(instr);
 
-	test('Correctly reads instructions addressed sequentially', () => {
+	test('correctly reads instructions addressed sequentially', () => {
 		for (let i = 0; i < instr.length; i++)
 			expect(Text.read(i)).toBe(instr[i]);
 	});
 
-	test('Throws error on write', () => {
+	test('throws error on write', () => {
 		expect( () => {
 			Text.write(0)
 		}).toThrow();
+	});
+
+	let addresses = [
+		0x100,
+		0x103,
+		0x105,
+		0x110
+	];
+
+	let TextWithAddresses = new TextSegment(instr, addresses);
+
+	test('correctly reads instructions with custom addresses', () => {
+		for (let i = 0; i < instr.length; i++)
+			expect(TextWithAddresses.read(addresses[i])).toBe(instr[i]);
+	});
+
+	test('gets next address', () => {
+		for (let i = 0; i < instr.length - 1; i++)
+			expect(TextWithAddresses.next(addresses[i])).toBe(addresses[i+1]);
 	});
 });

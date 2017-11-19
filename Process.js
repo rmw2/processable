@@ -9,8 +9,6 @@ let { RegisterSet } = require('./Registers.js');
 let { Int64 } = require('./Int64.js');
 let x86 = require('./x86.js');
 
-const SUFFIXES = ['b', 'w', 'l', 'q'];
-const SIZES = [1, 2, 4, 8];
 const STACK_START = 0xF000;
 
 class AsmSyntaxError extends Error {
@@ -129,19 +127,57 @@ class Process {
     }
 
     /**
-     * Fetch the next instruction and transfer control to the proper instruction handler
+     * Return the operand size implied by a given mnemonic
      */
-    step() {
-        let [mnemonic, ...operands] = this.text.read(this.rip);
-        this.rip++;
+    parseOperandSize(mnemonic) {
+        const SUFFIXES = ['b', 'w', 'l', 'q'];
+        const SIZES = [1, 2, 4, 8];
 
+        let idx = SUFFIXES.indexOf(mnemonic.slice(-1));
+        let size = SIZES[idx];
+        let prefix = mnemonic.slice(0,-1);
+
+        return {prefix, size};
+    }
+
+    /**
+     * Fetch the next instruction and execute
+     */
+    step(verbose=true) {
+        if (this.rip !== undefined) {
+            let rip = this.rip;
+
+            // Fetch mnemonic and operands from Text section
+            let [mnemonic, ...operands] = this.text.read(this.rip);
+
+            if (verbose) 
+                this.print(rip, true, true);
+
+            // Advance instruction pointer and execute
+            this.rip = this.text.next(this.rip);
+            this.execute(mnemonic, operands);
+
+            if (verbose) {
+                // Print stack pointer and operand values after operation
+                console.log('\t-----');
+                this.print(rip, false, true);
+            }
+        }
+
+        return this.rip;
+    }
+
+    /**
+     * Given a mnemonic and operands, transfer control to the proper instruction handler
+     */
+    execute(mnemonic, operands) {
         if (mnemonic in this.chip) {
             this.chip[mnemonic](operands);
         } else {
-            let suffixIdx = SUFFIXES.indexOf(mnemonic.slice(-1));
+            let {prefix, size} = this.parseOperandSize(mnemonic);
 
-            if (suffixIdx > -1) {
-                this.chip[mnemonic.slice(0,-1)](operands, SIZES[suffixIdx]);
+            if (size) {
+                this.chip[prefix](operands, size);
             } else {
                 throw new AsmSyntaxError(`Unknown mnemonic: ${mnemonic}`);
             }
@@ -149,18 +185,63 @@ class Process {
     }
 
     /**
-     * Run the process one instruction at a time.  Pause for delay ms between executing each.
+     * Run the process one instruction at a time.
+     * Pause for delay ms between executing each.
      */
-    run(delay) {
+    run(delay=0, verbose=true) {
+        if (delay) {
+            // Time-out execution
+            let interval;
+            interval = setInterval(() => {
+                if (this.rip === undefined || this.breakpoints[this.rip]) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                this.step(verbose);
+            }, delay);
+        } else {
+            // Continuous execution
+            while (this.rip !== undefined && !this.breakpoints[this.rip])
+                this.step();
+        }
+    }
+
+    addBreakpoint(addressOrLabel) {
+        if (this.labels[addressOrLabel] !== undefined)
+            address = this.labels[addressOrLabel];
+        else
+            address = addressOrLabel;
+
         // TODO
     }
 
     /**
      * Dump current state
      */
-    print() {
-        console.log('PC: ' + this.rip);
-        console.log(this.text.read(this.rip));
+    print(rip=this.rip, showPC=true, showStack=true) {
+        let [mnemonic, ...operands] = this.text.read(rip);
+        let {prefix, size} = this.parseOperandSize(mnemonic);
+
+        // Output address and instruction to execute
+        if (showPC && this.rip !== undefined)
+            console.log(`0x${rip.toString(16)}: ${mnemonic}\t${operands.join(', ')}`);
+
+        // Output stack pointer and operand values before operation
+        if (showStack && operands.indexOf('%rsp') == -1)
+            console.log(`\t%rsp:\t0x${this.regs.read('rsp').val().toString(16)}`);
+
+        // Print operands and values
+        for (let i in operands) {
+            let op = operands[i];
+            if (op.startsWith('$')) continue;
+            try {
+                console.log(`\t${op}:\t${this.read(op, size)}`);
+            } catch (e) {
+                if (!(e instanceof AsmSyntaxError)) 
+                    throw e;
+            }
+        }
     }
 }
 
