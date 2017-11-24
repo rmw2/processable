@@ -123,6 +123,10 @@ class Process {
         let idx   = matches[3] ? this.regs.read(matches[3]) : 0;
         let scale = matches[4] ? parseInt(matches[4])       : 1;
 
+        // Gosh this is cumbersome
+        if (base.name === 'Int64') base = base.val();
+        if (idx.name === 'Int64') idx = idx.val();
+
         return disp + base + (idx * scale);
     }
 
