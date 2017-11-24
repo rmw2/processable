@@ -25,31 +25,31 @@ class RegisterSet {
 	 * for each available register.  The word size and endianness
 	 * can also be specified at construction.
 	 */
-	constructor(registerInfo, wordSize = 8, littleEndian = true) {
-		let nRegs = Object.keys(registerInfo).length;
+	constructor(info, wordSize = 8, littleEndian = true) {
+		let nRegs = Object.keys(info).length;
 		
 		this.littleEndian = littleEndian;
 
-		this.registerInfo = registerInfo;
-		this.registerBuffer = new ArrayBuffer(wordSize * nRegs);
-		this.registerView = new DataView(this.registerBuffer);
+		this.info = info;
+		this.buffer = new ArrayBuffer(wordSize * nRegs);
+		this.view = new DataView(this.buffer);
 	}
 
 	/**
 	 * Return the value held in the specified register.
 	 */
 	read(reg) {
-		let [idx, size]  = this.registerInfo[reg];
+		let [idx, size]  = this.info[reg];
 
 		switch (size) {
 			case 1:
-				return this.registerView.getUint8(idx, this.littleEndian);
+				return this.view.getUint8(idx, this.littleEndian);
 			case 2: 
-				return this.registerView.getUint16(idx, this.littleEndian);
+				return this.view.getUint16(idx, this.littleEndian);
 			case 4:
-				return this.registerView.getUint32(idx, this.littleEndian);
+				return this.view.getUint32(idx, this.littleEndian);
 			case 8:
-				return this.registerView.getUint64(idx, this.littleEndian);
+				return this.view.getUint64(idx, this.littleEndian);
 		}
 	}
 
@@ -61,25 +61,25 @@ class RegisterSet {
 		let idx, size;
 
 		try {
-			[idx, size]  = this.registerInfo[reg];
+			[idx, size]  = this.info[reg];
 		} catch (Error) {
 			throw new RegisterError(reg, 'Does not exist');
 		}
 
 		switch (size) {
 			case 1:
-				this.registerView.setUint8(idx, value, this.littleEndian);
+				this.view.setUint8(idx, value, this.littleEndian);
 				break;
 			case 2: 
-				this.registerView.setUint16(idx, value, this.littleEndian);
+				this.view.setUint16(idx, value, this.littleEndian);
 				break;
 			case 4:
-				this.registerView.setUint32(idx, value, this.littleEndian);
+				this.view.setUint32(idx, value, this.littleEndian);
 				break;
 			case 8:
 				// Determine if value is already an Int64
 				if (value.name !== 'Int64') value = new Int64(value, 0);
-				this.registerView.setUint64(idx, value, this.littleEndian);
+				this.view.setUint64(idx, value, this.littleEndian);
 				break;
 		}
 	}
