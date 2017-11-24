@@ -1,0 +1,88 @@
+<html ng-app="vm">
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono|Ubuntu:700" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="interact.js"></script>
+    -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+    <script type="text/javascript">
+        // fallback
+        window.angular || document.write('<script src="lib/angular.min.js">\x3C/script>');
+    </script>
+    <script src="MiniVM.js"></script>
+    <script src="ng-vm.js"></script>
+</head>
+<body ng-controller="processCtrl">
+    <div id="title">
+        <h1>processable</h1>
+        <div id="menu">
+            <a id="about-link" href="http://github.com/rmw2/Processable" class="menu-btn">about</a>
+        </div>
+        <div id="about">
+            <!---->
+        </div>
+    </div>
+
+    <div id="text" class="section round">
+        <div class="section-title">.text</div>
+        <div class="content">
+            <div class="inst" ng-repeat="inst in P.text">
+                <div class="inst-label" ng-if="P.labelFor($index)!=''"><span class="inst-label-text">{{P.labelFor($index)}}</span></div>
+                <div class="inst-addr">{{$index}}</div>
+                <div class="inst-text" ng-class="{'current-inst': $index==P.where()}">
+                    <div class="inst-op" ng-repeat="op in inst"><span class="inst-op-text">{{op}}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="controls" class="section round">
+    <div class="section-title">controls</div>
+        <div class="content">
+            <button id="step-btn" class="control-btn" ng-click="P.step()">
+                <img class="btn-img" src="step.png" /> step
+            </button>
+            <button id="reset-btn" class="control-btn" ng-click="P.start()">
+                <img class="btn-img" src="restart.png"/> restart
+            </button>
+            <button id="play-btn" class="control-btn" ng-click="P.run(500)">
+                <img class="btn-img" src="run.png" /> run
+            </button>
+            <button id="pause-btn" class="control-btn" ng-click="P.pause()">
+                <img class="btn-img" src="pause.png" /> pause
+            </button>
+        </div>
+    </div>
+
+    <div id="registers" class="section round">
+        <div class="section-title">registers</div>
+        <div class="content">
+            <div class="register" ng-repeat="(name, value) in P.regs.regs">
+                <div id="register-name-{{$index}}" class="register-name">{{name}}</div>
+                <div id="register-value-{{$index}}" class="register-value">{{value}}</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stack" class="section round">
+        <div class="section-title">stack</div>
+        <div class="content">
+            <div id="stack-contents">
+                <div class="stack-word" ng-repeat="item in P.stackItems()">
+                    <div class="stack-addr" ng-class="{'stack-pointer' : item.addr==P.regs.get('rsp')}">
+                        {{item.addr}}
+                    </div>
+                    <div class="stack-item">
+                        {{item.val}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</body>
+</html>
