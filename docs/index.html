@@ -1,7 +1,7 @@
-<html ng-app="vm">
+<html ng-app="miniproc">
 <head>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono|Ubuntu:700" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="miniproc/style.css">
     <!--
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="interact.js"></script>
@@ -11,8 +11,8 @@
         // fallback
         window.angular || document.write('<script src="lib/angular.min.js">\x3C/script>');
     </script>
-    <script src="MiniVM.js"></script>
-    <script src="ng-vm.js"></script>
+    <script src="miniproc/process.js"></script>
+    <script src="miniproc/miniproc-ng.js"></script>
 </head>
 <body ng-controller="processCtrl">
     <div id="title">
@@ -42,16 +42,16 @@
     <div class="section-title">controls</div>
         <div class="content">
             <button id="step-btn" class="control-btn" ng-click="P.step()">
-                <img class="btn-img" src="step.png" /> step
+                <img class="btn-img" src="miniproc/step.png" /> step
             </button>
             <button id="reset-btn" class="control-btn" ng-click="P.start()">
-                <img class="btn-img" src="restart.png"/> restart
+                <img class="btn-img" src="miniproc/restart.png"/> restart
             </button>
             <button id="play-btn" class="control-btn" ng-click="P.run(500)">
-                <img class="btn-img" src="run.png" /> run
+                <img class="btn-img" src="miniproc/run.png" /> run
             </button>
             <button id="pause-btn" class="control-btn" ng-click="P.pause()">
-                <img class="btn-img" src="pause.png" /> pause
+                <img class="btn-img" src="miniproc/pause.png" /> pause
             </button>
         </div>
     </div>
