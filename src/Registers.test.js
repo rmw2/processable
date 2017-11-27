@@ -4,12 +4,13 @@ const x86 = require('./x86.js');
 const { Int64 } = require('./Int64.js')
 const { RegisterSet } = require('./Registers.js');
 
-let Regs = new RegisterSet(x86.Registers);
-let regnames = Object.keys(x86.Registers);
+let Regs = new RegisterSet(x86.registers);
+
+let regnames = Object.keys(Object.assign({}, ...x86.registers.mapping));
 
 test('sets and retrieves 1, 2, and 4-byte values with LSC', () => {
 	for (let i = 0; i < regnames.length; i++) {
-		if (x86.Registers[regnames[i]][1] == 8)
+		if (Regs.mapping[regnames[i]][1] == 8)
 			continue
 
 		// Get random integer value between 0 and 255
@@ -22,7 +23,7 @@ test('sets and retrieves 1, 2, and 4-byte values with LSC', () => {
 
 test('sets and retrieves 8-byte values with LSC', () => {
 	for (let i = 0; i < regnames.length; i++) {
-		if (x86.Registers[regnames[i]][1] != 8)
+		if (Regs.mapping[regnames[i]][1] != 8)
 			continue
 
 		// Get random integer value between 0 and 255

@@ -1,5 +1,4 @@
 const { Process } = require('./Process.js');
-const x86 = require('./x86.js');
 
 const fibonacci = {
 	text: [
@@ -21,4 +20,4 @@ const fibonacci = {
 
 module.exports = { fibonacci };
 
-let p = new Process(fibonacci.text, fibonacci.labels, x86.Chip);
+let p = new Process(fibonacci.text, fibonacci.labels);

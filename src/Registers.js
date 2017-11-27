@@ -25,21 +25,43 @@ class RegisterSet {
 	 * for each available register.  The word size and endianness
 	 * can also be specified at construction.
 	 */
-	constructor(info, wordSize = 8, littleEndian = true) {
-		let nRegs = Object.keys(info).length;
-		
+	constructor(descriptor, littleEndian = true) {		
+		// Dave properties of registers
 		this.littleEndian = littleEndian;
+		this.n = descriptor.info.n;
+		this.size = descriptor.info.size;
 
-		this.info = info;
-		this.buffer = new ArrayBuffer(wordSize * nRegs);
+		// Allocate space to hold register data
+		this.buffer = new ArrayBuffer(this.size * this.n);
 		this.view = new DataView(this.buffer);
+
+		// Parse the register descriptor to get register to buffer offset mapping
+		// and keep group mapping as relative offset
+		this.mapping = {};
+		this.groups = descriptor.mapping.map((group, idx) => {
+			let aligned = [];
+			for (const reg in group) {
+				// Save directly to mapping
+				this.mapping[reg] = group[reg];
+				// Calculate offset from this register
+				aligned.push({
+					name: reg,
+					offset: group[reg][0] - idx*this.size, 
+					size: group[reg][1]
+				});
+			}
+
+			return aligned;
+		});
+
+		this.flags = descriptor.flags;
 	}
 
 	/**
 	 * Return the value held in the specified register.
 	 */
 	read(reg) {
-		let [idx, size]  = this.info[reg];
+		let [idx, size]  = this.mapping[reg];
 
 		switch (size) {
 			case 1:
@@ -61,7 +83,7 @@ class RegisterSet {
 		let idx, size;
 
 		try {
-			[idx, size]  = this.info[reg];
+			[idx, size]  = this.mapping[reg];
 		} catch (Error) {
 			throw new RegisterError(reg, 'Does not exist');
 		}
@@ -85,16 +107,4 @@ class RegisterSet {
 	}
 }
 
-/**
- * Status flags register
- */
-let Flags = {
-	OF: false,
-	SF: false,
-	ZF: false,
-	AF: false,
-	CF: false,
-	PF: false,
-}
-
-module.exports = { RegisterSet, Flags };
+module.exports = { RegisterSet };

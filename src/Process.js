@@ -19,21 +19,26 @@ class AsmSyntaxError extends Error {
 }
 
 class Process {
-    constructor(instructions, labels, chip, verbose = false) {
+    constructor(instructions, labels={}, arch=x86, verbose=false) {
         // Intitialize memory and registers
         this.mem  = new MemorySegment(STACK_START);
-        this.regs = new RegisterSet(x86.Registers);
-        this.regs.write('rsp', STACK_START);
+        this.regs = new RegisterSet(arch.registers);
+        this.regs.write('rsp', STACK_START-8);
 
         // Keep instruction pointer separate from registers, initialize to zero
-        this.rip = 0;
+        this.pc = 0;
 
         // Initialize the code segments
         this.text = new TextSegment(instructions);
         this.labels = labels;
+        
+        // Reverse label mapping
+        this.labeled = {};
+        for (let label in this.labels)
+            this.labeled[this.labels[label]] = label;
 
         // Object containing handlers indexed by instruction
-        this.chip = chip.call(this);
+        this.chip = arch.chip.call(this);
 
         // Intialize breakpoint dictionary
         this.breakpoints = {};
@@ -44,7 +49,7 @@ class Process {
      * The operand is a string defining a register, immediate, or memory
      * address as the information source
      */
-    read(operand, size) {
+    read(operand, size=4) {
         // Immediate Operand
         if (operand.startsWith('$')) {
             return parseInt(operand.slice(1));
@@ -94,13 +99,13 @@ class Process {
     jump(operand) {
         // Indirect jump to address held in register
         if (operand.startsWith('*')) {
-            this.rip = this.read(operand.slice(1));
+            this.pc = this.read(operand.slice(1));
         } else if (parseInt(operand)) {
-            this.rip = parseInt(operand);
+            this.pc = parseInt(operand);
         } else {
             let address = this.labels[operand];
             if (address === undefined) throw new AsmSyntaxError(`Unkown label: ${operand}`)
-            this.rip = address;
+            this.pc = address;
         }
     }
 
@@ -148,27 +153,27 @@ class Process {
      * Fetch the next instruction and execute
      */
     step(verbose=true) {
-        if (this.rip !== undefined) {
-            let rip = this.rip;
+        if (this.pc !== undefined) {
+            let pc = this.pc;
 
             // Fetch mnemonic and operands from Text section
-            let [mnemonic, ...operands] = this.text.read(this.rip);
+            let [mnemonic, ...operands] = this.text.read(this.pc);
 
             if (verbose) 
-                this.print(rip, true, true);
+                this.print(pc, true, true);
 
             // Advance instruction pointer and execute
-            this.rip = this.text.next(this.rip);
+            this.pc = this.text.next(this.pc);
             this.execute(mnemonic, operands);
 
             if (verbose) {
                 // Print stack pointer and operand values after operation
                 console.log('\t-----');
-                this.print(rip, false, true);
+                this.print(pc, false, true);
             }
         }
 
-        return this.rip;
+        return this.pc;
     }
 
     /**
@@ -197,7 +202,7 @@ class Process {
             // Time-out execution
             let interval;
             interval = setInterval(() => {
-                if (this.rip === undefined || this.breakpoints[this.rip]) {
+                if (this.pc === undefined || this.breakpoints[this.pc]) {
                     clearInterval(interval);
                     return;
                 }
@@ -206,7 +211,7 @@ class Process {
             }, delay);
         } else {
             // Continuous execution
-            while (this.rip !== undefined && !this.breakpoints[this.rip])
+            while (this.pc !== undefined && !this.breakpoints[this.pc])
                 this.step();
         }
     }
@@ -223,13 +228,13 @@ class Process {
     /**
      * Dump current state
      */
-    print(rip=this.rip, showPC=true, showStack=true) {
-        let [mnemonic, ...operands] = this.text.read(rip);
+    print(pc=this.pc, showPC=true, showStack=true) {
+        let [mnemonic, ...operands] = this.text.read(pc);
         let {prefix, size} = this.parseOperandSize(mnemonic);
 
         // Output address and instruction to execute
-        if (showPC && this.rip !== undefined)
-            console.log(`0x${rip.toString(16)}: ${mnemonic}\t${operands.join(', ')}`);
+        if (showPC && this.pc !== undefined)
+            console.log(`0x${pc.toString(16)}: ${mnemonic}\t${operands.join(', ')}`);
 
         // Output stack pointer and operand values before operation
         if (showStack && operands.indexOf('%rsp') == -1)
@@ -242,7 +247,7 @@ class Process {
             try {
                 console.log(`\t${op}:\t${this.read(op, size)}`);
             } catch (e) {
-                if (!(e instanceof AsmSyntaxError)) 
+                if (e.name !== 'AsmSyntaxError')
                     throw e;
             }
         }
