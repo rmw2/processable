@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "webpack --config webpack.config.js --progress --colors",
+    "build": "webpack --config webpack.config.js --progress --colors --watch",
     "test": "jest --coverage"
   },
   "devDependencies": {

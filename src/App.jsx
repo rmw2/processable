@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ProcessContainer from './ProcessContainer.jsx';
+import ProcessContainer from './ProcessView.jsx';
 
 const { fibonacci } = require('./TestProcesses.js');
 const { Process } = require('./Process.js');

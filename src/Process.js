@@ -24,6 +24,7 @@ class Process {
         this.mem  = new MemorySegment(STACK_START);
         this.regs = new RegisterSet(arch.registers);
         this.regs.write('rsp', STACK_START-8);
+        this.stackOrigin = STACK_START;
 
         // Keep instruction pointer separate from registers, initialize to zero
         this.pc = 0;
@@ -31,7 +32,7 @@ class Process {
         // Initialize the code segments
         this.text = new TextSegment(instructions);
         this.labels = labels;
-        
+
         // Reverse label mapping
         this.labeled = {};
         for (let label in this.labels)
@@ -202,27 +203,30 @@ class Process {
             // Time-out execution
             let interval;
             interval = setInterval(() => {
+                this.step(verbose);
+
                 if (this.pc === undefined || this.breakpoints[this.pc]) {
                     clearInterval(interval);
                     return;
                 }
-
-                this.step(verbose);
             }, delay);
         } else {
             // Continuous execution
-            while (this.pc !== undefined && !this.breakpoints[this.pc])
+            do {
                 this.step();
+            } while (this.pc !== undefined && !this.breakpoints[this.pc])
         }
     }
 
-    addBreakpoint(addressOrLabel) {
+    toggleBreakpoint(addressOrLabel) {
+        let address;
+        addressOrLabel += '';
         if (this.labels[addressOrLabel] !== undefined)
             address = this.labels[addressOrLabel];
         else
             address = addressOrLabel;
 
-        // TODO
+        this.breakpoints[address] = !this.breakpoints[address];
     }
 
     /**

@@ -1,4 +1,6 @@
 "use strict";
+import { pad } from './decode.js';
+
 const MAX_INT32 = 0xFFFFFFFF;
 const MAX_INT53 = 0x1FFFFFFFFFFFFF;
 const MAX_INT64 = 0xFFFFFFFFFFFFFFFF;
@@ -51,11 +53,35 @@ class Int64 {
 
 		return val;
 	}
+
+	toString(base) {
+		if (base === 2 || base === 16) {
+			return this.hi.toString(base) + pad(this.lo.toString(base), 64 / base);
+		} else if (base === 10) {
+			// Convert to hex first, as strings can be concatenated
+			const hexDigits = this.hi.toString(16) + pad(this.lo.toString(16), 8);
+
+			// Keep track of decimal digits in an array
+			let decDigits = [];
+			let carry = 0;
+
+			for (let digit of hexDigits.split('')) {
+				let val = parseInt(digit, 16) + carry;
+				carry = Math.floor(val / 10);
+				decDigits.unshift(val % 10);
+			}
+
+			// Trim leading zeros
+			return decDigits.join('').replace(/^0+(?!\.|$)/, '');
+		} else {
+			throw new Int64Error(`Can't directly decode to base ${base}!  Only decimal, binary, and hex supported.`);
+		}
+	}
 }
 
 
 /** Update the dataview prototype to support 64-bit integers */
-DataView.prototype.getUint64 = function (idx, littleEndian) {
+DataView.prototype.getUint64 = function (idx, littleEndian=true) {
 	let lo, hi;
 	if (littleEndian) {
 		lo = this.getUint32(idx, littleEndian);
@@ -68,7 +94,7 @@ DataView.prototype.getUint64 = function (idx, littleEndian) {
 	return new Int64(lo, hi);
 }
 
-DataView.prototype.setUint64 = function (idx, value, littleEndian) {
+DataView.prototype.setUint64 = function (idx, value, littleEndian=true) {
 	let {lo, hi} = value.lohi();
 
 	if (littleEndian) {
