@@ -29,8 +29,10 @@ export default class ProcessContainer extends React.Component {
     render() {
         return (
             <div className="process-container">
-                <button id="step" className="control-button" onClick={this.step}>step</button>
-                <button id="run" className="control-button" onClick={this.run}>continue</button>
+                <div id="controls" className="container">
+                    <button id="step" className="control-button" onClick={this.step}>&#8677;</button>
+                    <button id="continue" className="control-button" onClick={this.run}>&#10142;</button>
+                </div> 
                 <TextContainer
                     pc={this.props.process.pc}
                     text={this.props.process.text} 
@@ -38,7 +40,8 @@ export default class ProcessContainer extends React.Component {
                     breakpoints={this.props.process.breakpoints}
                     toggleBreakpoint={this.toggleBreakpoint} />
                 <RegisterContainer 
-                    regs={this.props.process.regs} />
+                    regs={this.props.process.regs}
+                    flags={this.props.process.regs.flags} />
                 <StackContainer 
                     mem={this.props.process.mem}
                     origin={this.props.process.stackOrigin}

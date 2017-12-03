@@ -1,7 +1,6 @@
 /**
  * The stack, broh
  */
-
 import React from 'react';
 import { pad } from './decode.js'
 /**
@@ -16,14 +15,18 @@ export default class StackContainer extends React.Component {
 		let bytes = [];
 		for (let addr = this.props.origin - 1; addr >= this.props.pointer; addr--) {
 			bytes.push(
-				<ByteView key={addr} value={this.props.mem.read(addr, 1)} address={addr} />
+				<ByteView 
+					key={addr} 
+					value={this.props.mem.read(addr, 1)} 
+					address={addr} 
+					isTop={addr == this.props.pointer} />
 			);
 		}
 
 		return (
-			<div className="stack-container container">
+			<div id="stack" className="container">
 				<div className="container-title">stack</div>
-				<div className="stack-contents">
+				<div id="stack-content" className="content">
 					{bytes}
 				</div>
 			</div>
@@ -39,11 +42,28 @@ class ByteView extends React.Component {
 		super(props);
 	}
 
+	componentDidMount() {
+		this.refs.thisbyte.scrollIntoView(false);
+	}
+
+	printPointer() {
+		if (this.props.isTop) {
+			return {__html: '%rsp &rarr;'};
+		}
+	}
+
 	render() {
+		const style = {
+			address: {
+				visibility: this.props.isTop ? 'visible' : '',
+			}
+		}
+
 		return (
-			<div className="stack-byte">
-				<span className="byte-address">{this.props.address.toString(16)}</span>
-				<span className="byte-value">{pad(this.props.value, 2)}</span>
+			<div ref="thisbyte" className="stack-byte">
+				<span className="stack-pointer" dangerouslySetInnerHTML={this.printPointer()}></span>
+				<span style={style.address} className="byte-address">{this.props.address.toString(16)}</span>
+				<span className="byte-value">{pad(this.props.value.toString(16), 2)}</span>
 			</div>
 		);
 	}

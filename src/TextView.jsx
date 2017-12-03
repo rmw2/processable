@@ -31,10 +31,12 @@ export default class TextContainer extends React.Component {
 
     render() {
         return (
-            <div className="container text-container">
+            <div id="text" className="container">
                 <div className="container-title">text</div>
                 <span className="pc"> PC: 0x{this.props.pc.toString(16)} </span>
-                {this.renderInstructions()}
+                <div id="text-content" className="content">
+                    {this.renderInstructions()}
+                </div>
             </div>
         );
         
@@ -70,15 +72,15 @@ class InstructionView extends React.Component {
     render() {
         // Todo: replace with better solution for conditional classes
         const highlightStyle = this.props.isCurrent ? {
-            backgroundColor:  this.state.isBreakpoint ? '#f99' : '#ddd',
+            backgroundColor:  this.state.isBreakpoint ? '#f99' : '#eee',
             fontWeight: 'bold'
         } : {};
 
         const addrStyle = this.state.isBreakpoint ? {
             backgroundColor: '#f99',
-            borderColor: this.props.isCurrent ? '#f99' : '#000'
+            borderColor: this.props.isCurrent ? '#000' : '#000'
         } : {
-            borderColor: this.props.isCurrent ? '#ddd' : '#fff'
+            borderColor: this.props.isCurrent ? '#ddd' : '#ddd'
         };
 
         return (

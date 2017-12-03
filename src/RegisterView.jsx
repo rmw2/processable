@@ -28,9 +28,40 @@ export default class RegisterContainer extends React.Component {
 
     render() {
         return (
-            <div className='container register-container'>
+            <div id="registers" className="container">
                 <div className="container-title">registers</div>
-                {this.renderRegs()}
+                <FlagView flags={this.props.flags} />
+                <div id="register-content" className="content">
+                    {this.renderRegs()}
+                </div>
+            </div>
+        );
+    }
+}
+
+class FlagView extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    renderFlags() {
+        return Object.keys(this.props.flags).map((flag) => {
+            let flagStyle = {
+                backgroundColor: this.props.flags[flag] ? '#efe' : '#fee',
+            };
+
+            return (
+                <span key={flag} style={flagStyle} className='register-flag'>
+                    {flag}
+                </span>
+            );
+        });
+    }
+
+    render() {
+        return (
+            <div id="register-flags">
+                {this.renderFlags()}
             </div>
         );
     }
