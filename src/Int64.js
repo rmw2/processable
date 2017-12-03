@@ -71,8 +71,8 @@ class Int64 {
 				decDigits.unshift(val % 10);
 			}
 
-			// Trim leading zeros
-			return decDigits.join('').replace(/^0+(?!\.|$)/, '');
+			// Trim leading zeros but keep at least one zero
+			return decDigits.join('').replace(/^0+(?!$)/, '');
 		} else {
 			throw new Int64Error(`Can't directly decode to base ${base}!  Only decimal, binary, and hex supported.`);
 		}
