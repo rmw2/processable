@@ -105,6 +105,20 @@ class RegisterSet {
 				break;
 		}
 	}
+
+	/**
+	 * Set the flag with the given name to the given value
+	 */
+	setFlag(name, value=true) {
+		this.flags[name] = value;
+	}
+
+	/**
+	 * Return the current value of the given flag
+	 */
+	getFlag(name) {
+		return this.flags[name];
+	}
 }
 
 module.exports = { RegisterSet };
