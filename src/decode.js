@@ -29,16 +29,16 @@ export function nextEncoding(state) {
  * Take a DataView data, and decode its contents to a string
  * according to the specified encoding and size
  */
-export function decodeFromBuffer(data, offset, size, encoding) {
+export function decodeFromBuffer(data, offset, size, encoding, littleEndian=true) {
 	let val;
 	switch (size) {
-		case 1: val = data.getUint8(offset);
+		case 1: val = data.getUint8(offset, littleEndian);
 			break;
-		case 2: val = data.getUint16(offset);
+		case 2: val = data.getUint16(offset, littleEndian);
 			break;
-		case 4: val = data.getUint32(offset);
+		case 4: val = data.getUint32(offset, littleEndian);
 			break;
-		case 8: val = data.getUint64(offset);
+		case 8: val = data.getUint64(offset, littleEndian);
 			break;
 		default:
 			throw new DecodeError(`Cannot decode in chunks of ${size} bytes. Size must be 1,2,4, or 8`);
@@ -55,9 +55,9 @@ export function decodeFromBuffer(data, offset, size, encoding) {
         // Int case requires signed decoding
         case 'int':
             switch (size) {
-            	case 1: return data.getInt8(offset);
-            	case 2: return data.getInt16(offset);
-            	case 4: return data.getInt32(offset);
+            	case 1: return data.getInt8(offset, littleEndian);
+            	case 2: return data.getInt16(offset, littleEndian);
+            	case 4: return data.getInt32(offset, littleEndian);
             	case 8: 
             		// Some fancy magic to get a 64bit signed int in decimal
             		return 'TODO';
