@@ -15,13 +15,13 @@ A Javascript process emulator and visual inspector/debugger.
 * December
   - Interpreter:
     - [ ] Add support for flags, conditional instructions
-    - [ ] Compose "assembler" module and support .data, .bss, and .rodata sections
+    - [x] Compose "assembler" module and support .data, .bss, and .rodata sections
     - [ ] Write tests for remaining mnemonics
   - View:
-    - [ ] Implement component for viewing the stack with toggle-able memory
-    - [ ] Add flags to view
-    - [ ] Add breakpoint toggles and execution controls to view
-    - [ ] Implement components for 
+    - [x] Implement component for viewing the stack 
+      - [ ] with toggle-able decoding options
+    - [x] Add flags to view
+    - [x] Add breakpoint toggles and execution controls to view
 * January
   - Interpreter:
     - [ ] Support external function calls for c standard library methods
