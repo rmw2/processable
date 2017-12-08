@@ -68,7 +68,7 @@ class Int64 {
 			for (let digit of hexDigits.split('')) {
 				let val = parseInt(digit, 16) + carry;
 				carry = Math.floor(val / 10);
-				decDigits.unshift(val % 10);
+				decDigits.push(val % 10);
 			}
 
 			// Trim leading zeros but keep at least one zero
