@@ -1,7 +1,21 @@
 const WORD_SIZE = 8;
 
+const CARRIES = {
+	1: 0xFF,
+	2: 0xFFFF,
+	4: 0xFFFFFFFF,
+	8: 0xFFFFFFFFFFFFFFFF
+};
+
+const OVERFLOWS = {
+	1: 0x7F,
+	2: 0x7FFF,
+	4: 0x7FFFFFFF,
+	8: 0x7FFFFFFFFFFFFFFF
+};
+
 const chip = function () {
-	return {
+	let mnems = {
 		/******************************************************************
 		 * The almighty move
 		 *****************************************************************/
@@ -32,35 +46,41 @@ const chip = function () {
 		add : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
-			// TODO: Set flags
-			this.write(operands[1], src + dest, size)
+			let result = src + dest;
+			updateFlags.call(this, result, size);
+			this.write(operands[1], result, size)
 		},
 
 		sub : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
-			// TODO: Set flags
-			this.write(operands[1], src - dest, size)
+			let result = src - dest;
+			updateFlags.call(this, result, size);
+			this.write(operands[1], result, size)
 		},
 
 		imul : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
-			// TODO: set flags
-			this.write(operands[1], src * dest, size)
+			let result = src * dest;
+			updateFlags.call(this, result, size);
+			this.write(operands[1], result, size)
 		},
 
 		idiv : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
-			this.write(operands[1], src / dest, size);
+			let result = src / dest;
+			updateFlags.call(this, result, size);
+			this.write(operands[1], result, size);
 		},
 
 		adc : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
-			// TODO: Set flags
-			this.write(operands[1], src + dest + this.flags.CF, size)
+			let result = src + dest + this.regs.getFlag('CF');
+			updateFlags.call(this, result, size);
+			this.write(operands[1], result, size);
 		},
 
 		lea : (operands, size) => {
@@ -99,13 +119,13 @@ const chip = function () {
 
 		inc : (operands, size) => {
 			let dest = this.read(operands[0]);
-			// TODO: Set flags
+			updateFlags.call(this, dest + 1, size, true);
 			this.write(operands[0], dest + 1, size);
 		},
 
 		dec : (operands, size) => {
 			let dest = this.read(operands[0]);
-			// TODO: Set flags
+			updateFlags.call(this, dest - 1, size, true);
 			this.write(operands[0], dest - 1, size);
 		},
 
@@ -144,6 +164,86 @@ const chip = function () {
 			this.jump(operands[0]);
 		},
 
+		je : (operands, size) => {
+			if (!this.regs.getFlag('ZF'))
+				this.jump(operands[0]);
+		}, 
+
+		jne : (operands, size) => {
+			if (!this.regs.getFlag('ZF'))
+				this.jump(operands[0]);
+		},
+
+		jo : (operands, size) => {
+			if (!this.regs.getFlag('OF'))
+				this.jump(operands[0]);
+		}, 
+
+		jno : (operands, size) => {
+			if (!this.regs.getFlag('OF'))
+				this.jump(operands[0]);
+		},
+
+		ja : (operands, size) => {
+			if (!this.regs.getFlag('CF'))
+				this.jump(operands[0]);
+		},
+
+		jae : (operands, size) => {
+			if (!this.regs.getFlag('CF') || this.regs.getFlag('ZF'))
+				this.jump(operands[0]);
+		}, 
+
+		jb : (operands, size) => {
+			if (this.regs.getFlag('CF'))
+				this.jump(operands[0]);
+		},
+
+		jbe : (operands, size) => {
+			if (this.regs.getFlag('CF') || this.regs.getFlag('ZF'))
+				this.jump(operands[0]);
+		}, 
+
+		jg : (operands, size) => {
+			if (this.regs.getFlag('OF') === this.regs.getFlag('SF') && !this.regs.getFlag('ZF'))
+				this.jump(operands[0]);
+		},
+
+		jge : (operands, size) => {
+			if (this.regs.getFlag('OF') === this.regs.getFlag('SF'))
+				this.jump(operands[0]);
+		}, 
+
+		jl : (operands, size) => {
+			if (this.regs.getFlag('OF') !== this.regs.getFlags('SF') && !this.regs.getFlag('ZF'))
+				this.jump(operands[0]);
+		},
+
+		jle : (operands, size) => {
+			if (this.regs.getFlag('OF') !== this.regs.getFlags('SF'))
+				this.jump(operands[0]);
+		}, 
+
+		js : (operands, size) => {
+			if (this.regs.getFlag('SF'))
+				this.jump(operands[0]);
+		}, 
+
+		jns : (operands, size) => {
+			if (!this.regs.getFlag('SF'))
+				this.jump(operands[0]);
+		}, 
+
+		jcxz : (operands, size) => {
+			if (this.regs.read('cx') === 0)
+				this.jump(operands[0]);
+		}, 
+
+		jecxz : (operands, size) => {
+			if (this.regs.read('ecx') === 0)
+				this.jump(operands[0]);
+		}, 
+
 		/******************************************************************
 		 * Shifts
 		 *****************************************************************/
@@ -177,19 +277,59 @@ const chip = function () {
 		},
 
 		/******************************************************************
+		 * Explicit flag control
+		 *****************************************************************/
+
+		stc : () => {
+			this.regs.setFlag('CF', true);
+		},
+
+		clc : () => {
+			this.regs.setFlag('CF', false);
+		},
+
+		cmc : () => {
+			this.regs.setFlag('CF', !this.regs.getFlag('CF'));
+		},
+
+
+		/******************************************************************
 		 * Condition Testing
 		 *****************************************************************/
 
 		cmp : (operands, size) => {
 			// Set flags according to src - dest
-
+			let result = this.read(operands[0]) - this.read(operands[1]);
+			updateFlags.call(this, result, size);
 		},
 
 		test : (operands, size) => {
 			// Set flags according to src & dest
 
+		},
+
+		hlt : () => {
+			this.pc = undefined;
 		}
 	}
+
+	// Setup aliases
+	mnems.jz = mnems.je;
+	mnems.jnz = mnems.jne;
+	mnems.jc = mnems.jb;
+	mnems.jnc = mnems.jae;
+
+	mnems.jnb = mnems.jae;
+	mnems.jnbe = mnems.ja;
+	mnems.jna = mnems.jbe;
+	mnems.jnae = mnems.jb;
+
+	mnems.jng = mnems.jle;
+	mnems.jnge = mnems.jl;
+	mnems.jnl = mnems.jge;
+	mnems.jnle = mnems.jg;
+
+	return mnems;
 }
 
 const registers = {
@@ -223,9 +363,9 @@ const registers = {
 		{
 			'rdx'  : [24, 8],
 			'edx'  : [24, 4],
-			'rx'   : [24, 2],
-			'rh'   : [25, 1],
-			'rl'   : [24, 1],
+			'dx'   : [24, 2],
+			'dh'   : [25, 1],
+			'dl'   : [24, 1],
 		},
 		{
 			'rsp'  : [32, 8],
@@ -313,5 +453,39 @@ const registers = {
 		PF: false,
 	}
 };
+
+function updateFlags(result, size, skipCarry=false) {
+	// Zero
+	if (result == 0) 
+		this.regs.setFlag('ZF', true);
+	else 
+		this.regs.setFlag('ZF', false);
+
+	// Carry
+	if (!skipCarry) {
+		if (result > CARRIES[size])
+			this.regs.setFlag('CF', true);
+		else
+			this.regs.setFlag('CF', false);
+	}
+	
+	// Overflow
+	if (result > OVERFLOWS[size])
+		this.regs.setFlag('OF', true);
+	else
+		this.regs.setFlag('OF', false);
+
+	// Sign
+	if (result < 0 || result > OVERFLOWS[size])
+		this.regs.setFlag('SF', true);
+	else
+		this.regs.setFlag('SF', false);
+
+	// Auxiliary
+	// TODO
+
+	// Parity
+	// TODO
+}
 
 module.exports = { chip, registers };
