@@ -3,6 +3,33 @@
  * to objects understood by our debugger
  */
 
+
+/**
+ * An event handler for file uploads, to replace the current program with another
+ */
+export function uploadAndAssemble() {
+	let input = event.target;
+	let reader = new FileReader();
+
+	reader.onload = () => {
+		// Assemble the text
+		let text = reader.result;
+
+		let {instructions, addresses, labels} = assemble(text);
+		
+		// Start the process
+		let p = new Process(instructions, labels);
+
+		// Render it up
+		ReactDOM.render(
+			React.createElement(ProcessContainer, {process: p}), 
+			document.getElementById('root')
+		);
+	};
+
+	reader.readAsText(input.files[0]);
+}
+
 /**
  * Assemble a text file containing assembly instructions in AT&T syntax
  * and return an object mapping labels to addresses, parellel lists of
@@ -46,6 +73,9 @@ export default function assemble(asm) {
 
 		// Add instruction to instruction list & increment address
 		if (section === '.text' && tokens.length > 0 && tokens[0]) {
+			for (let i in tokens)
+				if (!tokens[i]) tokens.splice(i, 1);
+
 			instructions.push(tokens);
 			addresses.push(addr);
 			addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT
