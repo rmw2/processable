@@ -23,7 +23,7 @@ class Process {
         // Intitialize memory and registers
         this.mem  = new MemorySegment(STACK_START);
         this.regs = new RegisterSet(arch.registers);
-        this.regs.write('rsp', STACK_START-8);
+        this.regs.write('rsp', STACK_START);
         this.stackOrigin = STACK_START;
 
         // Keep instruction pointer separate from registers, initialize to zero
@@ -153,7 +153,7 @@ class Process {
     /**
      * Fetch the next instruction and execute
      */
-    step(verbose=true) {
+    step(verbose=false) {
         if (this.pc !== undefined) {
             let pc = this.pc;
 
@@ -198,7 +198,7 @@ class Process {
      * Run the process one instruction at a time.
      * Pause for delay ms between executing each.
      */
-    run(delay=0, verbose=true) {
+    run(delay=0, verbose=false) {
         if (delay) {
             // Time-out execution
             let interval;
