@@ -9,12 +9,15 @@ const fibonacci = {
 		['movl', 	'4(%rsp)','%ebx'],
 		['movl', 	'(%rsp)','%ecx'],
 		['addl', 	'%ecx', '%ebx'],
+		['jb', 		'end'],
 		['pushl', 	'%ebx'],
 		['jmp',		'loop'],
+		['hlt']
 	],
 
 	labels: {
-		loop: 0x03 
+		loop: 0x03,
+		end: 0x0a
 	},
 };
 
