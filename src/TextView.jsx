@@ -2,6 +2,7 @@
  * Display instructions and such
  */
 import React from 'react';
+import { pad } from './decode.js'
 
 export default class TextContainer extends React.Component {
     constructor(props) {
@@ -30,10 +31,12 @@ export default class TextContainer extends React.Component {
     }
 
     render() {
+        let pc = this.props.pc !== undefined ? `PC: 0x${this.props.pc.toString(16)}` : '[process terminated]';
+
         return (
             <div id="text" className="container">
                 <div className="container-title">text</div>
-                <span className="pc"> PC: 0x{this.props.pc.toString(16)} </span>
+                <span className="pc">{pc}</span>
                 <div id="text-content" className="content">
                     {this.renderInstructions()}
                 </div>
@@ -62,11 +65,12 @@ class InstructionView extends React.Component {
     }
 
     renderOperands() {
-        return this.props.operands.map((op, idx) => 
+
+        return this.props.operands.length ? this.props.operands.map((op, idx) => 
             <span key={idx} className="operand">{op}</span>
         ).reduce((prev, curr) => 
             [prev, ', ', curr]
-        );
+        ) : null;
     }
 
     render() {
@@ -89,7 +93,7 @@ class InstructionView extends React.Component {
                 <span className="instruction-address" 
                     onClick={this.toggleBreakpoint}
                     style={addrStyle}>
-                    {this.props.address.toString(16)}
+                    {pad(this.props.address.toString(16), 2)}
                 </span>
                 <span className="instruction-mnemonic">{this.props.mnemonic}</span>
                 <span className="instruction-operands">{this.renderOperands()}</span>
