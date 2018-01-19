@@ -5,6 +5,8 @@
 $(document).ready(function () {
 	hide(0);
 	show(500);
+
+	window.history.replaceState({}, 'processable [prototype]', '/Processable/prototype');
 });
 
 function hide(speed) {
@@ -13,11 +15,11 @@ function hide(speed) {
 	}, speed);
 
 	$('#stack').animate({
-		right: '+=100%'
+		right: '-=100%'
 	}, speed);
 
 	$('#controls').animate({
-		bottom: '+=100%'
+		bottom: '-=100%'
 	}, speed);
 
 	$('#text').animate({
@@ -31,11 +33,11 @@ function show(speed) {
 	}, speed);
 
 	$('#stack').animate({
-		right: '-=100%'
+		right: '+=100%'
 	}, speed);
 
 	$('#controls').animate({
-		bottom: '-=100%'
+		bottom: '+=100%'
 	}, speed);
 
 	$('#text').animate({
