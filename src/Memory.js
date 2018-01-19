@@ -152,7 +152,7 @@ class MemorySegment {
  * array of string instructions.
  */
 class TextSegment {
-    constructor(instructions, addresses) {
+    constructor(instructions, addresses, offset=0) {
         // Validate provided addresses
         if (addresses && instructions.length != addresses.length)
             throw new TypeError('addresses must be same length as instructions');
@@ -168,11 +168,11 @@ class TextSegment {
             		throw new TypeError('addresses must be increasing');
 
             	// Keep track of forward and reverse mapping
-                this.addrToIdx[addresses[i]] = i;
-	            this.idxToAddr.push(addresses[i]);
+                this.addrToIdx[addresses[i] + offset] = i;
+	            this.idxToAddr.push(addresses[i] + offset);
             } else {
-                this.addrToIdx[i] = i;
-                this.idxToAddr.push(i);
+                this.addrToIdx[i + offset] = i;
+                this.idxToAddr.push(i + offset);
             }
         }
         
@@ -201,37 +201,29 @@ class TextSegment {
 
 /**
  * Memory in general, wrapping several segments of different types
+ * 
  */
-// class Memory {
+class Memory {
+    constructor(segments) {
+        this.segments = segments;
+    }
 
-//     constructor() {
-//         // Initialize text segment
-//         this.text = new TextSegment();
+    getSegment(addr) {
+    	for (s in this.segments) {
+    		const seg = this.segments[s];
+    		if (seg.lo < addr && addr < seg.hi) {
+    			return seg.data;
+    		}
+    	}
+    }
 
-//         // Initialize data segment
-//         // TODO
-//         // Initialize bss segment
-//         // TODO
+    read(addr, size) {
+    	return getSegment(addr).read(addr, size);
+    }
 
-//         // Initialize stack segment and randomize stack pointer
-//         this.stack = new MemorySegment();
-
-//         this.segments = [
-
-//         ]		
-//     }
-
-//     getSegment(addr) {
-
-//     }
-
-//     read(addr, size) {
-//     	return getSegment(addr).read(addr, size);
-//     }
-
-//     write(value, addr, size) {
-//     	getSegment(addr).write(value, addr, size);
-//     }
-// }
+    write(value, addr, size) {
+    	getSegment(addr).write(value, addr, size);
+    }
+}
 
 module.exports = { MemorySegment, TextSegment };

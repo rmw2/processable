@@ -11,10 +11,6 @@ let file = fs.readFileSync(
 
 let {instructions, addresses, labels} = assemble(file);
 
-console.log(instructions);
-console.log(addresses);
-console.log(labels);
-
 test('fake test', () => {
 	// Do nothing
 });

@@ -3,7 +3,6 @@
  * to objects understood by our debugger
  */
 
-
 /**
  * An event handler for file uploads, to replace the current program with another
  */

@@ -79,7 +79,6 @@ class Int64 {
 	}
 }
 
-
 /** Update the dataview prototype to support 64-bit integers */
 DataView.prototype.getUint64 = function (idx, littleEndian=true) {
 	let lo, hi;

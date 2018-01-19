@@ -218,6 +218,9 @@ class Process {
         }
     }
 
+    /**
+     * Add or remove a breakpoint at the specified address or label
+     */
     toggleBreakpoint(addressOrLabel) {
         let address;
         addressOrLabel += '';
@@ -226,6 +229,7 @@ class Process {
         else
             address = addressOrLabel;
 
+        // (undefined || false) -> true, true -> false
         this.breakpoints[address] = !this.breakpoints[address];
     }
 
