@@ -65,6 +65,8 @@ export default function assemble(asm) {
 				case '.text':
 					section = '.text';
 				// TODO: handle static allocation etc. 
+				case '.data':
+
 			}
 
 			continue;
@@ -82,6 +84,43 @@ export default function assemble(asm) {
 	}
 
 	return { instructions, addresses, labels };
+}
+
+
+class Assembler {
+	/**
+	 * Instantiate a new asesmbler object
+	 */
+	constructor(asm) {
+		this.addresses = [];
+		this.instructions = [];
+		this.labels = {};
+
+		// This maybe should go in the assemble function ?
+		this.lines = asm.split('\n');
+
+		this.assemble();
+	}
+
+	assemble() {
+
+	}
+
+	readData() {
+
+	}
+
+	readBSS() {
+
+	}
+
+	readText() {
+
+	}
+
+	readRodata() {
+
+	}
 }
 
 module.exports = { assemble };
