@@ -7,7 +7,8 @@ const path = require('path');
 // Read file 
 let file = fs.readFileSync(
 	path.join(__dirname, '../samples/euclid.s'), 
-	{encoding: 'utf-8'});
+	{encoding: 'utf-8'}
+);
 
 let {instructions, addresses, labels} = assemble(file);
 

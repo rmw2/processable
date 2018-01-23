@@ -255,6 +255,7 @@ class Process {
             try {
                 console.log(`\t${op}:\t${this.read(op, size)}`);
             } catch (e) {
+                // Hack in case we can't actually read this operand
                 if (e.name !== 'AsmSyntaxError')
                     throw e;
             }
