@@ -6,7 +6,7 @@ $(document).ready(function () {
 	hide(0);
 	show(500);
 
-	window.history.replaceState({}, 'processable [prototype]', '/Processable/prototype');
+	window.history.replaceState({}, 'processable [prototype]', '/processable/prototype');
 });
 
 function hide(speed) {
