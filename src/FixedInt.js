@@ -147,7 +147,7 @@ export default class FixedInt {
 
   /**
    * Is this integer negative, when interpretted as signed?
-   * {boolean}
+   * @returns {boolean}
    */
   isNegative() {
     return (this.size == 8) 
@@ -158,6 +158,7 @@ export default class FixedInt {
   /**
    * Is this integer less than that integer, 
    * when both are interpreted as unsigned
+   * @returns {boolean}
    */
   isLessThan(that) {
     return (this.size == 8)
@@ -167,7 +168,7 @@ export default class FixedInt {
 
   /**
    * Is this integer odd?
-   * {boolean}
+   * @returns {boolean}
    */
   isOdd() {
     return !!(this.lo & 1);
@@ -175,7 +176,7 @@ export default class FixedInt {
 
   /**
    * Is the value of this integer safely representable as a Number?
-   * {boolean}
+   * @returns {boolean}
    */
   isSafeInteger() {
     return (this.size < 8 || this.hi <= MAX_SAFE_HI);
@@ -184,6 +185,7 @@ export default class FixedInt {
   /**
    * Return the javascript Number that most closely represents this
    * number.  Accuracy guaranteed iff this.isSafeInteger().
+   * @returns {Number}
    */
   valueOf() {
     return (this.size == 8)
@@ -193,6 +195,7 @@ export default class FixedInt {
 
   /**
    * Return a new FixedInt with the same value as this
+   * @returns {FixedInt}
    */
   clone() {
     return new FixedInt(this);
@@ -201,6 +204,7 @@ export default class FixedInt {
   /**
    * Return a new FixedInt with the same value as this with the 
    * specified size, truncating if necessary
+   * @returns {FixedInt}
    */
   toSize(size) {
     return new FixedInt(size, this.lo, this.hi);
@@ -208,6 +212,7 @@ export default class FixedInt {
 
   /**
    * Is this integer the same value as that? 
+   * @returns {boolean}
    */
   equals(that) {
     return (this.size == that.size)
@@ -301,7 +306,8 @@ export class ALU {
     const result = new FixedInt(a.size, lo, hi);
 
     // Set overflow, sign, & zero flags
-    _OF = (a.isNegative() == b.isNegative()) ^ result.isNegative();
+    _OF = (a.isNegative() == b.isNegative())     // Equal signs
+      && (a.isNegative() != result.isNegative()); // and different result
     _ZF = result == 0;
     _SF = result.isNegative();
 
@@ -409,7 +415,7 @@ export class ALU {
         lo = (a.hi >> (shift - 32)) >>> 0;
       } else {
         // Carry bits shifted out of hi into shifted lo
-        lo = ((a.lo >> shift) | (a.hi << (32 - shift))) >>> 0;
+        lo = ((a.lo >>> shift) | (a.hi << (32 - shift))) >>> 0;
         hi = a.hi >> shift;
       }
     } else {
@@ -556,8 +562,8 @@ function divmod(dividend, divisor) {
 
   // Recursively divide by divisor * 2
   let [quotient, remainder] = divmod(dividend, ALU.shl(divisor,1));
-
   quotient = ALU.shl(quotient, 1);
+
   if (divisor.isLessThan(remainder)) {
     quotient = ALU.add(quotient, 1);
     remainder = ALU.sub(remainder, divisor);

@@ -235,18 +235,26 @@ describe('8,16, & 32-bit ALU', () => {
 				// Adding zero
 				let x = random(size);
 				expect(ALU.add(x, ZERO[size])).toEqual(x);
+				expect(ALU.CF).toBe(false);
+				expect(ALU.OF).toBe(false);
+				expect(ALU.SF).toBe(x.isNegative());
+				expect(ALU.ZF).toBe(x.equals(ZERO[size]));
 				
-				// Adding random numbers
+				// Adding random numbers without overflow
 				let val1 = (MODULUS[size] * Math.random() / 2 | 0) >>> 0;
 				let val2 = (MODULUS[size] * Math.random() / 2 | 0) >>> 0;
 
 				let y1 = new FixedInt(size, val1);
 				let y2 = new FixedInt(size, val2);
 
-				expect(ALU.add(y1,y2)).toEqual(new FixedInt(size, val1+val2));
+				let result = ALU.add(y1,y2);
+				expect(result).toEqual(new FixedInt(size, val1+val2));
 
 				// Test flags
-				// TODO
+				expect(ALU.ZF).toBe(result.equals(ZERO[size]));
+				expect(ALU.CF).toBe(false);
+				expect(ALU.OF).toBe((y1.isNegative() == y2.isNegative()) && (y1.isNegative() !== result.isNegative()));
+				expect(ALU.SF).toBe(result.isNegative());
 			}
 		});
 
@@ -256,6 +264,7 @@ describe('8,16, & 32-bit ALU', () => {
 				let x = random(size);
 				expect(ALU.sub(x, ZERO[size])).toEqual(x);
 				expect(ALU.sub(x, x)).toEqual(ZERO[size]);
+				expect(ALU.ZF).toBe(true);
 
 				// Subtracting values
 				let val1 = (MODULUS[size] * Math.random() / 2 | 0) >>> 0;
@@ -264,10 +273,14 @@ describe('8,16, & 32-bit ALU', () => {
 				let y1 = new FixedInt(size, val1);
 				let y2 = new FixedInt(size, val2);
 
-				expect(ALU.sub(y1,y2)).toEqual(new FixedInt(size, val1-val2));
+				let result = ALU.sub(y1,y2);
+				expect(result).toEqual(new FixedInt(size, val1-val2));
 
 				// Test Flags
-				// TODO
+				expect(ALU.ZF).toBe(y1.equals(y2));
+				// expect(ALU.CF).toBe();
+				// expect(ALU.OF).toBe();
+				expect(ALU.SF).toBe(result.isNegative());
 			}
 		});
 
@@ -444,16 +457,22 @@ describe('64-bit ALU Arithmetic', () => {
 		expect(ALU.xor(tester, tester)).toEqual(ZERO[8]);
 		expect(ALU.xor(tester, MAX[8])).toEqual(ALU.not(tester));
 
-		// // Random tests
-		// let val1 = (Number.MAX_SAFE_INTEGER * Math.random() | 0) >>> 0;
-		// let val2 = (Number.MAX_SAFE_INTEGER * Math.random() | 0) >>> 0;
+		// Test random values
+		for (let i = 0; i < N_RAND; i++) {
+			let x = random(8, false);
+			let y = random(8, false);
 
-		// let x = new FixedInt(8, val1);
-		// let y = new FixedInt(8, val2);
+			let or = ALU.or(x, y);
+			let and = ALU.and(x,y);
+			let xor = ALU.xor(x,y);
 
-		// expect(+ALU.or(x, y)).toEqual((val1 | val2) >>> 0);
-		// expect(+ALU.and(x, y)).toEqual((val1 & val2) >>> 0);
-		// expect(+ALU.xor(x, y)).toEqual((val1 ^ val2) >>> 0);
+			expect(or.lo).toEqual((x.lo | y.lo) >>> 0);
+			expect(or.hi).toEqual((x.hi | y.hi) >>> 0);
+			expect(and.lo).toEqual((x.lo & y.lo) >>> 0);
+			expect(and.hi).toEqual((x.hi & y.hi) >>> 0);
+			expect(xor.lo).toEqual((x.lo ^ y.lo) >>> 0);
+			expect(xor.hi).toEqual((x.hi ^ y.hi) >>> 0);
+		}
 	});
 
 	test(`performs 8-byte 1s and 2s complement`, () => {
@@ -474,6 +493,10 @@ describe('64-bit ALU Arithmetic', () => {
 
 			expect(ALU.neg(x)).toEqual(y);
 			expect(+ALU.neg(x)).toEqual(+y);
+
+			let not = ALU.not(x);
+			expect(not.lo).toBe(~x.lo >>> 0);
+			expect(not.hi).toBe(~x.hi >>> 0);
 		}
 	});
 
@@ -487,20 +510,62 @@ describe('64-bit ALU Arithmetic', () => {
 		expect(ALU.shl(MAX[8], 8*8)).toEqual(ZERO[8]);
 		expect(ALU.shr(MAX[8], 8*8)).toEqual(ZERO[8]);
 		expect(ALU.sar(MAX[8], 8*8)).toEqual(MAX[8]);
+
 		// Shifting by one
-		// expect(+ALU.shl(MAX[8], 1)).toEqual((MAX[8] << 1) >>> 0);
-		// expect(+ALU.shr(MAX[8], 1)).toEqual(MAX[8] >>> 1);
-		// expect(+ALU.sar(MAX[8], 1)).toEqual((MAX[4] >> 1) >>> 0);
+		let shl1 = ALU.shl(MAX[8], 1);
+		let shr1 = ALU.shr(MAX[8], 1);
+		let sar1 = ALU.sar(MAX[8], 1);
+
+		expect(shl1.lo).toEqual((VAL_MASK[4] << 1) >>> 0);
+		expect(shl1.hi).toEqual(VAL_MASK[4] >>> 0);
+		expect(shr1.lo).toEqual(VAL_MASK[4] >>> 0);
+		expect(shr1.hi).toEqual(VAL_MASK[4] >>> 1);
+		expect(sar1.lo).toEqual(VAL_MASK[4] >>> 0);
+		expect(sar1.hi).toEqual(VAL_MASK[4] >>> 0);
+
+		// Shifting by 32
+		let shl32 = ALU.shl(MAX[8], 32);
+		let shr32 = ALU.shr(MAX[8], 32);
+		let sar32 = ALU.sar(MAX[8], 32);
+
+		expect(shl32.lo).toEqual(0);
+		expect(shl32.hi).toEqual(VAL_MASK[4] >>> 0);
+		expect(shr32.lo).toEqual(VAL_MASK[4] >>> 0);
+		expect(shr32.hi).toEqual(0);
+		expect(sar32.lo).toEqual(VAL_MASK[4] >>> 0);
+		expect(sar32.hi).toEqual(VAL_MASK[4] >>> 0);
 
 		// Random shifts
-		// for (let i = 0; i < N_RAND; i++) {
-		// 	let shift = 8 * Math.random() | 0;
-		// 	let x = random(8);
+		for (let i = 0; i < N_RAND; i++) {
+			let hi = (MODULUS[4] * Math.random() | 0) >>> 0;
+			let lo = (MODULUS[4] * Math.random() | 0) >>> 0;
+			let x = new FixedInt(8, lo, hi);
 
-		// 	expect(+ALU.shl(x, shift)).toEqual((+x << shift & VAL_MASK[8]) >>> 0);
-		// 	expect(+ALU.shr(x, shift)).toEqual(+x >>> shift);
-		// 	expect(+ALU.sar(x, shift)).toEqual(
-		// 		((+x | (x.isNegative() && ~VAL_MASK[8])) >> shift & VAL_MASK[8]) >>> 0);
-		// }
+			let shift = 1 + (31 * Math.random() | 0);
+
+			// Shifting by one
+			let shl = ALU.shl(x, shift);
+			let shr = ALU.shr(x, shift);
+			let sar = ALU.sar(x, shift);
+
+			// console.log(`     shift = ${shift}`);
+			// console.log(`raw: ${pad(hi.toString(2), 32)} ${pad(lo.toString(2), 32)}`);
+			// console.log(`shl: ${pad(shl.hi.toString(2), 32)} ${pad(shl.lo.toString(2), 32)}`);
+			// console.log(`shr: ${pad(shr.hi.toString(2), 32)} ${pad(shr.lo.toString(2), 32)}`);
+			// console.log(`sar: ${pad(sar.hi.toString(2), 32)} ${pad(sar.lo.toString(2), 32)}`);
+
+			expect(shl.lo).toBe((lo << shift) >>> 0);
+			expect(shl.hi).toBe(((hi << shift) | (lo >>> (32 - shift))) >>> 0);
+			expect(shr.lo).toBe((lo >>> shift | hi << (32 - shift)) >>> 0);
+			expect(shr.hi).toBe(hi >>> shift);
+			expect(sar.lo).toBe((lo >>> shift | hi << (32 - shift)) >>> 0);
+			expect(sar.hi).toBe((hi >> shift) >>> 0);
+		}
 	});
 });
+
+/** Debugging function */
+function pad(n, width, z='0') {
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
