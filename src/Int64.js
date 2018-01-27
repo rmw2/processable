@@ -1,3 +1,6 @@
+/**********************************************************************
+ * DEPRECATED.  Will be replacing everything with FixedInt soon.
+ *********************************************************************/
 "use strict";
 import { pad } from './decode.js';
 
