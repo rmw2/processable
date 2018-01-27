@@ -809,6 +809,178 @@ module.exports = ExecutionEnvironment;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _decode = __webpack_require__(7);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var MAX_INT32 = 0xFFFFFFFF;
+var MAX_INT53 = 0x1FFFFFFFFFFFFF;
+var MAX_INT64 = 0xFFFFFFFFFFFFFFFF;
+
+/**
+ * Indicates a failure to read from a hardware register
+ */
+
+var Int64Error = function (_Error) {
+	_inherits(Int64Error, _Error);
+
+	function Int64Error(msg) {
+		_classCallCheck(this, Int64Error);
+
+		var _this = _possibleConstructorReturn(this, (Int64Error.__proto__ || Object.getPrototypeOf(Int64Error)).call(this, 'Int64 Error: ' + msg));
+
+		_this.name = 'Int64Error';
+		return _this;
+	}
+
+	return Int64Error;
+}(Error);
+
+var Int64 = function () {
+	function Int64(lo, hi) {
+		_classCallCheck(this, Int64);
+
+		if (lo > MAX_INT32) {
+			if (hi) throw new Int64Error('Components must be less than 2^32');
+			if (lo > MAX_INT64) throw new Int64Error('Value must be less than 2^64');
+			// Chop off the low bits
+			hi = Math.floor(lo / (MAX_INT32 + 1));
+			// Stick the low bits back in
+			lo &= MAX_INT32;
+		}
+
+		if (hi > MAX_INT32) throw new Int64Error('Value must be less than 2^64');
+
+		// Save hi and lo as 32 bit values
+		this.lo = lo || 0;
+		this.hi = hi || 0;
+
+		// For identification
+		this.name = 'Int64';
+	}
+
+	// Return a number for each
+
+
+	_createClass(Int64, [{
+		key: 'lohi',
+		value: function lohi() {
+			return {
+				lo: this.lo,
+				hi: this.hi
+			};
+		}
+	}, {
+		key: 'val',
+		value: function val() {
+			var val = this.hi * (MAX_INT32 + 1) + this.lo;
+
+			if (val > MAX_INT53) throw new Int64Error('Value ' + val + ' is too large to store accurately');
+
+			return val;
+		}
+	}, {
+		key: 'toString',
+		value: function toString(base) {
+			if (base === 2 || base === 16) {
+				return this.hi.toString(base) + (0, _decode.pad)(this.lo.toString(base), 64 / base);
+			} else if (base === 10) {
+				// Convert to hex first, as strings can be concatenated
+				var hexDigits = this.hi.toString(16) + (0, _decode.pad)(this.lo.toString(16), 8);
+
+				// Keep track of decimal digits in an array
+				var decDigits = [];
+				var carry = 0;
+
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+
+				try {
+					for (var _iterator = hexDigits.split('')[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var digit = _step.value;
+
+						var val = parseInt(digit, 16) + carry;
+						carry = Math.floor(val / 10);
+						decDigits.push(val % 10);
+					}
+
+					// Trim leading zeros but keep at least one zero
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator.return) {
+							_iterator.return();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+
+				return decDigits.join('').replace(/^0+(?!$)/, '');
+			} else {
+				throw new Int64Error('Can\'t directly decode to base ' + base + '!  Only decimal, binary, and hex supported.');
+			}
+		}
+	}]);
+
+	return Int64;
+}();
+
+/** Update the dataview prototype to support 64-bit integers */
+
+
+DataView.prototype.getUint64 = function (idx) {
+	var littleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+	var lo = void 0,
+	    hi = void 0;
+	if (littleEndian) {
+		lo = this.getUint32(idx, littleEndian);
+		hi = this.getUint32(idx + 4, littleEndian);
+	} else {
+		lo = this.getUint32(idx + 4, littleEndian);
+		hi = this.getUint32(idx, littleEndian);
+	}
+
+	return new Int64(lo, hi);
+};
+
+DataView.prototype.setUint64 = function (idx, value) {
+	var littleEndian = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+	var _value$lohi = value.lohi(),
+	    lo = _value$lohi.lo,
+	    hi = _value$lohi.hi;
+
+	if (littleEndian) {
+		this.setUint32(idx, lo, littleEndian);
+		this.setUint32(idx + 4, hi, littleEndian);
+	} else {
+		this.setUint32(idx + 4, lo, littleEndian);
+		this.setUint32(idx, hi, littleEndian);
+	}
+};
+
+module.exports = { Int64: Int64 };
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 /**
@@ -886,7 +1058,7 @@ module.exports = EventListener;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -957,7 +1129,7 @@ function shallowEqual(objA, objB) {
 module.exports = shallowEqual;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1000,7 +1172,7 @@ function containsNode(outerNode, innerNode) {
 module.exports = containsNode;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1030,7 +1202,7 @@ function focusNode(node) {
 module.exports = focusNode;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1072,7 +1244,7 @@ function getActiveElement(doc) /*?DOMElement*/{
 module.exports = getActiveElement;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1099,7 +1271,7 @@ var _require = __webpack_require__(41),
 var _require2 = __webpack_require__(42),
     RegisterSet = _require2.RegisterSet;
 
-var _require3 = __webpack_require__(17),
+var _require3 = __webpack_require__(11),
     Int64 = _require3.Int64;
 
 var x86 = __webpack_require__(43);
@@ -1415,6 +1587,7 @@ var Process = function () {
                 try {
                     console.log('\t' + op + ':\t' + this.read(op, size));
                 } catch (e) {
+                    // Hack in case we can't actually read this operand
                     if (e.name !== 'AsmSyntaxError') throw e;
                 }
             }
@@ -1425,178 +1598,6 @@ var Process = function () {
 }();
 
 module.exports = { Process: Process };
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _decode = __webpack_require__(7);
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var MAX_INT32 = 0xFFFFFFFF;
-var MAX_INT53 = 0x1FFFFFFFFFFFFF;
-var MAX_INT64 = 0xFFFFFFFFFFFFFFFF;
-
-/**
- * Indicates a failure to read from a hardware register
- */
-
-var Int64Error = function (_Error) {
-	_inherits(Int64Error, _Error);
-
-	function Int64Error(msg) {
-		_classCallCheck(this, Int64Error);
-
-		var _this = _possibleConstructorReturn(this, (Int64Error.__proto__ || Object.getPrototypeOf(Int64Error)).call(this, 'Int64 Error: ' + msg));
-
-		_this.name = 'Int64Error';
-		return _this;
-	}
-
-	return Int64Error;
-}(Error);
-
-var Int64 = function () {
-	function Int64(lo, hi) {
-		_classCallCheck(this, Int64);
-
-		if (lo > MAX_INT32) {
-			if (hi) throw new Int64Error('Components must be less than 2^32');
-			if (lo > MAX_INT64) throw new Int64Error('Value must be less than 2^64');
-			// Chop off the low bits
-			hi = Math.floor(lo / (MAX_INT32 + 1));
-			// Stick the low bits back in
-			lo &= MAX_INT32;
-		}
-
-		if (hi > MAX_INT32) throw new Int64Error('Value must be less than 2^64');
-
-		// Save hi and lo as 32 bit values
-		this.lo = lo || 0;
-		this.hi = hi || 0;
-
-		// For identification
-		this.name = 'Int64';
-	}
-
-	// Return a number for each
-
-
-	_createClass(Int64, [{
-		key: 'lohi',
-		value: function lohi() {
-			return {
-				lo: this.lo,
-				hi: this.hi
-			};
-		}
-	}, {
-		key: 'val',
-		value: function val() {
-			var val = this.hi * (MAX_INT32 + 1) + this.lo;
-
-			if (val > MAX_INT53) throw new Int64Error('Value ' + val + ' is too large to store accurately');
-
-			return val;
-		}
-	}, {
-		key: 'toString',
-		value: function toString(base) {
-			if (base === 2 || base === 16) {
-				return this.hi.toString(base) + (0, _decode.pad)(this.lo.toString(base), 64 / base);
-			} else if (base === 10) {
-				// Convert to hex first, as strings can be concatenated
-				var hexDigits = this.hi.toString(16) + (0, _decode.pad)(this.lo.toString(16), 8);
-
-				// Keep track of decimal digits in an array
-				var decDigits = [];
-				var carry = 0;
-
-				var _iteratorNormalCompletion = true;
-				var _didIteratorError = false;
-				var _iteratorError = undefined;
-
-				try {
-					for (var _iterator = hexDigits.split('')[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-						var digit = _step.value;
-
-						var val = parseInt(digit, 16) + carry;
-						carry = Math.floor(val / 10);
-						decDigits.push(val % 10);
-					}
-
-					// Trim leading zeros but keep at least one zero
-				} catch (err) {
-					_didIteratorError = true;
-					_iteratorError = err;
-				} finally {
-					try {
-						if (!_iteratorNormalCompletion && _iterator.return) {
-							_iterator.return();
-						}
-					} finally {
-						if (_didIteratorError) {
-							throw _iteratorError;
-						}
-					}
-				}
-
-				return decDigits.join('').replace(/^0+(?!$)/, '');
-			} else {
-				throw new Int64Error('Can\'t directly decode to base ' + base + '!  Only decimal, binary, and hex supported.');
-			}
-		}
-	}]);
-
-	return Int64;
-}();
-
-/** Update the dataview prototype to support 64-bit integers */
-
-
-DataView.prototype.getUint64 = function (idx) {
-	var littleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-	var lo = void 0,
-	    hi = void 0;
-	if (littleEndian) {
-		lo = this.getUint32(idx, littleEndian);
-		hi = this.getUint32(idx + 4, littleEndian);
-	} else {
-		lo = this.getUint32(idx + 4, littleEndian);
-		hi = this.getUint32(idx, littleEndian);
-	}
-
-	return new Int64(lo, hi);
-};
-
-DataView.prototype.setUint64 = function (idx, value) {
-	var littleEndian = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-
-	var _value$lohi = value.lohi(),
-	    lo = _value$lohi.lo,
-	    hi = _value$lohi.hi;
-
-	if (littleEndian) {
-		this.setUint32(idx, lo, littleEndian);
-		this.setUint32(idx + 4, hi, littleEndian);
-	} else {
-		this.setUint32(idx + 4, lo, littleEndian);
-		this.setUint32(idx, hi, littleEndian);
-	}
-};
-
-module.exports = { Int64: Int64 };
 
 /***/ }),
 /* 18 */
@@ -1624,7 +1625,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var _require = __webpack_require__(40),
     fibonacci = _require.fibonacci;
 
-var _require2 = __webpack_require__(16),
+var _require2 = __webpack_require__(17),
     Process = _require2.Process;
 
 // Loading example program(s)
@@ -3436,7 +3437,7 @@ if (process.env.NODE_ENV === 'production') {
  LICENSE file in the root directory of this source tree.
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(2);__webpack_require__(3);var l=__webpack_require__(10),n=__webpack_require__(4),ba=__webpack_require__(11),ca=__webpack_require__(1),da=__webpack_require__(5),ea=__webpack_require__(12),fa=__webpack_require__(13),ha=__webpack_require__(14),ia=__webpack_require__(15);
+var aa=__webpack_require__(2);__webpack_require__(3);var l=__webpack_require__(10),n=__webpack_require__(4),ba=__webpack_require__(12),ca=__webpack_require__(1),da=__webpack_require__(5),ea=__webpack_require__(13),fa=__webpack_require__(14),ha=__webpack_require__(15),ia=__webpack_require__(16);
 function w(a){for(var b=arguments.length-1,c="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)c+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(c+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}aa?void 0:w("227");
 function ja(a){switch(a){case "svg":return"http://www.w3.org/2000/svg";case "math":return"http://www.w3.org/1998/Math/MathML";default:return"http://www.w3.org/1999/xhtml"}}
 var ka={Namespaces:{html:"http://www.w3.org/1999/xhtml",mathml:"http://www.w3.org/1998/Math/MathML",svg:"http://www.w3.org/2000/svg"},getIntrinsicNamespace:ja,getChildNamespace:function(a,b){return null==a||"http://www.w3.org/1999/xhtml"===a?ja(b):"http://www.w3.org/2000/svg"===a&&"foreignObject"===b?"http://www.w3.org/1999/xhtml":a}},la=null,oa={};
@@ -3765,7 +3766,7 @@ var react = __webpack_require__(2);
 var invariant = __webpack_require__(3);
 var ExecutionEnvironment = __webpack_require__(10);
 var _assign = __webpack_require__(4);
-var EventListener = __webpack_require__(11);
+var EventListener = __webpack_require__(12);
 var require$$0 = __webpack_require__(6);
 var hyphenateStyleName = __webpack_require__(26);
 var emptyFunction = __webpack_require__(1);
@@ -3774,10 +3775,10 @@ var performanceNow = __webpack_require__(30);
 var propTypes = __webpack_require__(32);
 var emptyObject = __webpack_require__(5);
 var checkPropTypes = __webpack_require__(8);
-var shallowEqual = __webpack_require__(12);
-var containsNode = __webpack_require__(13);
-var focusNode = __webpack_require__(14);
-var getActiveElement = __webpack_require__(15);
+var shallowEqual = __webpack_require__(13);
+var containsNode = __webpack_require__(14);
+var focusNode = __webpack_require__(15);
+var getActiveElement = __webpack_require__(16);
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -22520,8 +22521,13 @@ var ByteView = function (_React$Component2) {
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 exports.uploadAndAssemble = uploadAndAssemble;
 exports.default = assemble;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
 
@@ -22605,6 +22611,8 @@ function assemble(asm) {
 					case '.text':
 						section = '.text';
 					// TODO: handle static allocation etc. 
+					case '.data':
+
 				}
 
 				continue;
@@ -22616,7 +22624,7 @@ function assemble(asm) {
 					if (!tokens[i]) tokens.splice(i, 1);
 				}instructions.push(tokens);
 				addresses.push(addr);
-				addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT
+				addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT [eek]
 			}
 		}
 	} catch (err) {
@@ -22637,6 +22645,43 @@ function assemble(asm) {
 	return { instructions: instructions, addresses: addresses, labels: labels };
 }
 
+var Assembler = function () {
+	/**
+  * Instantiate a new asesmbler object
+  */
+	function Assembler(asm) {
+		_classCallCheck(this, Assembler);
+
+		this.addresses = [];
+		this.instructions = [];
+		this.labels = {};
+
+		// This maybe should go in the assemble function ?
+		this.lines = asm.split('\n');
+
+		this.assemble();
+	}
+
+	_createClass(Assembler, [{
+		key: 'assemble',
+		value: function assemble() {}
+	}, {
+		key: 'readData',
+		value: function readData() {}
+	}, {
+		key: 'readBSS',
+		value: function readBSS() {}
+	}, {
+		key: 'readText',
+		value: function readText() {}
+	}, {
+		key: 'readRodata',
+		value: function readRodata() {}
+	}]);
+
+	return Assembler;
+}();
+
 module.exports = { assemble: assemble };
 
 /***/ }),
@@ -22646,7 +22691,7 @@ module.exports = { assemble: assemble };
 "use strict";
 
 
-var _require = __webpack_require__(16),
+var _require = __webpack_require__(17),
     Process = _require.Process;
 
 var fibonacci = {
@@ -22678,7 +22723,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _require = __webpack_require__(17),
+var _require = __webpack_require__(11),
     Int64 = _require.Int64;
 
 /**
@@ -22983,7 +23028,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _require = __webpack_require__(17),
+var _require = __webpack_require__(11),
     Int64 = _require.Int64;
 
 /**

@@ -79,7 +79,7 @@ export default function assemble(asm) {
 
 			instructions.push(tokens);
 			addresses.push(addr);
-			addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT
+			addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT [eek]
 		}
 	}
 
