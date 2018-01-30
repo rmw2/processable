@@ -14,9 +14,10 @@ A Javascript process emulator and visual inspector/debugger.
     - [x] Component for viewing Registers and toggling decoding
 * December
   - Interpreter:
-    - [ ] Add support for flags, conditional instructions
+    - [x] Add support for flags, conditional instructions
     - [x] Compose "assembler" module and support .data, .bss, and .rodata sections
     - [ ] Write tests for remaining mnemonics
+      - (january note: Some of this moved into FixedInt module)
   - View:
     - [x] Implement component for viewing the stack 
       - [ ] with toggle-able decoding options
@@ -24,11 +25,12 @@ A Javascript process emulator and visual inspector/debugger.
     - [x] Add breakpoint toggles and execution controls to view
 * January
   - Interpreter:
+    - [x] Compose and test module for representing Fixed-width Integers and emulating ALU behavior
     - [ ] Support external function calls for c standard library methods
     - [ ] Connect with compiler on server side to run compiled C code
     - [ ] Add support for the heap / brk()
   - View:
-    - [ ] Host alpha version and begin to solicit feedback
+    - [x] Host alpha version and begin to solicit feedback
     - [ ] Improve customizability of stack/text components
     - [ ] Design Heap component
   - Paper:
