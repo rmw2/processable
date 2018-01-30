@@ -6,9 +6,10 @@ import { uploadAndAssemble } from './Assembler.js';
 const { fibonacci } = require('./TestProcesses.js');
 const { Process } = require('./Process.js');
 
+
 // Loading example program(s)
 document.getElementById('load-fib').onclick = function loadFib() {
-	let p = new Process(fibonacci.text, fibonacci.labels);
+  let p = new Process(fibonacci.text, fibonacci.labels);
 
 	ReactDOM.render(
 		React.createElement(ProcessContainer, {process: p}), 
