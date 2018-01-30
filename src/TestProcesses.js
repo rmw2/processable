@@ -4,7 +4,7 @@ const fibonacci = {
 	text: [
 		['pushl', 	'$1'],
 		['pushl', 	'$1'],
-		['movq', 	'$0', '%eax'],
+		['movl', 	'$0', '%eax'],
 		['addl', 	'$1', '%eax'],
 		['movl', 	'4(%rsp)','%ebx'],
 		['movl', 	'(%rsp)','%ecx'],
