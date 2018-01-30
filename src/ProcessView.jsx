@@ -14,16 +14,36 @@ export default class ProcessContainer extends React.Component {
     }
 
     step() {
-        this.props.process.step();
+        try {
+            this.props.process.step();        
+        } catch (e) {
+            this.displayError(e);
+        }
+
         // TODO: come up with a clever way to keep track of things that have changed
         // and only redraw those things.  It seems like react wouldn't really be able to
-        // figure it out because most change lies deep within objects
+        // figure it out because most change lies deep within objects, unless the process
+        // object kept track of changes on itself
         this.forceUpdate();
     }
 
     run() {
-        this.props.process.run();
+        try {
+            this.props.process.run();        
+        } catch (e) {
+            this.displayError(e);
+        }
+
         this.forceUpdate();
+    }
+
+    componentDidCatch(error) {
+        this.displayError(error);
+    }
+
+    displayError(e) {
+        alert(`${e}\n${e.stack}`);
+        throw e;
     }
 
     render() {
@@ -45,7 +65,7 @@ export default class ProcessContainer extends React.Component {
                 <StackContainer 
                     mem={this.props.process.mem}
                     origin={this.props.process.stackOrigin}
-                    pointer={this.props.process.read('%rsp').val()} />
+                    pointer={+this.props.process.regs.read('rsp')} />
             </div>
         );
     }

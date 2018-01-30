@@ -4,10 +4,10 @@
  * to execute instructions
  */
 
-let { MemorySegment, TextSegment } = require('./Memory.js');
-let { RegisterSet } = require('./Registers.js');
-let { Int64 } = require('./Int64.js');
-let x86 = require('./x86.js');
+import { FixedInt } from './FixedInt.js';
+import { MemorySegment, TextSegment } from './Memory.js';
+import { RegisterSet } from './Registers.js';
+import x86 from './x86.js';
 
 const STACK_START = 0xF000;
 
@@ -23,7 +23,7 @@ class Process {
         // Intitialize memory and registers
         this.mem  = new MemorySegment(STACK_START);
         this.regs = new RegisterSet(arch.registers);
-        this.regs.write('rsp', STACK_START);
+        this.regs.write('rsp', new FixedInt(arch.WORD_SIZE, STACK_START));
         this.stackOrigin = STACK_START;
 
         // Keep instruction pointer separate from registers, initialize to zero
@@ -53,7 +53,17 @@ class Process {
     read(operand, size=4) {
         // Immediate Operand
         if (operand.startsWith('$')) {
-            return parseInt(operand.slice(1));
+            let val, label;
+            if (isNaN(val = parseInt(label = operand.slice(1)))) {
+                val = this.labels[label];
+                if (val !== undefined) {
+                    return new FixedInt(size, val);
+                } else {
+                    throw new AsmSyntaxError(`Label ${name} undefined`);
+                }
+            }
+
+            return new FixedInt(size, val);
         }
 
         // Register operand
@@ -85,11 +95,15 @@ class Process {
             return;
         }
 
+        // Label operand
+        if (this.labels[operand] !== undefined) {
+            let address = this.labels[operand];
+            this.mem.write(address, value);
+        }
+
         // Memory operand
         let address = this.parseMemoryOperand(operand);
         this.mem.write(value, address, size);
-
-        // TODO: allow write from labeled address
     }
 
     /**
@@ -100,11 +114,12 @@ class Process {
     jump(operand) {
         // Indirect jump to address held in register
         if (operand.startsWith('*')) {
-            this.pc = this.read(operand.slice(1));
-        } else if (parseInt(operand)) {
-            this.pc = parseInt(operand);
+            this.pc = +this.read(operand.slice(1));
+        } else if (parseInt(+operand)) {
+            this.pc = parseInt(+operand);
         } else {
             let address = this.labels[operand];
+            // TODO: include bridge for "standard library" calls
             if (address === undefined) throw new AsmSyntaxError(`Unkown label: ${operand}`)
             this.pc = address;
         }
@@ -124,14 +139,10 @@ class Process {
         if (!matches) throw new AsmSyntaxError(`Invalid address format: ${operand}`);
 
         // Parse the integers
-        let disp  = matches[1] ? parseInt(matches[1])       : 0;
-        let base  = matches[2] ? this.regs.read(matches[2]) : 0;
-        let idx   = matches[3] ? this.regs.read(matches[3]) : 0;
-        let scale = matches[4] ? parseInt(matches[4])       : 1;
-
-        // Gosh this is cumbersome
-        if (base.name === 'Int64') base = base.val();
-        if (idx.name === 'Int64') idx = idx.val();
+        let disp  = matches[1] ? parseInt(matches[1])        : 0;
+        let base  = matches[2] ? +this.regs.read(matches[2]) : 0;
+        let idx   = matches[3] ? +this.regs.read(matches[3]) : 0;
+        let scale = matches[4] ? parseInt(matches[4])        : 1;
 
         return disp + base + (idx * scale);
     }

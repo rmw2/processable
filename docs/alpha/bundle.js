@@ -568,53 +568,53 @@ module.exports = warning;
 
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
 exports.pad = pad;
 exports.nextEncoding = nextEncoding;
 exports.decodeFromBuffer = decodeFromBuffer;
 
+var _FixedInt = __webpack_require__(11);
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-/**
- * A module for decoding 
- */
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * A module for decoding 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                */
 
 // 
 var ENCODINGS = ['hex', 'int', 'uint', 'char', 'bin'];
 
 var DecodeError = function (_Error) {
-  _inherits(DecodeError, _Error);
+    _inherits(DecodeError, _Error);
 
-  function DecodeError(msg) {
-    _classCallCheck(this, DecodeError);
+    function DecodeError(msg) {
+        _classCallCheck(this, DecodeError);
 
-    var _this = _possibleConstructorReturn(this, (DecodeError.__proto__ || Object.getPrototypeOf(DecodeError)).call(this, 'Decode Error: ' + msg));
+        var _this = _possibleConstructorReturn(this, (DecodeError.__proto__ || Object.getPrototypeOf(DecodeError)).call(this, 'Decode Error: ' + msg));
 
-    _this.name = 'DecodeError';
-    return _this;
-  }
+        _this.name = 'DecodeError';
+        return _this;
+    }
 
-  return DecodeError;
+    return DecodeError;
 }(Error);
 
 function pad(n, width) {
-  var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '0';
+    var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '0';
 
-  n = n + '';
-  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
 function nextEncoding(state) {
-  var nextIdx = (state.encIdx + 1) % ENCODINGS.length;
-  return {
-    encoding: ENCODINGS[nextIdx],
-    encIdx: nextIdx
-  };
+    var nextIdx = (state.encIdx + 1) % ENCODINGS.length;
+    return {
+        encoding: ENCODINGS[nextIdx],
+        encIdx: nextIdx
+    };
 }
 
 /**
@@ -622,61 +622,35 @@ function nextEncoding(state) {
  * according to the specified encoding and size
  */
 function decodeFromBuffer(data, offset, size, encoding) {
-  var littleEndian = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
+    var littleEndian = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
 
-  var val = void 0;
-  switch (size) {
-    case 1:
-      val = data.getUint8(offset, littleEndian);
-      break;
-    case 2:
-      val = data.getUint16(offset, littleEndian);
-      break;
-    case 4:
-      val = data.getUint32(offset, littleEndian);
-      break;
-    case 8:
-      val = data.getUint64(offset, littleEndian);
-      break;
-    default:
-      throw new DecodeError('Cannot decode in chunks of ' + size + ' bytes. Size must be 1,2,4, or 8');
-  }
+    var val = new _FixedInt.FixedInt(size, data, offset, littleEndian);
 
-  switch (encoding) {
-    // Handle the char case first, size doesn't matter
-    case 'char':
-      var str = '';
-      for (var i = 0; i < size; i++) {
-        str += String.fromCharCode(data.getUint8(offset + i));
-      }return '\'' + str + '\'';
+    switch (encoding) {
+        // Handle the char case first, size doesn't matter
+        case 'char':
+            var str = '';
+            for (var i = 0; i < size; i++) {
+                var code = data.getUint8(offset + i);
+                str += code > 32 ? String.fromCharCode(code) : ' ';
+            }
+            return '\'' + str + '\'';
 
-    // Int case requires signed decoding
-    case 'int':
-      switch (size) {
-        case 1:
-          return data.getInt8(offset, littleEndian);
-        case 2:
-          return data.getInt16(offset, littleEndian);
-        case 4:
-          return data.getInt32(offset, littleEndian);
-        case 8:
-          // Some fancy magic to get a 64bit signed int in decimal
-          return 'TODO';
+        // Int case requires signed decoding
+        case 'int':
+            return val.toString(10, true);
+
+        case 'hex':
+            return '0x' + pad(val.toString(16), 2 * size);
+
+        case 'uint':
+            return val.toString(10);
+
+        case 'bin':
+            return pad(val.toString(2), 8 * size).replace(/(.{16})/g, "$1<wbr>");
         default:
-          return 'HECK!';
-      }
-
-    case 'hex':
-      return '0x' + pad(val.toString(16), 2 * size);
-
-    case 'uint':
-      return val.toString(10);
-
-    case 'bin':
-      return pad(val.toString(2), 8 * size).replace(/(.{16})/g, "$1<wbr>");
-    default:
-      return 'HECK!';
-  }
+            return 'HECK!';
+    }
 }
 
 /***/ }),
@@ -809,11 +783,22 @@ module.exports = ExecutionEnvironment;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/*********************************************************************
+ * A module for representing fixed-width integers and performing 
+ * logical and arithmetic operations on them.
+ *
+ *********************************************************************/
 
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _decode = __webpack_require__(7);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -821,160 +806,813 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var MAX_INT32 = 0xFFFFFFFF;
-var MAX_INT53 = 0x1FFFFFFFFFFFFF;
-var MAX_INT64 = 0xFFFFFFFFFFFFFFFF;
+var FixedIntError = function (_Error) {
+  _inherits(FixedIntError, _Error);
 
-/**
- * Indicates a failure to read from a hardware register
- */
+  function FixedIntError(message) {
+    _classCallCheck(this, FixedIntError);
 
-var Int64Error = function (_Error) {
-	_inherits(Int64Error, _Error);
+    var _this = _possibleConstructorReturn(this, (FixedIntError.__proto__ || Object.getPrototypeOf(FixedIntError)).call(this, message));
 
-	function Int64Error(msg) {
-		_classCallCheck(this, Int64Error);
+    _this.name = 'FixedIntError';
+    return _this;
+  }
 
-		var _this = _possibleConstructorReturn(this, (Int64Error.__proto__ || Object.getPrototypeOf(Int64Error)).call(this, 'Int64 Error: ' + msg));
-
-		_this.name = 'Int64Error';
-		return _this;
-	}
-
-	return Int64Error;
+  return FixedIntError;
 }(Error);
 
-var Int64 = function () {
-	function Int64(lo, hi) {
-		_classCallCheck(this, Int64);
-
-		if (lo > MAX_INT32) {
-			if (hi) throw new Int64Error('Components must be less than 2^32');
-			if (lo > MAX_INT64) throw new Int64Error('Value must be less than 2^64');
-			// Chop off the low bits
-			hi = Math.floor(lo / (MAX_INT32 + 1));
-			// Stick the low bits back in
-			lo &= MAX_INT32;
-		}
-
-		if (hi > MAX_INT32) throw new Int64Error('Value must be less than 2^64');
-
-		// Save hi and lo as 32 bit values
-		this.lo = lo || 0;
-		this.hi = hi || 0;
-
-		// For identification
-		this.name = 'Int64';
-	}
-
-	// Return a number for each
+// (2^53 - 1) >> 32
 
 
-	_createClass(Int64, [{
-		key: 'lohi',
-		value: function lohi() {
-			return {
-				lo: this.lo,
-				hi: this.hi
-			};
-		}
-	}, {
-		key: 'val',
-		value: function val() {
-			var val = this.hi * (MAX_INT32 + 1) + this.lo;
+var MAX_SAFE_HI = 0x001FFFFF;
 
-			if (val > MAX_INT53) throw new Int64Error('Value ' + val + ' is too large to store accurately');
+// Mask for the high bit for each size
+var SIGN_MASK = {
+  1: 0x80,
+  2: 0x8000,
+  4: 0x8000000
+};
 
-			return val;
-		}
-	}, {
-		key: 'toString',
-		value: function toString(base) {
-			if (base === 2 || base === 16) {
-				return this.hi.toString(base) + (0, _decode.pad)(this.lo.toString(base), 64 / base);
-			} else if (base === 10) {
-				// Convert to hex first, as strings can be concatenated
-				var hexDigits = this.hi.toString(16) + (0, _decode.pad)(this.lo.toString(16), 8);
+// Truncation masks for values
+var VAL_MASK = {
+  1: 0xFF,
+  2: 0xFFFF,
+  4: 0xFFFFFFFF
+};
 
-				// Keep track of decimal digits in an array
-				var decDigits = [];
-				var carry = 0;
+// Moduli for each byte size
+var MODULUS = {
+  1: 0x100,
+  2: 0x10000,
+  4: 0x100000000
+};
 
-				var _iteratorNormalCompletion = true;
-				var _didIteratorError = false;
-				var _iteratorError = undefined;
+/**
+ * @classdesc 
+ * An immutable data type representing a fixed width integer
+ * its size in bytes can be 1, 2, 4, or 8
+ * All methods are static, and return new FixedInt objects
+ * ALU also maintains status flags from the result of the last
+ * computation, which can be accessed by the getters for OF, CF, SF, and ZF
+ */
 
-				try {
-					for (var _iterator = hexDigits.split('')[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-						var digit = _step.value;
+var FixedInt = function () {
+  /**
+   * Construct a new FixedInt object.  The constructor admits three formats:
+   *     FixedInt(size {int}, lo {int} [, hi {int}])
+   *     FixedInt(size {int}, view {DataView}, offset {int}, littleEndian {boolean})
+   *     FixedInt(fixedInt)
+   *
+   * @constructor
+   * @param {int | Object} sizeOrObject An object 
+   * @param {int | DataView} [loOrDataView]
+   * @param {int} [hiOrOffset]
+   * @param {boolean} [littleEndian] How to read from ArrayBuffer. Only use with the DataView constructor
+   * @return A new FixedInt object with the specified value
+   */
+  function FixedInt(sizeOrObject) {
+    var loOrDataView = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    var hiOrOffset = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+    var littleEndian = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 
-						var val = parseInt(digit, 16) + carry;
-						carry = Math.floor(val / 10);
-						decDigits.push(val % 10);
-					}
+    _classCallCheck(this, FixedInt);
 
-					// Trim leading zeros but keep at least one zero
-				} catch (err) {
-					_didIteratorError = true;
-					_iteratorError = err;
-				} finally {
-					try {
-						if (!_iteratorNormalCompletion && _iterator.return) {
-							_iterator.return();
-						}
-					} finally {
-						if (_didIteratorError) {
-							throw _iteratorError;
-						}
-					}
-				}
+    // Deconstruct object if provided
+    if ((typeof sizeOrObject === 'undefined' ? 'undefined' : _typeof(sizeOrObject)) === 'object') {
+      loOrDataView = sizeOrObject.lo || 0;
+      hiOrOffset = sizeOrObject.hi || 0;
+      sizeOrObject = sizeOrObject.size;
+    }
 
-				return decDigits.join('').replace(/^0+(?!$)/, '');
-			} else {
-				throw new Int64Error('Can\'t directly decode to base ' + base + '!  Only decimal, binary, and hex supported.');
-			}
-		}
-	}]);
+    // Validate size
+    if ([1, 2, 4, 8].indexOf(sizeOrObject) < 0) throw new FixedIntError('Invalid size in bytes: ' + sizeOrObject);
+    this._size = sizeOrObject;
 
-	return Int64;
+    // DataView constructor
+    if (loOrDataView instanceof DataView) {
+      var view = loOrDataView;
+      var offset = hiOrOffset;
+      switch (this.size) {
+        case 1:
+          this._lo = view.getUint8(offset, littleEndian);
+          this._hi = 0;
+          break;
+        case 2:
+          this._lo = view.getUint16(offset, littleEndian);
+          this._hi = 0;
+          break;
+        case 4:
+          this._lo = view.getUint32(offset, littleEndian);
+          this._hi = 0;
+          break;
+        case 8:
+          if (littleEndian) {
+            this._lo = view.getUint32(offset, littleEndian);
+            this._hi = view.getUint32(offset + 4, littleEndian);
+          } else {
+            this._hi = view.getUint32(offset, !littleEndian);
+            this._lo = view.getUint32(offset + 4, !littleEndian);
+          }
+      }
+    }
+
+    // Integer constructor
+    else {
+        // Validate size of input number
+        if (this.size === 8) {
+          if (hiOrOffset && loOrDataView >= MODULUS[4]) throw new FixedIntError('hi and lo must be less than 2^32');
+          if (loOrDataView > Number.MAX_SAFE_INTEGER) throw new FixedIntError('Value larger than max safe integer.  Use two-part constructor.');
+
+          // Set hi and lo
+          if (loOrDataView < 0) {
+            if (hiOrOffset) throw new FixedIntError('Cannot construct negative number in two parts: lo=' + loOrDataView + ', hi=' + hiOrOffset);
+
+            // Calculate positive value then negate
+            this._lo = ~(-loOrDataView & VAL_MASK[4]) + 1 >>> 0;
+            this._hi = ~(-loOrDataView / MODULUS[4] | 0) + (this.lo == 0) >>> 0;
+          } else {
+            this._hi = (hiOrOffset || loOrDataView / MODULUS[4] | 0) >>> 0;
+            this._lo = (loOrDataView & VAL_MASK[4]) >>> 0;
+          }
+        } else {
+          this._lo = (loOrDataView & VAL_MASK[this.size]) >>> 0;
+          this._hi = 0;
+        }
+      }
+  }
+
+  /**
+   * Getters for size, lo, and hi.  
+   * All are read-only properties, setters do nothing
+   * @return {Number} the size of this object
+   */
+
+
+  _createClass(FixedInt, [{
+    key: 'isNegative',
+
+
+    /**
+     * Is this integer negative, when interpretted as signed?
+     * @returns {boolean}
+     */
+    value: function isNegative() {
+      return this.size == 8 ? !!(this.hi & SIGN_MASK[4]) : !!(this.lo & SIGN_MASK[this.size]);
+    }
+
+    /**
+     * Is this integer less than that integer, 
+     * when both are interpreted as unsigned
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'isLessThan',
+    value: function isLessThan(that) {
+      return this.size == 8 ? this.hi == that.hi ? this.lo < that.lo : this.hi < that.hi : this.lo < that.lo;
+    }
+
+    /**
+     * Is this integer odd?
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'isOdd',
+    value: function isOdd() {
+      return !!(this.lo & 1);
+    }
+
+    /**
+     * Is the value of this integer safely representable as a Number?
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'isSafeInteger',
+    value: function isSafeInteger() {
+      return this.size < 8 || this.hi <= MAX_SAFE_HI;
+    }
+
+    /**
+     * Return the javascript Number that most closely represents this
+     * number.  Accuracy guaranteed iff this.isSafeInteger().
+     * @returns {Number}
+     */
+
+  }, {
+    key: 'valueOf',
+    value: function valueOf() {
+      return this.size == 8 ? MODULUS[4] * this.hi + this.lo : this.lo;
+    }
+
+    /**
+     * Return a new FixedInt with the same value as this
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'clone',
+    value: function clone() {
+      return new FixedInt(this);
+    }
+
+    /**
+     * Return a new FixedInt with the same value as this with the 
+     * specified size, truncating if necessary
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'toSize',
+    value: function toSize(size) {
+      return new FixedInt(size, this.lo, this.hi);
+    }
+
+    /**
+     * Is this integer the same value as that? 
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'equals',
+    value: function equals(that) {
+      return this.size == that.size && this.lo == that.lo && (this.size < 8 || this.hi == that.hi);
+    }
+
+    /**
+     * Print this number as a string in the given base
+     * @param {Number} radix -- base 
+     * @param {boolean} [signed] -- how to interpret this number when printing
+     */
+
+  }, {
+    key: 'toString',
+    value: function toString() {
+      var radix = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 10;
+      var signed = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      signed = signed && this.isNegative() && radix == 10;
+
+      if (this.size < 8) return signed ? 'signed' : this.lo.toString(radix);
+
+      switch (radix) {
+        case 2:
+          return this.hi.toString(radix) + pad(this.lo.toString(radix), 32);
+        case 16:
+          return this.hi.toString(radix) + pad(this.lo.toString(radix), 8);
+        case 10:
+          var hi = this.hi.toString(radix);
+          var lo = pad(this.lo.toString(radix), 64 / radix);
+          return 'TODO';
+      }
+      // char* itoa(int num, char* str, int base)
+      // {
+      //     int i = 0;
+      var i = 0;
+      //     bool isNegative = false;
+      var isNegative = signed && this.isNegative() && radix === 10;
+
+      //     /* Handle 0 explicitely, otherwise empty string is printed for 0 */
+
+      //     if (num == 0)
+      //     {
+      //         str[i++] = '0';
+      //         str[i] = '\0';
+      //         return str;
+      //     }
+      if (+this == 0) return '0';
+
+      var num = void 0;
+      while (false) {}
+      //     // Process individual digits
+      //     while (num != 0)
+      //     {
+      //         int rem = num % base;
+      //         str[i++] = (rem > 9)? (rem-10) + 'a' : rem + '0';
+      //         num = num/base;
+      //     }
+
+      //     // If number is negative, append '-'
+      //     if (isNegative)
+      //         str[i++] = '-';
+
+      //     str[i] = '\0'; // Append string terminator
+
+      //     // Reverse the string
+      //     reverse(str, i);
+
+      //     return str;
+      // }
+    }
+
+    /**
+     * Write this value to an ArrayBuffer wrapped by a DataView view
+     */
+
+  }, {
+    key: 'toBuffer',
+    value: function toBuffer(view) {
+      var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      var littleEndian = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+      switch (this.size) {
+        case 1:
+          view.setUint8(offset, this.lo, littleEndian);
+          break;
+        case 2:
+          view.setUint16(offset, this.lo, littleEndian);
+          break;
+        case 4:
+          view.setUint32(offset, this.lo, littleEndian);
+          break;
+        case 8:
+          if (littleEndian) {
+            view.setUint32(offset, this.lo, littleEndian);
+            view.setUint32(offset + 4, this.hi, littleEndian);
+          } else {
+            view.setUint32(offset, this.hi, !littleEndian);
+            view.setUint32(offset + 4, this.lo, !littleEndian);
+          }
+          break;
+      }
+    }
+  }, {
+    key: 'size',
+    get: function get() {
+      return this._size;
+    }
+  }, {
+    key: 'lo',
+    get: function get() {
+      return this._lo;
+    }
+  }, {
+    key: 'hi',
+    get: function get() {
+      return this._hi;
+    }
+  }]);
+
+  return FixedInt;
 }();
 
-/** Update the dataview prototype to support 64-bit integers */
+/* Flags to represent carry/overflow */
 
 
-DataView.prototype.getUint64 = function (idx) {
-	var littleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+exports.default = FixedInt;
+var _OF = false;
+var _CF = false;
+var _ZF = false;
+var _SF = false;
 
-	var lo = void 0,
-	    hi = void 0;
-	if (littleEndian) {
-		lo = this.getUint32(idx, littleEndian);
-		hi = this.getUint32(idx + 4, littleEndian);
-	} else {
-		lo = this.getUint32(idx + 4, littleEndian);
-		hi = this.getUint32(idx, littleEndian);
-	}
+var _PF = false; /* Not implemented */
+var _AF = false; /* Not implemented */
 
-	return new Int64(lo, hi);
-};
+/* An auxiliary value to be stored by the ALU */
+var _aux = void 0;
 
-DataView.prototype.setUint64 = function (idx, value) {
-	var littleEndian = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+/**
+ * Static class to perform arithmetic on FixedInt objects
+ */
 
-	var _value$lohi = value.lohi(),
-	    lo = _value$lohi.lo,
-	    hi = _value$lohi.hi;
+var ALU = exports.ALU = function () {
+  function ALU() {
+    _classCallCheck(this, ALU);
+  }
 
-	if (littleEndian) {
-		this.setUint32(idx, lo, littleEndian);
-		this.setUint32(idx + 4, hi, littleEndian);
-	} else {
-		this.setUint32(idx + 4, lo, littleEndian);
-		this.setUint32(idx, hi, littleEndian);
-	}
-};
+  _createClass(ALU, null, [{
+    key: 'add',
 
-module.exports = { Int64: Int64 };
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+    value: function add(a, b) {
+      var _validateOperands = validateOperands(a, b);
+
+      a = _validateOperands.a;
+      b = _validateOperands.b;
+
+
+      var hi = a.hi + b.hi;
+      var lo = a.lo + b.lo;
+
+      if (a.size === 8) {
+        // Carry from lo into hi
+        hi += lo > VAL_MASK[4];
+        lo = (lo & VAL_MASK[4]) >>> 0;
+
+        _CF = hi >= MODULUS[4];
+      } else {
+        _CF = lo >= MODULUS[a.size];
+      }
+
+      var result = new FixedInt(a.size, lo, hi);
+
+      // Set overflow, sign, & zero flags
+      _OF = a.isNegative() == b.isNegative() && // Equal signs
+      a.isNegative() != result.isNegative(); // and different result
+      _ZF = result == 0;
+      _SF = result.isNegative();
+
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'sub',
+    value: function sub(a, b) {
+      if (!(b instanceof FixedInt)) b = new FixedInt(a.size, b);
+      return this.add(a, ALU.neg(b));
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'mul',
+    value: function mul(a, b) {
+
+      // Double the size if we can fit it
+      // if (a.size < 8) {
+      //   a = a.toSize(2*a.size);
+      //   b = b.toSize(2*a.size);
+      // }
+
+      // Base case
+      var _validateOperands2 = validateOperands(a, b);
+
+      a = _validateOperands2.a;
+      b = _validateOperands2.b;
+      if (b == 0) return new FixedInt(a.size);
+
+      // Recursive definition of multiplication
+      var product = this.shl(this.mul(a, this.sar(b, 1)), 1);
+      if (b.isOdd()) {
+        product = this.add(product, a);
+      }
+
+      return product;
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'div',
+    value: function div(a, b) {
+      var _validateOperands3 = validateOperands(a, b);
+
+      a = _validateOperands3.a;
+      b = _validateOperands3.b;
+
+
+      if (+b === 0) throw new FixedIntError('Division by zero');
+
+      // Use recursive helper for division
+
+      var _divmod = divmod(a, b),
+          _divmod2 = _slicedToArray(_divmod, 2),
+          result = _divmod2[0],
+          mod = _divmod2[1];
+
+      // Store modulus in aux
+
+
+      _aux = mod;
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'shl',
+    value: function shl(a, b) {
+      // Use the Number representation of the shift
+      var hi = void 0,
+          lo = void 0,
+          shift = +b;
+
+      if (a.size === 8) {
+        if (shift >= 64) {
+          hi = lo = 0;
+        } else if (shift >= 32) {
+          hi = a.lo << shift - 32;
+          lo = 0;
+        } else {
+          // Or bits shifted out of lo with shifted hi
+          hi = a.hi << shift | a.lo >>> 32 - shift;
+          lo = a.lo << shift >>> 0;
+        }
+      } else {
+        lo = shift >= 32 ? 0 : a.lo << shift;
+      }
+
+      var result = new FixedInt(a.size, lo, hi);
+
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'sar',
+    value: function sar(a, b) {
+      var hi = void 0,
+          lo = void 0,
+          shift = +b;
+
+      if (a.size === 8) {
+        if (shift >= 64) {
+          // Value entirely shifted out
+          hi = lo = a.isNegative() ? VAL_MASK[4] : 0;
+        } else if (shift >= 32) {
+          // Hi entirely shifted out
+          hi = a.isNegative() ? VAL_MASK[4] : 0;
+          lo = a.hi >> shift - 32 >>> 0;
+        } else {
+          // Carry bits shifted out of hi into shifted lo
+          lo = (a.lo >>> shift | a.hi << 32 - shift) >>> 0;
+          hi = a.hi >> shift;
+        }
+      } else {
+        if (a.isNegative()) {
+          // Propagate the sign to the 4-byte sign bit
+          lo = shift >= 32 ? VAL_MASK[a.size] : (a.lo | ~VAL_MASK[a.size]) >> shift;
+        } else {
+          // Simply shift
+          lo = shift >= 32 ? 0 : a.lo >> shift;
+        }
+      }
+
+      var result = new FixedInt(a.size, lo, hi);
+
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'shr',
+    value: function shr(a, b) {
+      var lo = void 0,
+          hi = void 0,
+          shift = +b;
+
+      if (a.size === 8) {
+        if (shift >= 64) {
+          // Value entirely shifted out
+          hi = lo = 0;
+        } else if (shift >= 32) {
+          // Hi entirely shifted out
+          hi = 0;
+          lo = a.hi >>> shift - 32;
+        } else {
+          // Carry bits shifted out of lo into shifted hi
+          lo = (a.lo >>> shift | a.hi << 32 - shift) >>> 0;
+          hi = a.hi >>> shift;
+        }
+      } else {
+        lo = shift >= 32 ? 0 : a.lo >>> shift;
+      }
+
+      var result = new FixedInt(a.size, lo, hi);
+
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'and',
+    value: function and(a, b) {
+      var _validateOperands4 = validateOperands(a, b);
+
+      a = _validateOperands4.a;
+      b = _validateOperands4.b;
+
+      var lo = a.lo & b.lo;
+      var hi = a.hi & b.hi;
+
+      var result = new FixedInt(a.size, lo >>> 0, hi);
+
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'or',
+    value: function or(a, b) {
+      var _validateOperands5 = validateOperands(a, b);
+
+      a = _validateOperands5.a;
+      b = _validateOperands5.b;
+
+      var lo = a.lo | b.lo;
+      var hi = a.hi | b.hi;
+
+      var result = new FixedInt(a.size, lo >>> 0, hi);
+
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'xor',
+    value: function xor(a, b) {
+      var _validateOperands6 = validateOperands(a, b);
+
+      a = _validateOperands6.a;
+      b = _validateOperands6.b;
+
+      var lo = a.lo ^ b.lo;
+      var hi = a.hi ^ b.hi;
+
+      var result = new FixedInt(a.size, lo >>> 0, hi);
+
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a -- the number to be complemented
+     * @returns {FixedInt} a new FixedInt with the same size as a and 1s complement value
+     */
+
+  }, {
+    key: 'not',
+    value: function not(a) {
+      if (!(a instanceof FixedInt)) throw new FixedIntError('First operand must be instance of FixedInt');
+      var lo = ~a.lo;
+      var hi = ~a.hi;
+
+      var result = new FixedInt(a.size, lo >>> 0, hi);
+
+      return result;
+    }
+
+    /**
+     * @param {FixedInt} a -- the number to be negated
+     * @returns {FixedInt} a new FixedInt with the same size as a 
+     * and its 2s complement value
+     */
+
+  }, {
+    key: 'neg',
+    value: function neg(a) {
+      var lo = void 0,
+          hi = void 0;
+      if (!(a instanceof FixedInt)) throw new FixedIntError('Operand must be instance of FixedInt');
+
+      if (a.size === 8) {
+        lo = ~a.lo + 1 >>> 0;
+        // Carry +1 into hi if lo overflows
+        hi = ~a.hi + (lo == 0);
+      } else {
+        lo = ~a.lo + 1;
+      }
+
+      var result = new FixedInt(a.size, lo, hi);
+      return result;
+    }
+  }, {
+    key: 'OF',
+
+    /** Getters for Overflow, Carry, Zero, and Sign flags */
+    get: function get() {
+      return _OF;
+    }
+  }, {
+    key: 'CF',
+    get: function get() {
+      return _CF;
+    }
+  }, {
+    key: 'ZF',
+    get: function get() {
+      return _ZF;
+    }
+  }, {
+    key: 'SF',
+    get: function get() {
+      return _SF;
+    }
+  }, {
+    key: 'aux',
+
+    // static get AF() {return _AF};
+    // static get PF() {return _PF};
+
+    /**
+     * Return an additional value computed by the ALU in the last computation
+     * e.g. remainder after a division operation, or the extension of a multiplication
+     * @returns {FixedInt} auxiliary value stored by the ALU
+     */
+    get: function get() {
+      return _aux;
+    }
+  }]);
+
+  return ALU;
+}();
+
+/**
+ * Recursive helper function to perform division with remainder.
+ * @param {FixedInt} dividend
+ * @param {FixedInt} divisor
+ */
+
+
+function divmod(dividend, divisor) {
+  // Base case
+  if (dividend.isLessThan(divisor)) {
+    return [new FixedInt(divisor.size, 0), dividend];
+  }
+
+  // Recursively divide by divisor * 2
+
+  var _divmod3 = divmod(dividend, ALU.shl(divisor, 1)),
+      _divmod4 = _slicedToArray(_divmod3, 2),
+      quotient = _divmod4[0],
+      remainder = _divmod4[1];
+
+  quotient = ALU.shl(quotient, 1);
+
+  if (divisor.isLessThan(remainder)) {
+    quotient = ALU.add(quotient, 1);
+    remainder = ALU.sub(remainder, divisor);
+  }
+
+  return [quotient, remainder];
+}
+
+/**
+ * Ensure that the operands are the same size, or coerce both to FixedInt
+ */
+function validateOperands(a, b) {
+  // Validate type
+  if (!(a instanceof FixedInt)) throw new FixedIntError('First operand must be instance of FixedInt');
+
+  // Validate sizes
+  if (b instanceof FixedInt) {
+    if (b.size !== a.size) throw new FixedIntError('FixedInt operands must be the same size.  a: ' + a.size + ' b: ' + b.size);
+  } else {
+    b = new FixedInt(a.size, b);
+  }
+
+  return { a: a, b: b };
+}
+
+/**
+ * Helper function for printing strings
+ */
+function pad(n, width) {
+  var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '0';
+
+  n = n + '';
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+module.exports = { FixedInt: FixedInt, ALU: ALU, SIGN_MASK: SIGN_MASK, VAL_MASK: VAL_MASK, MODULUS: MODULUS, MAX_SAFE_HI: MAX_SAFE_HI };
 
 /***/ }),
 /* 12 */
@@ -1256,6 +1894,18 @@ module.exports = getActiveElement;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _FixedInt = __webpack_require__(11);
+
+var _Memory = __webpack_require__(41);
+
+var _Registers = __webpack_require__(42);
+
+var _x11 = __webpack_require__(44);
+
+var _x12 = _interopRequireDefault(_x11);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1263,18 +1913,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _require = __webpack_require__(41),
-    MemorySegment = _require.MemorySegment,
-    TextSegment = _require.TextSegment;
-
-var _require2 = __webpack_require__(42),
-    RegisterSet = _require2.RegisterSet;
-
-var _require3 = __webpack_require__(11),
-    Int64 = _require3.Int64;
-
-var x86 = __webpack_require__(43);
 
 var STACK_START = 0xF000;
 
@@ -1296,22 +1934,22 @@ var AsmSyntaxError = function (_Error) {
 var Process = function () {
     function Process(instructions) {
         var labels = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var arch = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : x86;
+        var arch = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _x12.default;
         var verbose = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
 
         _classCallCheck(this, Process);
 
         // Intitialize memory and registers
-        this.mem = new MemorySegment(STACK_START);
-        this.regs = new RegisterSet(arch.registers);
-        this.regs.write('rsp', STACK_START);
+        this.mem = new _Memory.MemorySegment(STACK_START);
+        this.regs = new _Registers.RegisterSet(arch.registers);
+        this.regs.write('rsp', new _FixedInt.FixedInt(arch.WORD_SIZE, STACK_START));
         this.stackOrigin = STACK_START;
 
         // Keep instruction pointer separate from registers, initialize to zero
         this.pc = 0;
 
         // Initialize the code segments
-        this.text = new TextSegment(instructions);
+        this.text = new _Memory.TextSegment(instructions);
         this.labels = labels;
 
         // Reverse label mapping
@@ -1339,7 +1977,18 @@ var Process = function () {
 
             // Immediate Operand
             if (operand.startsWith('$')) {
-                return parseInt(operand.slice(1));
+                var val = void 0,
+                    label = void 0;
+                if (isNaN(val = parseInt(label = operand.slice(1)))) {
+                    val = this.labels[label];
+                    if (val !== undefined) {
+                        return new _FixedInt.FixedInt(size, val);
+                    } else {
+                        throw new AsmSyntaxError('Label ' + name + ' undefined');
+                    }
+                }
+
+                return new _FixedInt.FixedInt(size, val);
             }
 
             // Register operand
@@ -1374,11 +2023,15 @@ var Process = function () {
                 return;
             }
 
+            // Label operand
+            if (this.labels[operand] !== undefined) {
+                var _address = this.labels[operand];
+                this.mem.write(_address, value);
+            }
+
             // Memory operand
             var address = this.parseMemoryOperand(operand);
             this.mem.write(value, address, size);
-
-            // TODO: allow write from labeled address
         }
 
         /**
@@ -1392,11 +2045,12 @@ var Process = function () {
         value: function jump(operand) {
             // Indirect jump to address held in register
             if (operand.startsWith('*')) {
-                this.pc = this.read(operand.slice(1));
-            } else if (parseInt(operand)) {
-                this.pc = parseInt(operand);
+                this.pc = +this.read(operand.slice(1));
+            } else if (parseInt(+operand)) {
+                this.pc = parseInt(+operand);
             } else {
                 var address = this.labels[operand];
+                // TODO: include bridge for "standard library" calls
                 if (address === undefined) throw new AsmSyntaxError('Unkown label: ' + operand);
                 this.pc = address;
             }
@@ -1420,13 +2074,9 @@ var Process = function () {
 
             // Parse the integers
             var disp = matches[1] ? parseInt(matches[1]) : 0;
-            var base = matches[2] ? this.regs.read(matches[2]) : 0;
-            var idx = matches[3] ? this.regs.read(matches[3]) : 0;
+            var base = matches[2] ? +this.regs.read(matches[2]) : 0;
+            var idx = matches[3] ? +this.regs.read(matches[3]) : 0;
             var scale = matches[4] ? parseInt(matches[4]) : 1;
-
-            // Gosh this is cumbersome
-            if (base.name === 'Int64') base = base.val();
-            if (idx.name === 'Int64') idx = idx.val();
 
             return disp + base + idx * scale;
         }
@@ -21893,17 +22543,39 @@ var ProcessContainer = function (_React$Component) {
     _createClass(ProcessContainer, [{
         key: 'step',
         value: function step() {
-            this.props.process.step();
+            try {
+                this.props.process.step();
+            } catch (e) {
+                this.displayError(e);
+            }
+
             // TODO: come up with a clever way to keep track of things that have changed
             // and only redraw those things.  It seems like react wouldn't really be able to
-            // figure it out because most change lies deep within objects
+            // figure it out because most change lies deep within objects, unless the process
+            // object kept track of changes on itself
             this.forceUpdate();
         }
     }, {
         key: 'run',
         value: function run() {
-            this.props.process.run();
+            try {
+                this.props.process.run();
+            } catch (e) {
+                this.displayError(e);
+            }
+
             this.forceUpdate();
+        }
+    }, {
+        key: 'componentDidCatch',
+        value: function componentDidCatch(error) {
+            this.displayError(error);
+        }
+    }, {
+        key: 'displayError',
+        value: function displayError(e) {
+            alert(e + '\n' + e.stack);
+            throw e;
         }
     }, {
         key: 'render',
@@ -21937,7 +22609,7 @@ var ProcessContainer = function (_React$Component) {
                 _react2.default.createElement(_StackView2.default, {
                     mem: this.props.process.mem,
                     origin: this.props.process.stackOrigin,
-                    pointer: this.props.process.read('%rsp').val() })
+                    pointer: +this.props.process.regs.read('rsp') })
             );
         }
     }]);
@@ -22527,14 +23199,29 @@ var _createClass = function () { function defineProperties(target, props) { for 
 exports.uploadAndAssemble = uploadAndAssemble;
 exports.default = assemble;
 
+var _react = __webpack_require__(2);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = __webpack_require__(21);
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _ProcessView = __webpack_require__(35);
+
+var _ProcessView2 = _interopRequireDefault(_ProcessView);
+
+var _Process = __webpack_require__(17);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
+function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); } /**
+                                                                               * An assembler module, to parse an assembly file and convert it 
+                                                                               * to objects understood by our debugger
+                                                                               */
 
-/**
- * An assembler module, to parse an assembly file and convert it 
- * to objects understood by our debugger
- */
 
 /**
  * An event handler for file uploads, to replace the current program with another
@@ -22555,10 +23242,10 @@ function uploadAndAssemble() {
 		// Start the process
 
 
-		var p = new Process(instructions, labels);
+		var p = new _Process.Process(instructions, labels);
 
 		// Render it up
-		ReactDOM.render(React.createElement(ProcessContainer, { process: p }), document.getElementById('root'));
+		_reactDom2.default.render(_react2.default.createElement(_ProcessView2.default, { process: p }), document.getElementById('root'));
 	};
 
 	reader.readAsText(input.files[0]);
@@ -22645,26 +23332,104 @@ function assemble(asm) {
 	return { instructions: instructions, addresses: addresses, labels: labels };
 }
 
-var Assembler = function () {
+var Assembly = function () {
 	/**
-  * Instantiate a new asesmbler object
+  * Instantiate a new assembler object by initializing empty data segments
+  * @constructor
+  * @returns new Assembly object
   */
-	function Assembler(asm) {
-		_classCallCheck(this, Assembler);
+	function Assembly() {
+		_classCallCheck(this, Assembly);
 
 		this.addresses = [];
 		this.instructions = [];
 		this.labels = {};
 
-		// This maybe should go in the assemble function ?
-		this.lines = asm.split('\n');
+		// Static memory
+		this.bss = {};
+		this.data = {};
+		this.rodata = {};
 
-		this.assemble();
+		// Fake addr to keep track of relocation records
+		this.linenum = 0;
+
+		// Have we linked yet ? 
+		this.linked = false;
 	}
 
-	_createClass(Assembler, [{
+	/**
+  * Add the contents of an assembly file to the current assembly
+  * @param {String} asm -- the contents of the file to assemble
+  */
+
+
+	_createClass(Assembly, [{
 		key: 'assemble',
-		value: function assemble() {}
+		value: function assemble(asm) {
+			var lines = asm.split('\n');
+			var section = '.text';
+			// TODO: 
+			// Remove multiline /* */ comments
+			// asm = preprocess(asm)
+			var _iteratorNormalCompletion2 = true;
+			var _didIteratorError2 = false;
+			var _iteratorError2 = undefined;
+
+			try {
+				for (var _iterator2 = lines[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+					var line = _step2.value;
+
+					// Remove comments
+					var _line$trim$split3 = line.trim().split('#'),
+					    _line$trim$split4 = _toArray(_line$trim$split3),
+					    code = _line$trim$split4[0],
+					    comments = _line$trim$split4.slice(1);
+					// Split on whitespace or commas
+
+
+					var tokens = code.split(/[\s,]+/g);
+
+					// Parse label (and remove from instruction)
+					if (tokens[0] && tokens[0].endsWith(':')) this.labels[tokens.shift().slice(0, -1)] = this.linenum;
+
+					// Parse new section
+					var newSection = parseSection(tokens);
+					if (newSection) {
+						section = newSection;
+						continue;
+					}
+
+					// Handle the line in the context of the current section
+					switch (section) {
+						case '.text':
+							this.readText(tokens);
+							break;
+						case '.data':
+							this.readData(tokens);
+						case '.rodata':
+							this.readRodata(tokens);
+						case '.bss':
+							this.readBSS(tokens);
+					}
+				}
+			} catch (err) {
+				_didIteratorError2 = true;
+				_iteratorError2 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion2 && _iterator2.return) {
+						_iterator2.return();
+					}
+				} finally {
+					if (_didIteratorError2) {
+						throw _iteratorError2;
+					}
+				}
+			}
+		}
+	}, {
+		key: 'link',
+		value: function link() {}
 	}, {
 		key: 'readData',
 		value: function readData() {}
@@ -22673,16 +23438,28 @@ var Assembler = function () {
 		value: function readBSS() {}
 	}, {
 		key: 'readText',
-		value: function readText() {}
+		value: function readText(tokens) {
+			for (var i in tokens) {
+				if (!tokens[i]) tokens.splice(i, 1);
+			}this.instructions.push(tokens);
+			this.addresses.push(this.linenum);
+			this.linenum += 1;
+		}
 	}, {
 		key: 'readRodata',
 		value: function readRodata() {}
 	}]);
 
-	return Assembler;
+	return Assembly;
 }();
 
-module.exports = { assemble: assemble };
+function parseSection(tokens) {
+	if (tokens[0].startsWith('.')) {}
+
+	return undefined;
+}
+
+module.exports = { assemble: assemble, uploadAndAssemble: uploadAndAssemble };
 
 /***/ }),
 /* 40 */
@@ -22695,7 +23472,7 @@ var _require = __webpack_require__(17),
     Process = _require.Process;
 
 var fibonacci = {
-	text: [['pushl', '$1'], ['pushl', '$1'], ['movq', '$0', '%eax'], ['addl', '$1', '%eax'], ['movl', '4(%rsp)', '%ebx'], ['movl', '(%rsp)', '%ecx'], ['addl', '%ecx', '%ebx'], ['jb', 'end'], ['pushl', '%ebx'], ['jmp', 'loop'], ['hlt']],
+	text: [['pushl', '$1'], ['pushl', '$1'], ['movl', '$0', '%eax'], ['addl', '$1', '%eax'], ['movl', '4(%rsp)', '%ebx'], ['movl', '(%rsp)', '%ecx'], ['addl', '%ecx', '%ebx'], ['jb', 'end'], ['pushl', '%ebx'], ['jmp', 'loop'], ['hlt']],
 
 	labels: {
 		loop: 0x03,
@@ -22715,7 +23492,14 @@ var p = new Process(fibonacci.text, fibonacci.labels);
 
 // Package for handling 64-bit data
 
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.TextSegment = exports.MemorySegment = exports.InvalidAccess = exports.SegFault = undefined;
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _FixedInt = __webpack_require__(11);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -22723,15 +23507,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _require = __webpack_require__(11),
-    Int64 = _require.Int64;
-
 /**
  * An error to throw for a page fault in our virtual memory scheme
  */
-
-
-var SegFault = function (_Error) {
+var SegFault = exports.SegFault = function (_Error) {
 	_inherits(SegFault, _Error);
 
 	function SegFault(addr, msg) {
@@ -22747,7 +23526,7 @@ var SegFault = function (_Error) {
 	return SegFault;
 }(Error);
 
-var InvalidAccess = function (_Error2) {
+var InvalidAccess = exports.InvalidAccess = function (_Error2) {
 	_inherits(InvalidAccess, _Error2);
 
 	function InvalidAccess(addr, msg) {
@@ -22769,7 +23548,7 @@ var InvalidAccess = function (_Error2) {
  */
 
 
-var MemorySegment = function () {
+var MemorySegment = exports.MemorySegment = function () {
 	function MemorySegment(hiAddr) {
 		var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1024;
 		var name = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
@@ -22824,14 +23603,16 @@ var MemorySegment = function () {
   * space, and return its byte index into the underlying ArrayBuffer.
   * If the requested address is not mapped, resize the memory, and return
   * the index into the new version.
+  * @param {FixedInt|Number} addr
+  * @param {Number} size
   */
 
 
 	_createClass(MemorySegment, [{
 		key: 'addrToIdx',
 		value: function addrToIdx(addr, size) {
-			// Cap addresses at 2^53 and get values of Int64 objects
-			if (addr.name === 'Int64') addr = addr.val();
+			// Convert address to integer
+			addr = +addr;
 
 			// Throw a segfault for accessing memory above current range
 			// Otherwise resize
@@ -22847,6 +23628,9 @@ var MemorySegment = function () {
 
 		/**
    * Return the value of the given size at the specified address
+   * @param {FixedInt|Number} addr
+   * @param {Number} size
+   * @returns {FixedInt} the value at the requested address
    */
 
 	}, {
@@ -22854,50 +23638,20 @@ var MemorySegment = function () {
 		value: function read(addr, size) {
 			var idx = this.addrToIdx(addr, size);
 
-			switch (size) {
-				case 1:
-					return this.mem.getUint8(idx, /* littleEndian = */false);
-
-				case 2:
-					return this.mem.getUint16(idx, /* littleEndian = */false);
-
-				case 4:
-					return this.mem.getUint32(idx, /* littleEndian = */false);
-
-				case 8:
-					return this.mem.getUint64(idx, /* littleEndian = */false);
-
-				default:
-					throw new InvalidAccess(addr, 'Cannot read memory in units of ' + size + ' bytes');
-			}
+			return new _FixedInt.FixedInt(size, this.mem, idx);
 		}
 
 		/**
-   * Store value at the specified address encoded with [size] bytes
+   * Store value at the specified address
+   * @param {FixedInt} value
+   * @param {FixedInt|Number} addr
    */
 
 	}, {
 		key: 'write',
-		value: function write(value, addr, size) {
-			var idx = this.addrToIdx(addr, size);
-
-			switch (size) {
-				case 1:
-					this.mem.setUint8(idx, value, /* littleEndian = */false);
-					break;
-				case 2:
-					this.mem.setUint16(idx, value, /* littleEndian = */false);
-					break;
-				case 4:
-					this.mem.setUint32(idx, value, /* littleEndian = */false);
-					break;
-				case 8:
-					if (value.name !== 'Int64') value = new Int64(value, 0);
-					this.mem.setUint64(idx, value, /* littleEndian = */false);
-					break;
-				default:
-					throw new InvalidAccess(addr, 'Cannot read memory in units of ' + size + ' bytes');
-			}
+		value: function write(value, addr) {
+			var idx = this.addrToIdx(addr, value.size);
+			value.toBuffer(this.mem, idx);
 		}
 	}]);
 
@@ -22910,7 +23664,7 @@ var MemorySegment = function () {
  */
 
 
-var TextSegment = function () {
+var TextSegment = exports.TextSegment = function () {
 	function TextSegment(instructions, addresses) {
 		var offset = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
 
@@ -22946,6 +23700,7 @@ var TextSegment = function () {
 	_createClass(TextSegment, [{
 		key: 'read',
 		value: function read(addr) {
+			addr = +addr;
 			if (!(addr in this.addrToIdx)) throw new InvalidAccess(addr, 'Unaligned read from text section');
 
 			return this.instructions[this.addrToIdx[addr]];
@@ -22956,6 +23711,7 @@ var TextSegment = function () {
 	}, {
 		key: 'next',
 		value: function next(addr) {
+			addr = +addr;
 			return this.idxToAddr[this.addrToIdx[addr] + 1];
 		}
 
@@ -23001,13 +23757,16 @@ var Memory = function () {
 		}
 	}, {
 		key: 'write',
-		value: function write(value, addr, size) {
-			getSegment(addr).write(value, addr, size);
+		value: function write(value, addr) {
+			getSegment(addr).write(value, addr);
 		}
 	}]);
 
 	return Memory;
 }();
+
+exports.default = Memory;
+
 
 module.exports = { MemorySegment: MemorySegment, TextSegment: TextSegment };
 
@@ -23018,9 +23777,16 @@ module.exports = { MemorySegment: MemorySegment, TextSegment: TextSegment };
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.RegisterError = undefined;
+
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _FixedInt = __webpack_require__(11);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -23028,15 +23794,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _require = __webpack_require__(11),
-    Int64 = _require.Int64;
-
 /**
  * Indicates a failure to read from a hardware register
  */
-
-
-var RegisterError = function (_Error) {
+var RegisterError = exports.RegisterError = function (_Error) {
 	_inherits(RegisterError, _Error);
 
 	function RegisterError(reg, msg) {
@@ -23117,16 +23878,7 @@ var RegisterSet = function () {
 			    idx = _mapping$reg[0],
 			    size = _mapping$reg[1];
 
-			switch (size) {
-				case 1:
-					return this.view.getUint8(idx, this.littleEndian);
-				case 2:
-					return this.view.getUint16(idx, this.littleEndian);
-				case 4:
-					return this.view.getUint32(idx, this.littleEndian);
-				case 8:
-					return this.view.getUint64(idx, this.littleEndian);
-			}
+			return new _FixedInt.FixedInt(size, this.view, idx);
 		}
 
 		/**
@@ -23149,22 +23901,9 @@ var RegisterSet = function () {
 				throw new RegisterError(reg, 'Does not exist');
 			}
 
-			switch (size) {
-				case 1:
-					this.view.setUint8(idx, value, this.littleEndian);
-					break;
-				case 2:
-					this.view.setUint16(idx, value, this.littleEndian);
-					break;
-				case 4:
-					this.view.setUint32(idx, value, this.littleEndian);
-					break;
-				case 8:
-					// Determine if value is already an Int64
-					if (value.name !== 'Int64') value = new Int64(value, 0);
-					this.view.setUint64(idx, value, this.littleEndian);
-					break;
-			}
+			if (value.size !== size) throw new RegisterError('Can\'t write ' + value.size + '-byte value to ' + size + '-byte register');
+
+			value.toBuffer(this.view, idx);
 		}
 
 		/**
@@ -23193,30 +23932,26 @@ var RegisterSet = function () {
 	return RegisterSet;
 }();
 
+exports.default = RegisterSet;
+
+
 module.exports = { RegisterSet: RegisterSet };
 
 /***/ }),
-/* 43 */
+/* 43 */,
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _FixedInt = __webpack_require__(11);
+
 var WORD_SIZE = 8;
-
-var CARRIES = {
-	1: 0xFF,
-	2: 0xFFFF,
-	4: 0xFFFFFFFF,
-	8: 0xFFFFFFFFFFFFFFFF
-};
-
-var OVERFLOWS = {
-	1: 0x7F,
-	2: 0x7FFF,
-	4: 0x7FFFFFFF,
-	8: 0x7FFFFFFFFFFFFFFF
-};
 
 var chip = function chip() {
 	var _this = this;
@@ -23231,17 +23966,23 @@ var chip = function chip() {
 			_this.write(operands[1], src, size);
 		},
 
+		movabs: function movabs(operands, size) {
+			var src = _this.read(operands[0], size);
+			_this.write(operands[1], src, size);
+		},
+
 		push: function push(operands, size) {
 			var src = _this.read(operands[0], size);
-			var rsp = _this.read('%rsp').val();
-			_this.write('%rsp', rsp - size);
-			_this.write('(%rsp)', src, size);
+			var rsp = _this.regs.read('rsp');
+
+			_this.regs.write('rsp', rsp = _FixedInt.ALU.sub(rsp, size));
+			_this.mem.write(src, +rsp);
 		},
 
 		pop: function pop(operands, size) {
-			var dest = _this.read('(%rsp)', size);
-			var rsp = _this.read('%rsp').val();
-			_this.write('%rsp', rsp + size);
+			var rsp = _this.regs.read('rsp');
+			var dest = _this.mem.read(+rsp, size);
+			_this.write('%rsp', _FixedInt.ALU.add(rsp, size));
 			_this.write(operands[0], dest, size);
 		},
 
@@ -23250,47 +23991,65 @@ var chip = function chip() {
    *****************************************************************/
 
 		add: function add(operands, size) {
-			var src = _this.read(operands[0]);
-			var dest = _this.read(operands[1]);
-			var result = src + dest;
-			updateFlags.call(_this, result, size);
+			var src = _this.read(operands[0], size);
+			var dest = _this.read(operands[1], size);
+			var result = _FixedInt.ALU.add(src, dest);
+			// Update flags
+			_this.regs.setFlag('CF', _FixedInt.ALU.CF);
+			_this.regs.setFlag('OF', _FixedInt.ALU.OF);
+			_this.regs.setFlag('ZF', _FixedInt.ALU.ZF);
+			_this.regs.setFlag('SF', _FixedInt.ALU.SF);
+
 			_this.write(operands[1], result, size);
 		},
 
 		sub: function sub(operands, size) {
-			var src = _this.read(operands[0]);
-			var dest = _this.read(operands[1]);
-			var result = src - dest;
-			updateFlags.call(_this, result, size);
+			var src = _this.read(operands[0], size);
+			var dest = _this.read(operands[1], size);
+			var result = _FixedInt.ALU.sub(dest, src);
+			// Update flags
+			_this.regs.setFlag('CF', _FixedInt.ALU.CF);
+			_this.regs.setFlag('OF', _FixedInt.ALU.OF);
+			_this.regs.setFlag('ZF', _FixedInt.ALU.ZF);
+			_this.regs.setFlag('SF', _FixedInt.ALU.SF);
 			_this.write(operands[1], result, size);
 		},
 
 		imul: function imul(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
-			var result = src * dest;
-			updateFlags.call(_this, result, size);
+			var result = _FixedInt.ALU.mul(dest, src);
+			// updateFlags.call(this, result, size);
 			_this.write(operands[1], result, size);
 		},
 
 		idiv: function idiv(operands, size) {
+			throw new NotImplementedError('division not yet implemented!!!');
+
+			// This is funky for x86 // TODO
 			var src = _this.read(operands[0]);
-			var dest = _this.read(operands[1]);
-			var result = src / dest;
-			updateFlags.call(_this, result, size);
-			_this.write(operands[1], result, size);
+			var dest = _this.read('%eax');
+			var result = _FixedInt.ALU.div(dest, src);
+			// updateFlags.call(this, result, size);
+			_this.write('%eax', result, size);
 		},
 
 		adc: function adc(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
-			var result = src + dest + _this.regs.getFlag('CF');
-			updateFlags.call(_this, result, size);
+			var result = _this.regs.getFlag('CF') ? _FixedInt.ALU.add(_FixedInt.ALU.add(src, dest), 1) : _FixedInt.ALU.add(src, dest);
+
+			// Update flags
+			_this.regs.setFlag('CF', _FixedInt.ALU.CF);
+			_this.regs.setFlag('OF', _FixedInt.ALU.OF);
+			_this.regs.setFlag('ZF', _FixedInt.ALU.ZF);
+			_this.regs.setFlag('SF', _FixedInt.ALU.SF);
+
 			_this.write(operands[1], result, size);
 		},
 
 		lea: function lea(operands, size) {
-			var address = _this.parseMemoryOperand(operands[0]);
+			var address = new _FixedInt.FixedInt(size, _this.parseMemoryOperand(operands[0]));
 			_this.write(operands[1], address, size);
 		},
 
@@ -23301,22 +24060,25 @@ var chip = function chip() {
 		xor: function xor(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
+			var result = _FixedInt.ALU.xor(src, dest);
 			// TODO: Set flags
-			_this.write(operands[1], src ^ dest, size);
+			_this.write(operands[1], result, size);
 		},
 
 		or: function or(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
+			var result = _FixedInt.ALU.or(src, dest);
 			// TODO: Set flags
-			_this.write(operands[1], src | dest, size);
+			_this.write(operands[1], result, size);
 		},
 
 		and: function and(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
+			var result = _FixedInt.ALU.and(src, dest);
 			// TODO: Set flags
-			_this.write(operands[1], src & dest, size);
+			_this.write(operands[1], result, size);
 		},
 
 		/******************************************************************
@@ -23325,26 +24087,30 @@ var chip = function chip() {
 
 		inc: function inc(operands, size) {
 			var dest = _this.read(operands[0]);
-			updateFlags.call(_this, dest + 1, size, true);
-			_this.write(operands[0], dest + 1, size);
+			var result = _FixedInt.ALU.add(dest, 1);
+			// SET FLAGS
+			_this.write(operands[0], result, size);
 		},
 
 		dec: function dec(operands, size) {
 			var dest = _this.read(operands[0]);
-			updateFlags.call(_this, dest - 1, size, true);
-			_this.write(operands[0], dest - 1, size);
+			var result = _FixedInt.ALU.sub(dest, 1);
+			// SET FLAGS
+			_this.write(operands[0], result, size);
 		},
 
 		not: function not(operands, size) {
 			var dest = _this.read(operands[0]);
+			var result = _FixedInt.ALU.not(dest);
 			// TODO: Set flags
-			_this.write(operands[0], ~dest, size);
+			_this.write(operands[0], result, size);
 		},
 
 		neg: function neg(operands, size) {
 			var dest = _this.read(operands[0]);
+			var result = _FixedInt.ALU.neg(dest);
 			// TODO: Set flags
-			_this.write(operands[0], -dest, size);
+			_this.write(operands[0], result, size);
 		},
 
 		/******************************************************************
@@ -23353,8 +24119,9 @@ var chip = function chip() {
 
 		call: function call(operands, size) {
 			var rsp = _this.read('%rsp');
-			_this.write('%rsp', rsp - WORD_SIZE);
-			_this.write('(%rsp)', _this.pc, WORD_SIZE);
+
+			_this.regs.write('rsp', _FixedInt.ALU.sub(rsp, WORD_SIZE));
+			_this.write('(%rsp)', new _FixedInt.FixedInt(WORD_SIZE, _this.pc), WORD_SIZE);
 			_this.jump(operands[0]);
 		},
 
@@ -23362,7 +24129,7 @@ var chip = function chip() {
 			// TODO: add optional immediate operand value to the stack 
 			var ret = _this.read('(%rsp)', WORD_SIZE);
 			var rsp = _this.read('%rsp');
-			_this.write('%rsp', rsp + WORD_SIZE);
+			_this.write('%rsp', _FixedInt.ALU.add(rsp, WORD_SIZE));
 			_this.jump(ret);
 		},
 
@@ -23441,29 +24208,33 @@ var chip = function chip() {
 		shl: function shl(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
+			var result = _FixedInt.ALU.shl(dest, src);
 			// TODO: Set flags
-			_this.write(operands[1], dest << src, size);
+			_this.write(operands[1], result, size);
 		},
 
 		shr: function shr(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
+			var result = _FixedInt.ALU.shr(dest, src);
 			// TODO: Set flags
-			_this.write(operands[1], dest >>> src, size);
+			_this.write(operands[1], result, size);
 		},
 
 		sal: function sal(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
+			var result = _FixedInt.ALU.shl(dest, src);
 			// TODO: Set flags
-			_this.write(operands[1], dest << src, size);
+			_this.write(operands[1], result, size);
 		},
 
 		sar: function sar(operands, size) {
 			var src = _this.read(operands[0]);
 			var dest = _this.read(operands[1]);
+			var result = _FixedInt.ALU.sar(dest, src);
 			// TODO: Set flags
-			_this.write(operands[1], dest >> src, size);
+			_this.write(operands[1], result, size);
 		},
 
 		/******************************************************************
@@ -23488,13 +24259,22 @@ var chip = function chip() {
 
 		cmp: function cmp(operands, size) {
 			// Set flags according to src - dest
-			var result = _this.read(operands[0]) - _this.read(operands[1]);
-			updateFlags.call(_this, result, size);
+			_FixedInt.ALU.sub(_this.read(operands[0]), _this.read(operands[1]));
+			// Update flags
+			_this.regs.setFlag('CF', _FixedInt.ALU.CF);
+			_this.regs.setFlag('OF', _FixedInt.ALU.OF);
+			_this.regs.setFlag('ZF', _FixedInt.ALU.ZF);
+			_this.regs.setFlag('SF', _FixedInt.ALU.SF);
 		},
 
 		test: function test(operands, size) {
 			// Set flags according to src & dest
-
+			_FixedInt.ALU.and(_this.read(operands[0]), _this.read(operands[1]));
+			// Update flags
+			_this.regs.setFlag('CF', _FixedInt.ALU.CF);
+			_this.regs.setFlag('OF', _FixedInt.ALU.OF);
+			_this.regs.setFlag('ZF', _FixedInt.ALU.ZF);
+			_this.regs.setFlag('SF', _FixedInt.ALU.SF);
 		},
 
 		hlt: function hlt() {
@@ -23625,31 +24405,11 @@ var registers = {
 	}
 };
 
-function updateFlags(result, size) {
-	var skipCarry = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+// Exports
+var x86 = { chip: chip, registers: registers, WORD_SIZE: WORD_SIZE };
+exports.default = x86;
 
-	// Zero
-	if (result == 0) this.regs.setFlag('ZF', true);else this.regs.setFlag('ZF', false);
-
-	// Carry
-	if (!skipCarry) {
-		if (result > CARRIES[size]) this.regs.setFlag('CF', true);else this.regs.setFlag('CF', false);
-	}
-
-	// Overflow
-	if (result > OVERFLOWS[size]) this.regs.setFlag('OF', true);else this.regs.setFlag('OF', false);
-
-	// Sign
-	if (result < 0 || result > OVERFLOWS[size]) this.regs.setFlag('SF', true);else this.regs.setFlag('SF', false);
-
-	// Auxiliary
-	// TODO
-
-	// Parity
-	// TODO
-}
-
-module.exports = { chip: chip, registers: registers };
+module.exports = x86;
 
 /***/ })
 /******/ ]);

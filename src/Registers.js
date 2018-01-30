@@ -1,10 +1,9 @@
 "use strict";
-let { Int64 } = require('./Int64.js');
-
+import {FixedInt, ALU} from './FixedInt.js';
 /**
  * Indicates a failure to read from a hardware register
  */
-class RegisterError extends Error {
+export class RegisterError extends Error {
     constructor(reg, msg) {
         super(`Invalid Access @${reg}: ${msg}`);
         this.name = 'InvalidAccess';
@@ -18,7 +17,7 @@ class RegisterError extends Error {
  *
  * Supports read and write operations.
  */
-class RegisterSet {
+export default class RegisterSet {
 	/**
 	 * Create a set of registers from an object which gives 
 	 * register names mapped to byte offsets and byte lengths
@@ -63,16 +62,7 @@ class RegisterSet {
 	read(reg) {
 		let [idx, size]  = this.mapping[reg];
 
-		switch (size) {
-			case 1:
-				return this.view.getUint8(idx, this.littleEndian);
-			case 2: 
-				return this.view.getUint16(idx, this.littleEndian);
-			case 4:
-				return this.view.getUint32(idx, this.littleEndian);
-			case 8:
-				return this.view.getUint64(idx, this.littleEndian);
-		}
+		return new FixedInt(size, this.view, idx);
 	}
 
 	/**
@@ -88,22 +78,10 @@ class RegisterSet {
 			throw new RegisterError(reg, 'Does not exist');
 		}
 
-		switch (size) {
-			case 1:
-				this.view.setUint8(idx, value, this.littleEndian);
-				break;
-			case 2: 
-				this.view.setUint16(idx, value, this.littleEndian);
-				break;
-			case 4:
-				this.view.setUint32(idx, value, this.littleEndian);
-				break;
-			case 8:
-				// Determine if value is already an Int64
-				if (value.name !== 'Int64') value = new Int64(value, 0);
-				this.view.setUint64(idx, value, this.littleEndian);
-				break;
-		}
+		if (value.size !== size) 
+			throw new RegisterError(`Can't write ${value.size}-byte value to ${size}-byte register`);
+		
+		value.toBuffer(this.view, idx);
 	}
 
 	/**

@@ -1,18 +1,6 @@
+import {FixedInt, ALU} from './FixedInt.js';
+
 const WORD_SIZE = 8;
-
-const CARRIES = {
-	1: 0xFF,
-	2: 0xFFFF,
-	4: 0xFFFFFFFF,
-	8: 0xFFFFFFFFFFFFFFFF
-};
-
-const OVERFLOWS = {
-	1: 0x7F,
-	2: 0x7FFF,
-	4: 0x7FFFFFFF,
-	8: 0x7FFFFFFFFFFFFFFF
-};
 
 const chip = function () {
 	let mnems = {
@@ -25,17 +13,23 @@ const chip = function () {
 			this.write(operands[1], src, size);
 		},
 
+		movabs : (operands, size) => {
+			let src = this.read(operands[0], size);
+			this.write(operands[1], src, size);
+		},
+
 		push : (operands, size) => {
 			let src = this.read(operands[0], size);
-			let rsp = this.read('%rsp').val();
-			this.write('%rsp', rsp - size);
-			this.write('(%rsp)', src, size);
+			let rsp = this.regs.read('rsp');
+
+			this.regs.write('rsp', rsp = ALU.sub(rsp, size));
+			this.mem.write(src, +rsp);
 		},
 
 		pop : (operands, size) => {
-			let dest = this.read('(%rsp)', size);
-			let rsp = this.read('%rsp').val();
-			this.write('%rsp', rsp + size);
+			let rsp = this.regs.read('rsp');
+			let dest = this.mem.read(+rsp, size);
+			this.write('%rsp', ALU.add(rsp, size));
 			this.write(operands[0], dest, size);
 		},
 
@@ -44,47 +38,67 @@ const chip = function () {
 		 *****************************************************************/
 
 		add : (operands, size) => {
-			let src = this.read(operands[0]);
-			let dest = this.read(operands[1]);
-			let result = src + dest;
-			updateFlags.call(this, result, size);
+			let src = this.read(operands[0], size);
+			let dest = this.read(operands[1], size);
+			let result = ALU.add(src, dest);
+			// Update flags
+			this.regs.setFlag('CF', ALU.CF);
+			this.regs.setFlag('OF', ALU.OF);
+			this.regs.setFlag('ZF', ALU.ZF);
+			this.regs.setFlag('SF', ALU.SF);
+
 			this.write(operands[1], result, size)
 		},
 
 		sub : (operands, size) => {
-			let src = this.read(operands[0]);
-			let dest = this.read(operands[1]);
-			let result = src - dest;
-			updateFlags.call(this, result, size);
+			let src = this.read(operands[0], size);
+			let dest = this.read(operands[1], size);
+			let result = ALU.sub(dest, src);
+			// Update flags
+			this.regs.setFlag('CF', ALU.CF);
+			this.regs.setFlag('OF', ALU.OF);
+			this.regs.setFlag('ZF', ALU.ZF);
+			this.regs.setFlag('SF', ALU.SF);
 			this.write(operands[1], result, size)
 		},
 
 		imul : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
-			let result = src * dest;
-			updateFlags.call(this, result, size);
-			this.write(operands[1], result, size)
+			let result = ALU.mul(dest, src);
+			// updateFlags.call(this, result, size);
+			this.write(operands[1], result, size);
 		},
 
 		idiv : (operands, size) => {
+			throw new NotImplementedError('division not yet implemented!!!');
+
+			// This is funky for x86 // TODO
 			let src = this.read(operands[0]);
-			let dest = this.read(operands[1]);
-			let result = src / dest;
-			updateFlags.call(this, result, size);
-			this.write(operands[1], result, size);
+			let dest = this.read('%eax');
+			let result = ALU.div(dest, src);
+			// updateFlags.call(this, result, size);
+			this.write('%eax', result, size);
 		},
 
 		adc : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
-			let result = src + dest + this.regs.getFlag('CF');
-			updateFlags.call(this, result, size);
+			let result = this.regs.getFlag('CF') 
+				? ALU.add(ALU.add(src, dest), 1)
+				: ALU.add(src, dest);
+
+			// Update flags
+			this.regs.setFlag('CF', ALU.CF);
+			this.regs.setFlag('OF', ALU.OF);
+			this.regs.setFlag('ZF', ALU.ZF);
+			this.regs.setFlag('SF', ALU.SF);
+
 			this.write(operands[1], result, size);
 		},
 
 		lea : (operands, size) => {
-			let address = this.parseMemoryOperand(operands[0]);
+			let address = new FixedInt(size, this.parseMemoryOperand(operands[0]));
 			this.write(operands[1], address, size);
 		},
 
@@ -95,22 +109,25 @@ const chip = function () {
 		xor : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
+			let result = ALU.xor(src, dest);
 			// TODO: Set flags
-			this.write(operands[1], src ^ dest, size);
+			this.write(operands[1], result, size);
 		},
 
 		or : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
+			let result = ALU.or(src, dest);
 			// TODO: Set flags
-			this.write(operands[1], src | dest, size);
+			this.write(operands[1], result, size);
 		},
 
 		and : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
+			let result = ALU.and(src, dest);
 			// TODO: Set flags
-			this.write(operands[1], src & dest, size);
+			this.write(operands[1], result, size);
 		},
 
 		/******************************************************************
@@ -119,26 +136,30 @@ const chip = function () {
 
 		inc : (operands, size) => {
 			let dest = this.read(operands[0]);
-			updateFlags.call(this, dest + 1, size, true);
-			this.write(operands[0], dest + 1, size);
+			let result = ALU.add(dest, 1);
+			// SET FLAGS
+			this.write(operands[0], result, size);
 		},
 
 		dec : (operands, size) => {
 			let dest = this.read(operands[0]);
-			updateFlags.call(this, dest - 1, size, true);
-			this.write(operands[0], dest - 1, size);
+			let result = ALU.sub(dest, 1);	
+			// SET FLAGS
+			this.write(operands[0], result, size);
 		},
 
 		not : (operands, size) => {
 			let dest = this.read(operands[0]);
+			let result = ALU.not(dest);
 			// TODO: Set flags
-			this.write(operands[0], ~dest, size);
+			this.write(operands[0], result, size);
 		},
 
 		neg : (operands, size) => {
 			let dest = this.read(operands[0]);
+			let result = ALU.neg(dest);
 			// TODO: Set flags
-			this.write(operands[0], -dest, size)
+			this.write(operands[0], result, size)
 		},
 
 		/******************************************************************
@@ -147,16 +168,17 @@ const chip = function () {
 
 		call : (operands, size) => {
 			let rsp = this.read('%rsp');
-			this.write('%rsp', rsp - WORD_SIZE);
-			this.write('(%rsp)', this.pc, WORD_SIZE);
+
+			this.regs.write('rsp', ALU.sub(rsp, WORD_SIZE));
+			this.write('(%rsp)', new FixedInt(WORD_SIZE, this.pc), WORD_SIZE);
 			this.jump(operands[0]);
 		},
 
 		ret : (operands, size) => {
 			// TODO: add optional immediate operand value to the stack 
 			let ret = this.read('(%rsp)', WORD_SIZE);
-			let rsp = this.read('%rsp')
-			this.write('%rsp', rsp + WORD_SIZE);
+			let rsp = this.read('%rsp');
+			this.write('%rsp', ALU.add(rsp, WORD_SIZE));
 			this.jump(ret);
 		},
 
@@ -251,29 +273,33 @@ const chip = function () {
 		shl : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
+			let result = ALU.shl(dest, src);
 			// TODO: Set flags
-			this.write(operands[1], dest << src, size);
+			this.write(operands[1], result, size);
 		},
 
 		shr : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
+			let result = ALU.shr(dest, src);
 			// TODO: Set flags
-			this.write(operands[1], dest >>> src, size);
+			this.write(operands[1], result, size);
 		},
 
 		sal : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
+			let result = ALU.shl(dest, src);
 			// TODO: Set flags
-			this.write(operands[1], dest << src, size);
+			this.write(operands[1], result, size);
 		},
 
 		sar : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
+			let result = ALU.sar(dest, src)
 			// TODO: Set flags
-			this.write(operands[1], dest >> src, size);
+			this.write(operands[1], result, size);
 		},
 
 		/******************************************************************
@@ -299,13 +325,22 @@ const chip = function () {
 
 		cmp : (operands, size) => {
 			// Set flags according to src - dest
-			let result = this.read(operands[0]) - this.read(operands[1]);
-			updateFlags.call(this, result, size);
+			ALU.sub(this.read(operands[0]), this.read(operands[1]));
+			// Update flags
+			this.regs.setFlag('CF', ALU.CF);
+			this.regs.setFlag('OF', ALU.OF);
+			this.regs.setFlag('ZF', ALU.ZF);
+			this.regs.setFlag('SF', ALU.SF);
 		},
 
 		test : (operands, size) => {
 			// Set flags according to src & dest
-
+			ALU.and(this.read(operands[0]), this.read(operands[1]));
+			// Update flags
+			this.regs.setFlag('CF', ALU.CF);
+			this.regs.setFlag('OF', ALU.OF);
+			this.regs.setFlag('ZF', ALU.ZF);
+			this.regs.setFlag('SF', ALU.SF);
 		},
 
 		hlt : () => {
@@ -314,19 +349,19 @@ const chip = function () {
 	}
 
 	// Setup aliases
-	mnems.jz = mnems.je;
+	mnems.jz  = mnems.je;
 	mnems.jnz = mnems.jne;
-	mnems.jc = mnems.jb;
+	mnems.jc  = mnems.jb;
 	mnems.jnc = mnems.jae;
 
-	mnems.jnb = mnems.jae;
+	mnems.jnb  = mnems.jae;
 	mnems.jnbe = mnems.ja;
-	mnems.jna = mnems.jbe;
+	mnems.jna  = mnems.jbe;
 	mnems.jnae = mnems.jb;
 
-	mnems.jng = mnems.jle;
+	mnems.jng  = mnems.jle;
 	mnems.jnge = mnems.jl;
-	mnems.jnl = mnems.jge;
+	mnems.jnl  = mnems.jge;
 	mnems.jnle = mnems.jg;
 
 	return mnems;
@@ -454,38 +489,7 @@ const registers = {
 	}
 };
 
-function updateFlags(result, size, skipCarry=false) {
-	// Zero
-	if (result == 0) 
-		this.regs.setFlag('ZF', true);
-	else 
-		this.regs.setFlag('ZF', false);
-
-	// Carry
-	if (!skipCarry) {
-		if (result > CARRIES[size])
-			this.regs.setFlag('CF', true);
-		else
-			this.regs.setFlag('CF', false);
-	}
-	
-	// Overflow
-	if (result > OVERFLOWS[size])
-		this.regs.setFlag('OF', true);
-	else
-		this.regs.setFlag('OF', false);
-
-	// Sign
-	if (result < 0 || result > OVERFLOWS[size])
-		this.regs.setFlag('SF', true);
-	else
-		this.regs.setFlag('SF', false);
-
-	// Auxiliary
-	// TODO
-
-	// Parity
-	// TODO
-}
-
-module.exports = { chip, registers };
+// Exports
+const x86 = { chip, registers, WORD_SIZE};
+export default x86;
+module.exports = x86;

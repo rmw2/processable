@@ -1,11 +1,11 @@
 "use strict";
 // Package for handling 64-bit data
-let { Int64 } = require('./Int64.js');
+import {FixedInt, ALU} from './FixedInt.js';
 
 /**
  * An error to throw for a page fault in our virtual memory scheme
  */
-class SegFault extends Error {
+export class SegFault extends Error {
 	constructor(addr, msg) {
 		super(`Segmentation Fault @${addr}: ${msg}`);
 		this.name = 'SegFault';
@@ -13,7 +13,7 @@ class SegFault extends Error {
 	}
 }
 
-class InvalidAccess extends Error {
+export class InvalidAccess extends Error {
     constructor(addr, msg) {
         super(`Invalid Access @${addr}: ${msg}`);
         this.name = 'InvalidAccess';
@@ -25,7 +25,7 @@ class InvalidAccess extends Error {
  * An object to represent byte-addressable memory
  * Implemented by creating a dataview on a 
  */
-class MemorySegment {
+export class MemorySegment {
 
 	constructor(hiAddr, size = 1024, name='') { //, resizable = false) {
 		// Size of memory, in bytes
@@ -75,11 +75,12 @@ class MemorySegment {
 	 * space, and return its byte index into the underlying ArrayBuffer.
 	 * If the requested address is not mapped, resize the memory, and return
 	 * the index into the new version.
+	 * @param {FixedInt|Number} addr
+	 * @param {Number} size
 	 */
 	addrToIdx(addr, size) {
-		// Cap addresses at 2^53 and get values of Int64 objects
-		if (addr.name === 'Int64')
-			addr = addr.val();
+		// Convert address to integer
+		addr = +addr;
 
 		// Throw a segfault for accessing memory above current range
 		// Otherwise resize
@@ -98,52 +99,24 @@ class MemorySegment {
 
 	/**
 	 * Return the value of the given size at the specified address
+	 * @param {FixedInt|Number} addr
+	 * @param {Number} size
+	 * @returns {FixedInt} the value at the requested address
 	 */
 	read(addr, size) {
 		let idx = this.addrToIdx(addr, size);
 
-		switch (size) {
-			case 1:
-				return this.mem.getUint8(idx, /* littleEndian = */ false);
-
-			case 2:
-				return this.mem.getUint16(idx, /* littleEndian = */ false);
-
-			case 4:
-				return this.mem.getUint32(idx, /* littleEndian = */ false);
-
-			case 8:
-				return this.mem.getUint64(idx, /* littleEndian = */ false)
-
-			default:
-				throw new InvalidAccess(addr, `Cannot read memory in units of ${size} bytes`);
-		}
+		return new FixedInt(size, this.mem, idx);
 	}
 
 	/**
-	 * Store value at the specified address encoded with [size] bytes
+	 * Store value at the specified address
+	 * @param {FixedInt} value
+	 * @param {FixedInt|Number} addr
 	 */
-	write(value, addr, size) {
-		let idx = this.addrToIdx(addr, size);
-
-		switch (size) {
-			case 1:
-				this.mem.setUint8(idx, value, /* littleEndian = */ false);
-				break;
-			case 2:
-				this.mem.setUint16(idx, value, /* littleEndian = */ false);
-				break;
-			case 4:
-				this.mem.setUint32(idx, value, /* littleEndian = */ false);
-				break;
-			case 8:
-				if (value.name !== 'Int64') value = new Int64(value, 0);
-				this.mem.setUint64(idx, value, /* littleEndian = */ false)
-				break;
-			default:
-				throw new InvalidAccess(addr, `Cannot read memory in units of ${size} bytes`);
-		}
-
+	write(value, addr) {
+		let idx = this.addrToIdx(addr, value.size);
+		value.toBuffer(this.mem, idx);
 	}
 }
 
@@ -151,7 +124,7 @@ class MemorySegment {
  * An object to represent addressable text.  Text will be stored as an 
  * array of string instructions.
  */
-class TextSegment {
+export class TextSegment {
     constructor(instructions, addresses, offset=0) {
         // Validate provided addresses
         if (addresses && instructions.length != addresses.length)
@@ -181,6 +154,7 @@ class TextSegment {
 
     /* Return the instruction at the specified address */
     read(addr) {
+    	addr = +addr;
         if (!(addr in this.addrToIdx))
             throw new InvalidAccess(addr, 'Unaligned read from text section');
 
@@ -189,6 +163,7 @@ class TextSegment {
 
     /* Return the address of the next instruction after the specified instruction */
     next(addr) {
+    	addr = +addr;
     	return this.idxToAddr[this.addrToIdx[addr] + 1];
     }
 
@@ -203,7 +178,7 @@ class TextSegment {
  * Memory in general, wrapping several segments of different types
  * 
  */
-class Memory {
+export default class Memory {
     constructor(segments) {
         this.segments = segments;
     }
@@ -221,8 +196,8 @@ class Memory {
     	return getSegment(addr).read(addr, size);
     }
 
-    write(value, addr, size) {
-    	getSegment(addr).write(value, addr, size);
+    write(value, addr) {
+    	getSegment(addr).write(value, addr);
     }
 }
 

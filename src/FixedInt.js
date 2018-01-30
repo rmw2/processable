@@ -221,6 +221,68 @@ export default class FixedInt {
   }
 
   /**
+   * Print this number as a string in the given base
+   * @param {Number} radix -- base 
+   * @param {boolean} [signed] -- how to interpret this number when printing
+   */
+  toString(radix=10, signed=false) {
+    signed = (signed && this.isNegative() && radix == 10);
+
+    if (this.size < 8) 
+      return (signed) ? 'signed' : this.lo.toString(radix);
+
+    switch (radix) {
+      case 2:
+        return this.hi.toString(radix) + pad(this.lo.toString(radix), 32);
+      case 16:
+        return this.hi.toString(radix) + pad(this.lo.toString(radix), 8);
+      case 10:
+        let hi = this.hi.toString(radix);
+        let lo = pad(this.lo.toString(radix), 64/radix);
+        return 'TODO';
+    }
+        // char* itoa(int num, char* str, int base)
+    // {
+    //     int i = 0;
+    let i = 0;
+    //     bool isNegative = false;
+    let isNegative = signed && this.isNegative() && radix === 10;
+     
+    //     /* Handle 0 explicitely, otherwise empty string is printed for 0 */
+
+    //     if (num == 0)
+    //     {
+    //         str[i++] = '0';
+    //         str[i] = '\0';
+    //         return str;
+    //     }
+    if (+this == 0)
+      return '0';
+
+    let num;
+    while (false) {}
+    //     // Process individual digits
+    //     while (num != 0)
+    //     {
+    //         int rem = num % base;
+    //         str[i++] = (rem > 9)? (rem-10) + 'a' : rem + '0';
+    //         num = num/base;
+    //     }
+     
+    //     // If number is negative, append '-'
+    //     if (isNegative)
+    //         str[i++] = '-';
+     
+    //     str[i] = '\0'; // Append string terminator
+     
+    //     // Reverse the string
+    //     reverse(str, i);
+     
+    //     return str;
+    // }
+  }
+
+  /**
    * Write this value to an ArrayBuffer wrapped by a DataView view
    */
   toBuffer(view, offset=0, littleEndian=true) {
@@ -320,7 +382,9 @@ export class ALU {
    * @returns {FixedInt}
    */
   static sub(a, b) {
-    return this.add(a, this.neg(b));
+    if (!(b instanceof FixedInt))
+      b = new FixedInt(a.size, b);
+    return this.add(a, ALU.neg(b));
   }
 
   /**
@@ -557,7 +621,7 @@ export class ALU {
 function divmod(dividend, divisor) {
   // Base case
   if (dividend.isLessThan(divisor)) {
-    return [new FixedInt(dividend.size, 0), dividend];
+    return [new FixedInt(divisor.size, 0), dividend];
   }
 
   // Recursively divide by divisor * 2
@@ -583,12 +647,20 @@ function validateOperands(a, b) {
   // Validate sizes
   if (b instanceof FixedInt) {
     if (b.size !== a.size) 
-      throw new FixedIntError('FixedInt operands must be the same size');
+      throw new FixedIntError(`FixedInt operands must be the same size.  a: ${a.size} b: ${b.size}`);
   } else {
     b = new FixedInt(a.size, b);
   }
 
   return {a, b};
+}
+
+/**
+ * Helper function for printing strings
+ */
+function pad(n, width, z='0') {
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
 module.exports = { FixedInt, ALU, SIGN_MASK, VAL_MASK, MODULUS, MAX_SAFE_HI };
