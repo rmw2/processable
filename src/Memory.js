@@ -85,13 +85,13 @@ export class MemorySegment {
 		// Throw a segfault for accessing memory above current range
 		// Otherwise resize
 		if (addr + size > this.hiAddr) 
-			throw new SegFault(addr, size);
+			throw new SegFault(addr, `Reading ${size}-bytes of section ${this.name}`);
 
 		else if (addr < this.loAddr) {
             // Perhaps add support for resizing at some point
 			// if (this.resizable)
 			// 	   this.resize(addr);
-			throw new SegFault(addr, size);
+			throw new SegFault(addr, `Reading ${size}-bytes of section ${this.name}`);
 		}
 
 		return (this.hiAddr - addr - size);
