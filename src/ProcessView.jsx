@@ -71,7 +71,8 @@ export default class ProcessContainer extends React.Component {
                 <StackContainer 
                     mem={p.mem.segments.stack.data}
                     origin={p.stackOrigin}
-                    pointer={+p.regs.read('rsp')} />
+                    rsp={+p.regs.read('rsp')}
+                    rbp={+p.regs.read('rbp')} />
                 <StaticContainer
                     name="rodata"
                     mem={p.mem.segments.rodata.data}

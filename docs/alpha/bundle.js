@@ -646,7 +646,7 @@ var FixedInt = function () {
 
       signed = signed && this.isNegative() && radix == 10;
 
-      if (this.size < 8) return signed ? 'signed' : this.lo.toString(radix);
+      if (this.size < 8) return signed ? 'TODO' : this.lo.toString(radix);
 
       switch (radix) {
         case 2:
@@ -654,9 +654,10 @@ var FixedInt = function () {
         case 16:
           return this.hi.toString(radix) + pad(this.lo.toString(radix), 8);
         case 10:
+          return 'TODO';
+          // SKipped
           var hi = this.hi.toString(radix);
           var lo = pad(this.lo.toString(radix), 64 / radix);
-          return 'TODO';
       }
       // char* itoa(int num, char* str, int base)
       // {
@@ -2418,7 +2419,8 @@ var ProcessContainer = function (_React$Component) {
                 _react2.default.createElement(_StackView2.default, {
                     mem: p.mem.segments.stack.data,
                     origin: p.stackOrigin,
-                    pointer: +p.regs.read('rsp') }),
+                    rsp: +p.regs.read('rsp'),
+                    rbp: +p.regs.read('rbp') }),
                 _react2.default.createElement(_StaticView2.default, {
                     name: 'rodata',
                     mem: p.mem.segments.rodata.data,
@@ -23138,7 +23140,7 @@ var StackContainer = function (_React$Component) {
 		var _this = _possibleConstructorReturn(this, (StackContainer.__proto__ || Object.getPrototypeOf(StackContainer)).call(this, props));
 
 		_this.state = {
-			alignment: 8 // Alignment in bytes for display purposes
+			alignment: 4 // Alignment in bytes for display purposes
 		};
 		return _this;
 	}
@@ -23155,14 +23157,18 @@ var StackContainer = function (_React$Component) {
 
 			// This is pretty inefficient
 			var bytes = [];
-			for (var addr = this.props.origin - 1; addr >= this.props.pointer; addr--) {
+			for (var addr = this.props.origin - 1; addr >= this.props.rsp; addr--) {
+				var pointer = addr == this.props.rsp ? '%rsp' : addr == this.props.rbp ? '%rbp' : null;
+
 				bytes.push(_react2.default.createElement(ByteView, {
 					key: addr,
 					value: this.props.mem.read(addr, 1),
 					address: addr,
 					alignment: this.state.alignment,
-					isTop: addr == this.props.pointer }));
+					pointer: pointer }));
 			}
+
+			console.log(bytes);
 
 			return _react2.default.createElement(
 				'div',
@@ -23184,6 +23190,7 @@ var StackContainer = function (_React$Component) {
 						return _react2.default.createElement(
 							'button',
 							{
+								key: val,
 								className: 'toggle',
 								style: { backgroundColor: val == _this2.state.alignment ? '#eee' : '#aaa' },
 								onClick: function onClick() {
@@ -23227,30 +23234,25 @@ var ByteView = function (_React$Component2) {
 			this.refs.thisbyte.scrollIntoView(false);
 		}
 	}, {
-		key: 'printPointer',
-		value: function printPointer() {
-			if (this.props.isTop) {
-				return { __html: '%rsp &rarr;' };
-			}
-		}
-	}, {
 		key: 'render',
 		value: function render() {
 			var aligned = this.props.address % this.props.alignment === 0 ? ' aligned' : '';
 
-			var style = {
-				address: {
-					visibility: this.props.isTop || aligned ? 'visible' : ''
-				}
-			};
+			var pointer = this.props.pointer ? _react2.default.createElement(
+				'span',
+				{ className: 'stack-pointer' },
+				this.props.pointer,
+				_react2.default.createElement('span', { className: 'arrow', dangerouslySetInnerHTML: { __html: ' &rarr;' } })
+			) : _react2.default.createElement('span', { className: 'stack-pointer' });
 
 			return _react2.default.createElement(
 				'div',
 				{ ref: 'thisbyte', className: 'stack-byte' + aligned },
-				_react2.default.createElement('span', { className: 'stack-pointer', dangerouslySetInnerHTML: this.printPointer() }),
+				pointer,
 				_react2.default.createElement(
 					'span',
-					{ style: style.address, className: 'byte-address' },
+					{ style: { visibility: this.props.pointer || aligned ? 'visible' : 'hidden' },
+						className: 'byte-address' },
 					this.props.address.toString(16)
 				),
 				_react2.default.createElement(
@@ -23264,8 +23266,6 @@ var ByteView = function (_React$Component2) {
 
 	return ByteView;
 }(_react2.default.Component);
-
-ByteView.defaultProps = {};
 
 /***/ }),
 /* 39 */

@@ -306,10 +306,6 @@ label.file {
 	font-size: 0.75em;
 }
 
-.stack-byte, .static-byte {
-	margin-left: 2em;
-}
-
 .stack-byte > span, .static-byte > span {
 	display: inline-block;
 }
