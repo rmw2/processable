@@ -229,7 +229,7 @@ export default class FixedInt {
     signed = (signed && this.isNegative() && radix == 10);
 
     if (this.size < 8) 
-      return (signed) ? 'signed' : this.lo.toString(radix);
+      return (signed) ? 'TODO' : this.lo.toString(radix);
 
     switch (radix) {
       case 2:
@@ -237,9 +237,10 @@ export default class FixedInt {
       case 16:
         return this.hi.toString(radix) + pad(this.lo.toString(radix), 8);
       case 10:
+        return 'TODO';
+        // SKipped
         let hi = this.hi.toString(radix);
         let lo = pad(this.lo.toString(radix), 64/radix);
-        return 'TODO';
     }
         // char* itoa(int num, char* str, int base)
     // {
