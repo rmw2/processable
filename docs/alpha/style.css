@@ -149,6 +149,7 @@ label.file {
 .container-title {
 	font-weight: bold;
 	height: 1em;
+	display: inline-block;
 }
 
 /* Controls */
@@ -264,17 +265,19 @@ label.file {
 	border-radius: 0.25em;
 	cursor: pointer;
 	padding: 0 0.25em;
-	position: absolute;
-	top: 0;
 }
 
 .toggle-register {
 	font-weight: bold;
 	color: #fff;
+	position: absolute;
+	top: 0;
 }
 
 .toggle-encoding {
 	right: 1em;
+	position: absolute;
+	top: 0;
 }
 
 
@@ -297,6 +300,12 @@ label.file {
 	color: #999;
 }
 
+.stack-pointer, .byte-address {
+	transform: translate(0, 0.6em);
+	background-color: #fff;
+	font-size: 0.75em;
+}
+
 .stack-byte, .static-byte {
 	margin-left: 2em;
 }
@@ -314,10 +323,30 @@ label.file {
 
 .byte-address {
 	visibility: hidden;
+	padding: 0 0.25em;
+}
+/*
+.stack-byte:hover .byte-address,
+.static-byte:hover .byte-address, 
+.current {
+	visibility: visible;
+}*/
+
+.aligned {
+	box-shadow: 1px 1px 0px rgba(0,0,0,0.2);
 }
 
-.stack-byte:hover .byte-address, 
-.static-byte:hover .byte-address, 
-.current, .aligned {
-	visibility: visible;
+.button-group {
+	position: relative;
+	display: inline-block;
+	margin-left: 50%;
+}
+
+.button-group > .desc {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	font-size: 0.5em;
+	font-family: initial;
+	transform: translateY(-1em);
 }

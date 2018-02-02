@@ -23135,12 +23135,24 @@ var StackContainer = function (_React$Component) {
 	function StackContainer(props) {
 		_classCallCheck(this, StackContainer);
 
-		return _possibleConstructorReturn(this, (StackContainer.__proto__ || Object.getPrototypeOf(StackContainer)).call(this, props));
+		var _this = _possibleConstructorReturn(this, (StackContainer.__proto__ || Object.getPrototypeOf(StackContainer)).call(this, props));
+
+		_this.state = {
+			alignment: 8 // Alignment in bytes for display purposes
+		};
+		return _this;
 	}
 
 	_createClass(StackContainer, [{
+		key: 'setAlignment',
+		value: function setAlignment(val) {
+			this.setState({ alignment: val });
+		}
+	}, {
 		key: 'render',
 		value: function render() {
+			var _this2 = this;
+
 			// This is pretty inefficient
 			var bytes = [];
 			for (var addr = this.props.origin - 1; addr >= this.props.pointer; addr--) {
@@ -23148,6 +23160,7 @@ var StackContainer = function (_React$Component) {
 					key: addr,
 					value: this.props.mem.read(addr, 1),
 					address: addr,
+					alignment: this.state.alignment,
 					isTop: addr == this.props.pointer }));
 			}
 
@@ -23158,6 +23171,27 @@ var StackContainer = function (_React$Component) {
 					'div',
 					{ className: 'container-title' },
 					'stack'
+				),
+				_react2.default.createElement(
+					'div',
+					{ className: 'button-group' },
+					_react2.default.createElement(
+						'div',
+						{ className: 'desc' },
+						'alignment'
+					),
+					[1, 2, 4, 8].map(function (val) {
+						return _react2.default.createElement(
+							'button',
+							{
+								className: 'toggle',
+								style: { backgroundColor: val == _this2.state.alignment ? '#eee' : '#aaa' },
+								onClick: function onClick() {
+									return _this2.setAlignment(val);
+								} },
+							val
+						);
+					})
 				),
 				_react2.default.createElement(
 					'div',
@@ -23202,15 +23236,17 @@ var ByteView = function (_React$Component2) {
 	}, {
 		key: 'render',
 		value: function render() {
+			var aligned = this.props.address % this.props.alignment === 0 ? ' aligned' : '';
+
 			var style = {
 				address: {
-					visibility: this.props.isTop || this.props.address % 8 === 0 ? 'visible' : ''
+					visibility: this.props.isTop || aligned ? 'visible' : ''
 				}
 			};
 
 			return _react2.default.createElement(
 				'div',
-				{ ref: 'thisbyte', className: 'stack-byte' },
+				{ ref: 'thisbyte', className: 'stack-byte' + aligned },
 				_react2.default.createElement('span', { className: 'stack-pointer', dangerouslySetInnerHTML: this.printPointer() }),
 				_react2.default.createElement(
 					'span',
@@ -23228,6 +23264,8 @@ var ByteView = function (_React$Component2) {
 
 	return ByteView;
 }(_react2.default.Component);
+
+ByteView.defaultProps = {};
 
 /***/ }),
 /* 39 */
