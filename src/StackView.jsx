@@ -12,6 +12,7 @@ export default class StackContainer extends React.Component {
 	}
 
 	render() {
+		// This is pretty inefficient
 		let bytes = [];
 		for (let addr = this.props.origin - 1; addr >= this.props.pointer; addr--) {
 			bytes.push(
@@ -55,7 +56,7 @@ class ByteView extends React.Component {
 	render() {
 		const style = {
 			address: {
-				visibility: this.props.isTop ? 'visible' : '',
+				visibility: (this.props.isTop || this.props.address % 8 === 0) ? 'visible' : '',
 			}
 		}
 

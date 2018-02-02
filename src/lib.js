@@ -3,6 +3,10 @@
  * a similar debugging and i/o experience
  */
 
+function getArg(index) {
+
+}
+
 function stdlib(stdout, stdin) {
 	return {
 		printf: (fmt, ...args) => {

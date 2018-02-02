@@ -1,7 +1,8 @@
 import React from 'react';
-import RegisterContainer from './RegisterView.jsx'
-import TextContainer from './TextView.jsx'
-import StackContainer from './StackView.jsx'
+import RegisterContainer from './RegisterView.jsx';
+import TextContainer from './TextView.jsx';
+import StackContainer from './StackView.jsx';
+import StaticContainer from './StaticView.jsx';
 
 export default class ProcessContainer extends React.Component {
     constructor(props) {
@@ -11,6 +12,9 @@ export default class ProcessContainer extends React.Component {
         this.run = this.run.bind(this);
         this.toggleBreakpoint = this.props.process.toggleBreakpoint.bind(
             this.props.process);
+
+        // Do some preprocessing of labels and figure out which VM areas they live in
+        // TODO
     }
 
     step() {
@@ -47,6 +51,8 @@ export default class ProcessContainer extends React.Component {
     }
 
     render() {
+        let p = this.props.process;
+
         return (
             <div className="process-container">
                 <div id="controls" className="container">
@@ -54,18 +60,36 @@ export default class ProcessContainer extends React.Component {
                     <button id="continue" className="control-button" onClick={this.run}>&#10142;</button>
                 </div> 
                 <TextContainer
-                    pc={this.props.process.pc}
-                    text={this.props.process.text} 
-                    labels={this.props.process.labeled}
-                    breakpoints={this.props.process.breakpoints}
+                    pc={p.pc}
+                    text={p.mem.segments.text.data} 
+                    labels={p.labeled}
+                    breakpoints={p.breakpoints}
                     toggleBreakpoint={this.toggleBreakpoint} />
                 <RegisterContainer 
-                    regs={this.props.process.regs}
-                    flags={this.props.process.regs.flags} />
+                    regs={p.regs}
+                    flags={p.regs.flags} />
                 <StackContainer 
-                    mem={this.props.process.mem}
-                    origin={this.props.process.stackOrigin}
-                    pointer={+this.props.process.regs.read('rsp')} />
+                    mem={p.mem.segments.stack.data}
+                    origin={p.stackOrigin}
+                    pointer={+p.regs.read('rsp')} />
+                <StaticContainer
+                    name="rodata"
+                    mem={p.mem.segments.rodata.data}
+                    hi={p.mem.segments.rodata.hi}
+                    lo={p.mem.segments.rodata.lo}
+                    labelFor={p.labeled} />
+                <StaticContainer
+                    name="data"
+                    mem={p.mem.segments.data.data}
+                    hi={p.mem.segments.data.hi}
+                    lo={p.mem.segments.data.lo}
+                    labelFor={p.labeled} />
+                <StaticContainer
+                    name="bss"
+                    mem={p.mem.segments.bss.data}
+                    hi={p.mem.segments.bss.hi}
+                    lo={p.mem.segments.bss.lo}
+                    labelFor={p.labeled} />
             </div>
         );
     }

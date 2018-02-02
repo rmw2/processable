@@ -5,11 +5,9 @@
  */
 
 import { FixedInt } from './FixedInt.js';
-import { MemorySegment, TextSegment } from './Memory.js';
+import { Memory } from './Memory.js';
 import { RegisterSet } from './Registers.js';
 import x86 from './x86.js';
-
-const STACK_START = 0xF000;
 
 class AsmSyntaxError extends Error {
     constructor(message) {
@@ -19,21 +17,18 @@ class AsmSyntaxError extends Error {
 }
 
 class Process {
-    constructor(instructions, labels={}, arch=x86, verbose=false) {
+    constructor(image, labels={}, arch=x86, verbose=false) {
         // Intitialize memory and registers
-        this.mem  = new MemorySegment(STACK_START);
+        this.mem  = new Memory(image);
         this.regs = new RegisterSet(arch.registers);
-        this.regs.write('rsp', new FixedInt(arch.WORD_SIZE, STACK_START));
-        this.stackOrigin = STACK_START;
 
-        // Keep instruction pointer separate from registers, initialize to zero
-        this.pc = 0;
+        // Initialize stack pointer and instruction pointer
+        this.pc = image.text.start;
+        this.stackOrigin = this.mem.segments.stack.hi;
+        this.regs.write('rsp', new FixedInt(arch.WORD_SIZE, this.stackOrigin));
 
-        // Initialize the code segments
-        this.text = new TextSegment(instructions);
+        // Save the labels and reverse the label mapping
         this.labels = labels;
-
-        // Reverse label mapping
         this.labeled = {};
         for (let label in this.labels)
             this.labeled[this.labels[label]] = label;
@@ -169,13 +164,13 @@ class Process {
             let pc = this.pc;
 
             // Fetch mnemonic and operands from Text section
-            let [mnemonic, ...operands] = this.text.read(this.pc);
+            let [mnemonic, ...operands] = this.mem.read(this.pc);
 
             if (verbose) 
                 this.print(pc, true, true);
 
             // Advance instruction pointer and execute
-            this.pc = this.text.next(this.pc);
+            this.pc = this.mem.next(this.pc);
             this.execute(mnemonic, operands);
 
             if (verbose) {
@@ -243,12 +238,12 @@ class Process {
         // (undefined || false) -> true, true -> false
         this.breakpoints[address] = !this.breakpoints[address];
     }
-
+f
     /**
      * Dump current state
      */
     print(pc=this.pc, showPC=true, showStack=true) {
-        let [mnemonic, ...operands] = this.text.read(pc);
+        let [mnemonic, ...operands] = this.mem.read(pc);
         let {prefix, size} = this.parseOperandSize(mnemonic);
 
         // Output address and instruction to execute

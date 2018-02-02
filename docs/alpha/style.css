@@ -77,7 +77,7 @@ label.file {
 #controls {
 	top: 0;
 	left: 0;
-	width: 30%;
+	width: 35%;
 	height: 10%;
 
 	text-align: center;
@@ -85,7 +85,7 @@ label.file {
 
 #registers {
 	top: 0;
-	left: 30%;
+	left: 35%;
 	width: 40%;
 	height: 60%;
 }
@@ -93,15 +93,36 @@ label.file {
 #text {
 	top: 10%;
 	left: 0;
-	width: 30%;
+	width: 35%;
 	height: 50%;
 }
 
 #stack {
 	top: 0;
-	left: 70%;
-	width: 30%;
+	left: 75%;
+	width: 25%;
 	height: 100%;
+}
+
+#rodata {
+	top: 60%;
+	left: 0;
+	width: 25%;
+	height: 40%;
+}
+
+#data {
+	top: 60%;
+	left: 25%;
+	width: 25%;
+	height: 40%;
+}
+
+#bss {
+	top: 60%;
+	left: 50%;
+	width: 25%;
+	height: 40%;
 }
 
 .container {
@@ -257,25 +278,30 @@ label.file {
 }
 
 
-/* Stack stuff */
+/* Stack and static stuff */
 #stack-content {
 	border-top: 1px solid #000;
 }
 
-.stack-pointer {
-	min-width: 5em;
+.stack-pointer, .static-label {
+	width: 5em;
 	padding-right: 0.5em;
 	text-align: right;
 
 	font-weight: bold;
+	overflow-x: visible;
 	color: #d00;
 }
 
-.stack-byte {
+.static-label {
+	color: #999;
+}
+
+.stack-byte, .static-byte {
 	margin-left: 2em;
 }
 
-.stack-byte > span {
+.stack-byte > span, .static-byte > span {
 	display: inline-block;
 }
 
@@ -290,6 +316,8 @@ label.file {
 	visibility: hidden;
 }
 
-.stack-byte:hover .byte-address, .current {
+.stack-byte:hover .byte-address, 
+.static-byte:hover .byte-address, 
+.current, .aligned {
 	visibility: visible;
 }

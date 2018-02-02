@@ -9,7 +9,7 @@ describe('Process object', () => {
 
 	test('initializes stack and PC', () => {
 		let stack = p.read('%rsp');
-		expect(stack).toEqual(new Int64(STACK_TOP-8));
+		expect(stack).toEqual(new Int64(STACK_TOP));
 		expect(p.pc).toBe(0);
 	});
 

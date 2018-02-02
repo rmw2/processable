@@ -2,97 +2,8 @@
  * An assembler module, to parse an assembly file and convert it 
  * to objects understood by our debugger
  */
-import React from 'react';
-import ReactDOM from 'react-dom';
-
-import ProcessContainer from './ProcessView.jsx';
-import { Process } from './Process.js';
+ 
 import { FixedInt } from './FixedInt.js';
-
-/**
- * An event handler for file uploads, to replace the current program with another
- */
-export function uploadAndAssemble() {
-	let input = event.target;
-	let reader = new FileReader();
-
-	reader.onload = () => {
-		// Assemble the text
-		let text = reader.result;
-
-		let {instructions, addresses, labels} = assemble(text);
-		
-		// Start the process
-		let p = new Process(instructions, labels);
-
-		// Render it up
-		ReactDOM.render(
-			React.createElement(ProcessContainer, {process: p}), 
-			document.getElementById('root')
-		);
-	};
-
-	reader.readAsText(input.files[0]);
-}
-
-/**
- * @deprecated: to be replaced with Class Assembly 
- * Assemble a text file containing assembly instructions in AT&T syntax
- * and return an object mapping labels to addresses, parellel lists of
- * instruction strings and instruction addresses, and an object to 
- * describe staticly allocated data.
- */
-export default function assemble(asm) {
-	let addresses = [];
-	let instructions = [];
-	let labels = {};
-	let addr = 0;
-
-	let section = '';
-
-	// Split assembly file by line
-	const lines = asm.split('\n');
-
-	for (let line of lines) {
-		// Remove comments
-		let [code, ...comments] = line.trim().split('#');
-		// Split on whitespace or commas
-		let tokens = code.split(/[\s,]+/g);
-
-		// Parse label (and remove from instruction)
-		if (tokens[0] && tokens[0].endsWith(':'))
-			labels[tokens.shift().slice(0,-1)] = addr;
-
-		// Parse directive
-		if (tokens[0] && tokens[0].startsWith('.')) {
-			switch (tokens[0]) {
-				case '.section':
-					section = tokens[1];
-					break;
-				case '.text':
-					section = '.text';
-				// TODO: handle static allocation etc. 
-				case '.data':
-
-			}
-
-			continue;
-		}
-
-		// Add instruction to instruction list & increment address
-		if (section === '.text' && tokens.length > 0 && tokens[0]) {
-			for (let i in tokens)
-				if (!tokens[i]) tokens.splice(i, 1);
-
-			instructions.push(tokens);
-			addresses.push(addr);
-			addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT [eek]
-		}
-	}
-
-	return { instructions, addresses, labels };
-}
-
 
 // Hacky approximation of the average instruction length
 // Stretch goals would be to get actual instruction length but alas
@@ -110,7 +21,7 @@ class Assembly {
 	 * @constructor
 	 * @returns {Assembly} an empty Assembly object
 	 */
-	constructor() {
+	constructor(asm) {
 		// Use line number to identify relocations
 		this.linenum = 0;
 
@@ -130,6 +41,10 @@ class Assembly {
 		this.dataSz = 0;
 		this.rodata = {};
 		this.rodataSz = 0;
+
+		// Start assembling if a string was provided
+		if (asm !== undefined)
+			this.assemble(asm);
 	}
 
 	/**
@@ -161,21 +76,22 @@ class Assembly {
 				// console.log(`line: ${this.linenum}, label: ${this.labelFor[this.linenum]}`)
 			}
 
+			// Remove empty tokens
+			for (let i in tokens)
+				if (!tokens[i]) tokens.splice(i, 1);
+
 			// Skip empty lines
 			if (!tokens.length || (!tokens[0] && tokens.length === 1))
 				continue;
 
-
 			// Check if section has changed
 			let newSection = parseSection(tokens);
 			if (newSection) {
+				// Hacky parsing of section name
 				section = newSection.split('.')[1];
 				continue;
 			}
 
-			// Remove empty tokens
-			for (let i in tokens)
-				if (!tokens[i]) tokens.splice(i, 1);
 
 			// Handle the line in the context of the current section
 			switch (section) {
@@ -198,12 +114,13 @@ class Assembly {
 					}
 					break;
 				default:
-					console.log(`Unknown section: ${section}`);
+					console.log(`Unknown section: ${section} (parsed from ${newSection})`);
 			}
 
 			// Increment linenum only after succesfully parsing something
 			this.linenum += 1;
 		}
+		return this;
 	}
 
 	/**
@@ -215,6 +132,9 @@ class Assembly {
 	 * 						the labels it contains
 	 */
 	link(addr=0x08048000) {
+		// TODO: include a version of crt0.S 
+		// (_start function, get argv, call main) 
+
 		// Single image object to represent an ELF binary
 		let image = {};
 
@@ -250,8 +170,7 @@ class Assembly {
 			addr += INSTR_LEN;
 
 			// Convert line number to label
-			console.log(`${typeof linenum} ${linenum}: ${this.labelFor[linenum]}`);
-			if (this.labelFor[linenum] !== undefined) {
+			if (linenum in this.labelFor) {
 				this.labels[this.labelFor[linenum]] = addr;
 			}
 		}
@@ -267,6 +186,15 @@ class Assembly {
 		return {image, labels: this.labels};
 	}
 
+	/**
+	 * Write the contents of a static virtual memory area to an ArrayBuffer
+	 * via the DataView view.  Also map labels to final addresses in the process 
+	 *
+	 * @param {DataView} view
+	 * @param {Object} data
+	 * @param {Number} addr
+	 * @returns {Number} the current address after allocating this section
+	 */
 	writeToImage(view, data, addr) {
 		let start = addr;
 
@@ -386,16 +314,77 @@ function alloc(tokens) {
  *                   does not define a new section
  */
 function parseSection(tokens) {
+	// Remove quotes
+
 	if (tokens[0].startsWith('.')) {
 		if (tokens[0] === '.text')
 			return '.text';
 		if (tokens[0] === '.data')
 			return '.data';
 		if (tokens[0] === '.section')
-			return tokens[1];
+			return tokens[1].replace(/["']/g, '');
 	}
 
 	return undefined;
 }
 
-module.exports = { assemble, uploadAndAssemble, Assembly };
+module.exports = { Assembly };
+
+// /**
+//  * @deprecated: to be replaced with Class Assembly
+//  * Assemble a text file containing assembly instructions in AT&T syntax
+//  * and return an object mapping labels to addresses, parellel lists of
+//  * instruction strings and instruction addresses, and an object to 
+//  * describe staticly allocated data.
+//  */
+// export default function assemble(asm) {
+// 	let addresses = [];
+// 	let instructions = [];
+// 	let labels = {};
+// 	let addr = 0;
+
+// 	let section = '';
+
+// 	// Split assembly file by line
+// 	const lines = asm.split('\n');
+
+// 	for (let line of lines) {
+// 		// Remove comments
+// 		let [code, ...comments] = line.trim().split('#');
+// 		// Split on whitespace or commas
+// 		let tokens = code.split(/[\s,]+/g);
+
+// 		// Parse label (and remove from instruction)
+// 		if (tokens[0] && tokens[0].endsWith(':'))
+// 			labels[tokens.shift().slice(0,-1)] = addr;
+
+// 		// Parse directive
+// 		if (tokens[0] && tokens[0].startsWith('.')) {
+// 			switch (tokens[0]) {
+// 				case '.section':
+// 					section = tokens[1];
+// 					break;
+// 				case '.text':
+// 					section = '.text';
+// 				// TODO: handle static allocation etc. 
+// 				case '.data':
+
+// 			}
+
+// 			continue;
+// 		}
+
+// 		// Add instruction to instruction list & increment address
+// 		if (section === '.text' && tokens.length > 0 && tokens[0]) {
+// 			for (let i in tokens)
+// 				if (!tokens[i]) tokens.splice(i, 1);
+
+// 			instructions.push(tokens);
+// 			addresses.push(addr);
+// 			addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT [eek]
+// 		}
+// 	}
+
+// 	return { instructions, addresses, labels };
+// }
+

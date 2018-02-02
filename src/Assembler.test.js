@@ -6,7 +6,7 @@ const path = require('path');
 
 
 
-test('fake test', () => {
+test('euclid.s', () => {
 	// Read file 
 	let file = fs.readFileSync(
 		path.join(__dirname, '../samples/euclid.s'), 
@@ -16,9 +16,6 @@ test('fake test', () => {
 	let asm = new Assembly();
 
 	asm.assemble(file);
-
-	console.log(asm.labelFor);
-
 	let {image, labels} = asm.link();
 	
 	console.log(asm.labels);
@@ -31,4 +28,24 @@ test('fake test', () => {
 	// 	str += String.fromCharCode(view.getUint8(i));
 
 	// console.log(str);
+});
+
+
+test('hello.s', () => {
+	// Read file 
+	let file = fs.readFileSync(
+		path.join(__dirname, '../samples/16hello.s'), 
+		{encoding: 'utf-8'}
+	);
+
+	let asm = new Assembly();
+
+	asm.assemble(file);
+
+	console.log(asm.labelFor);
+
+	let {image, labels} = asm.link();
+	
+	console.log(image);
+	console.log(labels);
 });

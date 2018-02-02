@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 18);
+/******/ 	return __webpack_require__(__webpack_require__.s = 20);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -258,6 +258,21 @@ process.umask = function() { return 0; };
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports = __webpack_require__(21);
+} else {
+  module.exports = __webpack_require__(22);
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 
 
 /**
@@ -294,21 +309,6 @@ emptyFunction.thatReturnsArgument = function (arg) {
 };
 
 module.exports = emptyFunction;
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-if (process.env.NODE_ENV === 'production') {
-  module.exports = __webpack_require__(19);
-} else {
-  module.exports = __webpack_require__(20);
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 3 */
@@ -372,414 +372,6 @@ module.exports = invariant;
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
-object-assign
-(c) Sindre Sorhus
-@license MIT
-*/
-
-
-/* eslint-disable no-unused-vars */
-var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-var propIsEnumerable = Object.prototype.propertyIsEnumerable;
-
-function toObject(val) {
-	if (val === null || val === undefined) {
-		throw new TypeError('Object.assign cannot be called with null or undefined');
-	}
-
-	return Object(val);
-}
-
-function shouldUseNative() {
-	try {
-		if (!Object.assign) {
-			return false;
-		}
-
-		// Detect buggy property enumeration order in older V8 versions.
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-		var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
-		test1[5] = 'de';
-		if (Object.getOwnPropertyNames(test1)[0] === '5') {
-			return false;
-		}
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-		var test2 = {};
-		for (var i = 0; i < 10; i++) {
-			test2['_' + String.fromCharCode(i)] = i;
-		}
-		var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
-			return test2[n];
-		});
-		if (order2.join('') !== '0123456789') {
-			return false;
-		}
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-		var test3 = {};
-		'abcdefghijklmnopqrst'.split('').forEach(function (letter) {
-			test3[letter] = letter;
-		});
-		if (Object.keys(Object.assign({}, test3)).join('') !==
-				'abcdefghijklmnopqrst') {
-			return false;
-		}
-
-		return true;
-	} catch (err) {
-		// We don't expect any of the above to throw, but better to be safe.
-		return false;
-	}
-}
-
-module.exports = shouldUseNative() ? Object.assign : function (target, source) {
-	var from;
-	var to = toObject(target);
-	var symbols;
-
-	for (var s = 1; s < arguments.length; s++) {
-		from = Object(arguments[s]);
-
-		for (var key in from) {
-			if (hasOwnProperty.call(from, key)) {
-				to[key] = from[key];
-			}
-		}
-
-		if (getOwnPropertySymbols) {
-			symbols = getOwnPropertySymbols(from);
-			for (var i = 0; i < symbols.length; i++) {
-				if (propIsEnumerable.call(from, symbols[i])) {
-					to[symbols[i]] = from[symbols[i]];
-				}
-			}
-		}
-	}
-
-	return to;
-};
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-
-
-var emptyObject = {};
-
-if (process.env.NODE_ENV !== 'production') {
-  Object.freeze(emptyObject);
-}
-
-module.exports = emptyObject;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-
-
-var emptyFunction = __webpack_require__(1);
-
-/**
- * Similar to invariant but only logs a warning if the condition is not met.
- * This can be used to log issues in development environments in critical
- * paths. Removing the logging code for production environments will keep the
- * same logic and follow the same code paths.
- */
-
-var warning = emptyFunction;
-
-if (process.env.NODE_ENV !== 'production') {
-  var printWarning = function printWarning(format) {
-    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      args[_key - 1] = arguments[_key];
-    }
-
-    var argIndex = 0;
-    var message = 'Warning: ' + format.replace(/%s/g, function () {
-      return args[argIndex++];
-    });
-    if (typeof console !== 'undefined') {
-      console.error(message);
-    }
-    try {
-      // --- Welcome to debugging React ---
-      // This error was thrown as a convenience so that you can use this stack
-      // to find the callsite that caused this warning to fire.
-      throw new Error(message);
-    } catch (x) {}
-  };
-
-  warning = function warning(condition, format) {
-    if (format === undefined) {
-      throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
-    }
-
-    if (format.indexOf('Failed Composite propType: ') === 0) {
-      return; // Ignore CompositeComponent proptype check.
-    }
-
-    if (!condition) {
-      for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-        args[_key2 - 2] = arguments[_key2];
-      }
-
-      printWarning.apply(undefined, [format].concat(args));
-    }
-  };
-}
-
-module.exports = warning;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.pad = pad;
-exports.nextEncoding = nextEncoding;
-exports.decodeFromBuffer = decodeFromBuffer;
-
-var _FixedInt = __webpack_require__(11);
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /**
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * A module for decoding 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                */
-
-// 
-var ENCODINGS = ['hex', 'int', 'uint', 'char', 'bin'];
-
-var DecodeError = function (_Error) {
-    _inherits(DecodeError, _Error);
-
-    function DecodeError(msg) {
-        _classCallCheck(this, DecodeError);
-
-        var _this = _possibleConstructorReturn(this, (DecodeError.__proto__ || Object.getPrototypeOf(DecodeError)).call(this, 'Decode Error: ' + msg));
-
-        _this.name = 'DecodeError';
-        return _this;
-    }
-
-    return DecodeError;
-}(Error);
-
-function pad(n, width) {
-    var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '0';
-
-    n = n + '';
-    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-}
-
-function nextEncoding(state) {
-    var nextIdx = (state.encIdx + 1) % ENCODINGS.length;
-    return {
-        encoding: ENCODINGS[nextIdx],
-        encIdx: nextIdx
-    };
-}
-
-/**
- * Take a DataView data, and decode its contents to a string
- * according to the specified encoding and size
- */
-function decodeFromBuffer(data, offset, size, encoding) {
-    var littleEndian = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
-
-    var val = new _FixedInt.FixedInt(size, data, offset, littleEndian);
-
-    switch (encoding) {
-        // Handle the char case first, size doesn't matter
-        case 'char':
-            var str = '';
-            for (var i = 0; i < size; i++) {
-                var code = data.getUint8(offset + i);
-                str += code > 32 ? String.fromCharCode(code) : ' ';
-            }
-            return '\'' + str + '\'';
-
-        // Int case requires signed decoding
-        case 'int':
-            return val.toString(10, true);
-
-        case 'hex':
-            return '0x' + pad(val.toString(16), 2 * size);
-
-        case 'uint':
-            return val.toString(10);
-
-        case 'bin':
-            return pad(val.toString(2), 8 * size).replace(/(.{16})/g, "$1<wbr>");
-        default:
-            return 'HECK!';
-    }
-}
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-
-
-if (process.env.NODE_ENV !== 'production') {
-  var invariant = __webpack_require__(3);
-  var warning = __webpack_require__(6);
-  var ReactPropTypesSecret = __webpack_require__(9);
-  var loggedTypeFailures = {};
-}
-
-/**
- * Assert that the values match with the type specs.
- * Error messages are memorized and will only be shown once.
- *
- * @param {object} typeSpecs Map of name to a ReactPropType
- * @param {object} values Runtime values that need to be type-checked
- * @param {string} location e.g. "prop", "context", "child context"
- * @param {string} componentName Name of the component for error messages.
- * @param {?Function} getStack Returns the component stack.
- * @private
- */
-function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
-  if (process.env.NODE_ENV !== 'production') {
-    for (var typeSpecName in typeSpecs) {
-      if (typeSpecs.hasOwnProperty(typeSpecName)) {
-        var error;
-        // Prop type validation may throw. In case they do, we don't want to
-        // fail the render phase where it didn't fail before. So we log it.
-        // After these have been cleaned up, we'll let them throw.
-        try {
-          // This is intentionally an invariant that gets caught. It's the same
-          // behavior as without this statement except with a better message.
-          invariant(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'the `prop-types` package, but received `%s`.', componentName || 'React class', location, typeSpecName, typeof typeSpecs[typeSpecName]);
-          error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
-        } catch (ex) {
-          error = ex;
-        }
-        warning(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
-        if (error instanceof Error && !(error.message in loggedTypeFailures)) {
-          // Only monitor this failure once because there tends to be a lot of the
-          // same error.
-          loggedTypeFailures[error.message] = true;
-
-          var stack = getStack ? getStack() : '';
-
-          warning(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
-        }
-      }
-    }
-  }
-}
-
-module.exports = checkPropTypes;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-
-
-var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
-
-module.exports = ReactPropTypesSecret;
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-
-
-var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
-
-/**
- * Simple, lightweight module assisting with the detection and context of
- * Worker. Helps avoid circular dependencies and allows code to reason about
- * whether or not they are in a Worker, even if they never include the main
- * `ReactWorker` dependency.
- */
-var ExecutionEnvironment = {
-
-  canUseDOM: canUseDOM,
-
-  canUseWorkers: typeof Worker !== 'undefined',
-
-  canUseEventListeners: canUseDOM && !!(window.addEventListener || window.attachEvent),
-
-  canUseViewport: canUseDOM && !!window.screen,
-
-  isInWorker: !canUseDOM // For now, this is true - might change in the future.
-
-};
-
-module.exports = ExecutionEnvironment;
-
-/***/ }),
-/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1615,202 +1207,376 @@ function pad(n, width) {
 module.exports = { FixedInt: FixedInt, ALU: ALU, SIGN_MASK: SIGN_MASK, VAL_MASK: VAL_MASK, MODULUS: MODULUS, MAX_SAFE_HI: MAX_SAFE_HI };
 
 /***/ }),
-/* 12 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
+/*
+object-assign
+(c) Sindre Sorhus
+@license MIT
+*/
 
-/**
+
+/* eslint-disable no-unused-vars */
+var getOwnPropertySymbols = Object.getOwnPropertySymbols;
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+var propIsEnumerable = Object.prototype.propertyIsEnumerable;
+
+function toObject(val) {
+	if (val === null || val === undefined) {
+		throw new TypeError('Object.assign cannot be called with null or undefined');
+	}
+
+	return Object(val);
+}
+
+function shouldUseNative() {
+	try {
+		if (!Object.assign) {
+			return false;
+		}
+
+		// Detect buggy property enumeration order in older V8 versions.
+
+		// https://bugs.chromium.org/p/v8/issues/detail?id=4118
+		var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
+		test1[5] = 'de';
+		if (Object.getOwnPropertyNames(test1)[0] === '5') {
+			return false;
+		}
+
+		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
+		var test2 = {};
+		for (var i = 0; i < 10; i++) {
+			test2['_' + String.fromCharCode(i)] = i;
+		}
+		var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
+			return test2[n];
+		});
+		if (order2.join('') !== '0123456789') {
+			return false;
+		}
+
+		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
+		var test3 = {};
+		'abcdefghijklmnopqrst'.split('').forEach(function (letter) {
+			test3[letter] = letter;
+		});
+		if (Object.keys(Object.assign({}, test3)).join('') !==
+				'abcdefghijklmnopqrst') {
+			return false;
+		}
+
+		return true;
+	} catch (err) {
+		// We don't expect any of the above to throw, but better to be safe.
+		return false;
+	}
+}
+
+module.exports = shouldUseNative() ? Object.assign : function (target, source) {
+	var from;
+	var to = toObject(target);
+	var symbols;
+
+	for (var s = 1; s < arguments.length; s++) {
+		from = Object(arguments[s]);
+
+		for (var key in from) {
+			if (hasOwnProperty.call(from, key)) {
+				to[key] = from[key];
+			}
+		}
+
+		if (getOwnPropertySymbols) {
+			symbols = getOwnPropertySymbols(from);
+			for (var i = 0; i < symbols.length; i++) {
+				if (propIsEnumerable.call(from, symbols[i])) {
+					to[symbols[i]] = from[symbols[i]];
+				}
+			}
+		}
+	}
+
+	return to;
+};
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {/**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @typechecks
  */
 
-var emptyFunction = __webpack_require__(1);
 
-/**
- * Upstream version of event listener. Does not take into account specific
- * nature of platform.
- */
-var EventListener = {
-  /**
-   * Listen to DOM events during the bubble phase.
-   *
-   * @param {DOMEventTarget} target DOM element to register listener on.
-   * @param {string} eventType Event type, e.g. 'click' or 'mouseover'.
-   * @param {function} callback Callback function.
-   * @return {object} Object with a `remove` method.
-   */
-  listen: function listen(target, eventType, callback) {
-    if (target.addEventListener) {
-      target.addEventListener(eventType, callback, false);
-      return {
-        remove: function remove() {
-          target.removeEventListener(eventType, callback, false);
-        }
-      };
-    } else if (target.attachEvent) {
-      target.attachEvent('on' + eventType, callback);
-      return {
-        remove: function remove() {
-          target.detachEvent('on' + eventType, callback);
-        }
-      };
-    }
-  },
 
-  /**
-   * Listen to DOM events during the capture phase.
-   *
-   * @param {DOMEventTarget} target DOM element to register listener on.
-   * @param {string} eventType Event type, e.g. 'click' or 'mouseover'.
-   * @param {function} callback Callback function.
-   * @return {object} Object with a `remove` method.
-   */
-  capture: function capture(target, eventType, callback) {
-    if (target.addEventListener) {
-      target.addEventListener(eventType, callback, true);
-      return {
-        remove: function remove() {
-          target.removeEventListener(eventType, callback, true);
-        }
-      };
-    } else {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('Attempted to listen to events during the capture phase on a ' + 'browser that does not support the capture phase. Your application ' + 'will not receive some events.');
-      }
-      return {
-        remove: emptyFunction
-      };
-    }
-  },
+var emptyObject = {};
 
-  registerDefault: function registerDefault() {}
-};
+if (process.env.NODE_ENV !== 'production') {
+  Object.freeze(emptyObject);
+}
 
-module.exports = EventListener;
+module.exports = emptyObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 13 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
+/* WEBPACK VAR INJECTION */(function(process) {/**
+ * Copyright (c) 2014-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @typechecks
- * 
  */
 
-/*eslint-disable no-self-compare */
 
 
-
-var hasOwnProperty = Object.prototype.hasOwnProperty;
+var emptyFunction = __webpack_require__(2);
 
 /**
- * inlined Object.is polyfill to avoid requiring consumers ship their own
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+ * Similar to invariant but only logs a warning if the condition is not met.
+ * This can be used to log issues in development environments in critical
+ * paths. Removing the logging code for production environments will keep the
+ * same logic and follow the same code paths.
  */
-function is(x, y) {
-  // SameValue algorithm
-  if (x === y) {
-    // Steps 1-5, 7-10
-    // Steps 6.b-6.e: +0 != -0
-    // Added the nonzero y check to make Flow happy, but it is redundant
-    return x !== 0 || y !== 0 || 1 / x === 1 / y;
-  } else {
-    // Step 6.a: NaN == NaN
-    return x !== x && y !== y;
-  }
+
+var warning = emptyFunction;
+
+if (process.env.NODE_ENV !== 'production') {
+  var printWarning = function printWarning(format) {
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+
+    var argIndex = 0;
+    var message = 'Warning: ' + format.replace(/%s/g, function () {
+      return args[argIndex++];
+    });
+    if (typeof console !== 'undefined') {
+      console.error(message);
+    }
+    try {
+      // --- Welcome to debugging React ---
+      // This error was thrown as a convenience so that you can use this stack
+      // to find the callsite that caused this warning to fire.
+      throw new Error(message);
+    } catch (x) {}
+  };
+
+  warning = function warning(condition, format) {
+    if (format === undefined) {
+      throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
+    }
+
+    if (format.indexOf('Failed Composite propType: ') === 0) {
+      return; // Ignore CompositeComponent proptype check.
+    }
+
+    if (!condition) {
+      for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+        args[_key2 - 2] = arguments[_key2];
+      }
+
+      printWarning.apply(undefined, [format].concat(args));
+    }
+  };
+}
+
+module.exports = warning;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.pad = pad;
+exports.nextEncoding = nextEncoding;
+exports.decodeFromBuffer = decodeFromBuffer;
+
+var _FixedInt = __webpack_require__(4);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * A module for decoding 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                */
+
+// 
+var ENCODINGS = ['hex', 'int', 'uint', 'char', 'bin'];
+
+var DecodeError = function (_Error) {
+    _inherits(DecodeError, _Error);
+
+    function DecodeError(msg) {
+        _classCallCheck(this, DecodeError);
+
+        var _this = _possibleConstructorReturn(this, (DecodeError.__proto__ || Object.getPrototypeOf(DecodeError)).call(this, 'Decode Error: ' + msg));
+
+        _this.name = 'DecodeError';
+        return _this;
+    }
+
+    return DecodeError;
+}(Error);
+
+function pad(n, width) {
+    var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '0';
+
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+function nextEncoding(state) {
+    var nextIdx = (state.encIdx + 1) % ENCODINGS.length;
+    return {
+        encoding: ENCODINGS[nextIdx],
+        encIdx: nextIdx
+    };
 }
 
 /**
- * Performs equality by iterating through keys on an object and returning false
- * when any key has values which are not strictly equal between the arguments.
- * Returns true when the values of all keys are strictly equal.
+ * Take a DataView data, and decode its contents to a string
+ * according to the specified encoding and size
  */
-function shallowEqual(objA, objB) {
-  if (is(objA, objB)) {
-    return true;
-  }
+function decodeFromBuffer(data, offset, size, encoding) {
+    var littleEndian = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
 
-  if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
-    return false;
-  }
+    var val = new _FixedInt.FixedInt(size, data, offset, littleEndian);
 
-  var keysA = Object.keys(objA);
-  var keysB = Object.keys(objB);
+    switch (encoding) {
+        // Handle the char case first, size doesn't matter
+        case 'char':
+            var str = '';
+            for (var i = 0; i < size; i++) {
+                var code = data.getUint8(offset + i);
+                str += code > 32 ? String.fromCharCode(code) : ' ';
+            }
+            return '\'' + str + '\'';
 
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
+        // Int case requires signed decoding
+        case 'int':
+            return val.toString(10, true);
 
-  // Test for A's keys different from B.
-  for (var i = 0; i < keysA.length; i++) {
-    if (!hasOwnProperty.call(objB, keysA[i]) || !is(objA[keysA[i]], objB[keysA[i]])) {
-      return false;
+        case 'hex':
+            return '0x' + pad(val.toString(16), 2 * size);
+
+        case 'uint':
+            return val.toString(10);
+
+        case 'bin':
+            return pad(val.toString(2), 8 * size).replace(/(.{16})/g, "$1<wbr>");
+        default:
+            return 'HECK!';
+    }
+}
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+
+
+if (process.env.NODE_ENV !== 'production') {
+  var invariant = __webpack_require__(3);
+  var warning = __webpack_require__(7);
+  var ReactPropTypesSecret = __webpack_require__(10);
+  var loggedTypeFailures = {};
+}
+
+/**
+ * Assert that the values match with the type specs.
+ * Error messages are memorized and will only be shown once.
+ *
+ * @param {object} typeSpecs Map of name to a ReactPropType
+ * @param {object} values Runtime values that need to be type-checked
+ * @param {string} location e.g. "prop", "context", "child context"
+ * @param {string} componentName Name of the component for error messages.
+ * @param {?Function} getStack Returns the component stack.
+ * @private
+ */
+function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
+  if (process.env.NODE_ENV !== 'production') {
+    for (var typeSpecName in typeSpecs) {
+      if (typeSpecs.hasOwnProperty(typeSpecName)) {
+        var error;
+        // Prop type validation may throw. In case they do, we don't want to
+        // fail the render phase where it didn't fail before. So we log it.
+        // After these have been cleaned up, we'll let them throw.
+        try {
+          // This is intentionally an invariant that gets caught. It's the same
+          // behavior as without this statement except with a better message.
+          invariant(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'the `prop-types` package, but received `%s`.', componentName || 'React class', location, typeSpecName, typeof typeSpecs[typeSpecName]);
+          error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
+        } catch (ex) {
+          error = ex;
+        }
+        warning(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
+        if (error instanceof Error && !(error.message in loggedTypeFailures)) {
+          // Only monitor this failure once because there tends to be a lot of the
+          // same error.
+          loggedTypeFailures[error.message] = true;
+
+          var stack = getStack ? getStack() : '';
+
+          warning(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
+        }
+      }
     }
   }
-
-  return true;
 }
 
-module.exports = shallowEqual;
+module.exports = checkPropTypes;
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 14 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
-
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * 
  */
 
-var isTextNode = __webpack_require__(23);
 
-/*eslint-disable no-bitwise */
 
-/**
- * Checks if a given DOM node contains or is another DOM node.
- */
-function containsNode(outerNode, innerNode) {
-  if (!outerNode || !innerNode) {
-    return false;
-  } else if (outerNode === innerNode) {
-    return true;
-  } else if (isTextNode(outerNode)) {
-    return false;
-  } else if (isTextNode(innerNode)) {
-    return containsNode(outerNode, innerNode.parentNode);
-  } else if ('contains' in outerNode) {
-    return outerNode.contains(innerNode);
-  } else if (outerNode.compareDocumentPosition) {
-    return !!(outerNode.compareDocumentPosition(innerNode) & 16);
-  } else {
-    return false;
-  }
-}
+var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
-module.exports = containsNode;
+module.exports = ReactPropTypesSecret;
+
 
 /***/ }),
-/* 15 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1824,65 +1590,32 @@ module.exports = containsNode;
 
 
 
+var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
+
 /**
- * @param {DOMElement} node input/textarea to focus
+ * Simple, lightweight module assisting with the detection and context of
+ * Worker. Helps avoid circular dependencies and allows code to reason about
+ * whether or not they are in a Worker, even if they never include the main
+ * `ReactWorker` dependency.
  */
+var ExecutionEnvironment = {
 
-function focusNode(node) {
-  // IE8 can throw "Can't move focus to the control because it is invisible,
-  // not enabled, or of a type that does not accept the focus." for all kinds of
-  // reasons that are too expensive and fragile to test.
-  try {
-    node.focus();
-  } catch (e) {}
-}
+  canUseDOM: canUseDOM,
 
-module.exports = focusNode;
+  canUseWorkers: typeof Worker !== 'undefined',
+
+  canUseEventListeners: canUseDOM && !!(window.addEventListener || window.attachEvent),
+
+  canUseViewport: canUseDOM && !!window.screen,
+
+  isInWorker: !canUseDOM // For now, this is true - might change in the future.
+
+};
+
+module.exports = ExecutionEnvironment;
 
 /***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @typechecks
- */
-
-/* eslint-disable fb-www/typeof-undefined */
-
-/**
- * Same as document.activeElement but wraps in a try-catch block. In IE it is
- * not safe to call document.activeElement if there is nothing focused.
- *
- * The activeElement will be null only if the document or document body is not
- * yet defined.
- *
- * @param {?DOMDocument} doc Defaults to current document.
- * @return {?DOMElement}
- */
-function getActiveElement(doc) /*?DOMElement*/{
-  doc = doc || (typeof document !== 'undefined' ? document : undefined);
-  if (typeof doc === 'undefined') {
-    return null;
-  }
-  try {
-    return doc.activeElement || doc.body;
-  } catch (e) {
-    return doc.body;
-  }
-}
-
-module.exports = getActiveElement;
-
-/***/ }),
-/* 17 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1894,13 +1627,13 @@ module.exports = getActiveElement;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _FixedInt = __webpack_require__(11);
+var _FixedInt = __webpack_require__(4);
 
 var _Memory = __webpack_require__(41);
 
 var _Registers = __webpack_require__(42);
 
-var _x11 = __webpack_require__(44);
+var _x11 = __webpack_require__(43);
 
 var _x12 = _interopRequireDefault(_x11);
 
@@ -1913,8 +1646,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var STACK_START = 0xF000;
 
 var AsmSyntaxError = function (_Error) {
     _inherits(AsmSyntaxError, _Error);
@@ -1932,7 +1663,7 @@ var AsmSyntaxError = function (_Error) {
 }(Error);
 
 var Process = function () {
-    function Process(instructions) {
+    function Process(image) {
         var labels = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var arch = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _x12.default;
         var verbose = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
@@ -1940,19 +1671,16 @@ var Process = function () {
         _classCallCheck(this, Process);
 
         // Intitialize memory and registers
-        this.mem = new _Memory.MemorySegment(STACK_START);
+        this.mem = new _Memory.Memory(image);
         this.regs = new _Registers.RegisterSet(arch.registers);
-        this.regs.write('rsp', new _FixedInt.FixedInt(arch.WORD_SIZE, STACK_START));
-        this.stackOrigin = STACK_START;
 
-        // Keep instruction pointer separate from registers, initialize to zero
-        this.pc = 0;
+        // Initialize stack pointer and instruction pointer
+        this.pc = image.text.start;
+        this.stackOrigin = this.mem.segments.stack.hi;
+        this.regs.write('rsp', new _FixedInt.FixedInt(arch.WORD_SIZE, this.stackOrigin));
 
-        // Initialize the code segments
-        this.text = new _Memory.TextSegment(instructions);
+        // Save the labels and reverse the label mapping
         this.labels = labels;
-
-        // Reverse label mapping
         this.labeled = {};
         for (var label in this.labels) {
             this.labeled[this.labels[label]] = label;
@@ -2112,15 +1840,15 @@ var Process = function () {
 
                 // Fetch mnemonic and operands from Text section
 
-                var _text$read = this.text.read(this.pc),
-                    _text$read2 = _toArray(_text$read),
-                    mnemonic = _text$read2[0],
-                    operands = _text$read2.slice(1);
+                var _mem$read = this.mem.read(this.pc),
+                    _mem$read2 = _toArray(_mem$read),
+                    mnemonic = _mem$read2[0],
+                    operands = _mem$read2.slice(1);
 
                 if (verbose) this.print(pc, true, true);
 
                 // Advance instruction pointer and execute
-                this.pc = this.text.next(this.pc);
+                this.pc = this.mem.next(this.pc);
                 this.execute(mnemonic, operands);
 
                 if (verbose) {
@@ -2201,22 +1929,21 @@ var Process = function () {
             // (undefined || false) -> true, true -> false
             this.breakpoints[address] = !this.breakpoints[address];
         }
+    }, {
+        key: 'print',
 
         /**
          * Dump current state
          */
-
-    }, {
-        key: 'print',
         value: function print() {
             var pc = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.pc;
             var showPC = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
             var showStack = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
-            var _text$read3 = this.text.read(pc),
-                _text$read4 = _toArray(_text$read3),
-                mnemonic = _text$read4[0],
-                operands = _text$read4.slice(1);
+            var _mem$read3 = this.mem.read(pc),
+                _mem$read4 = _toArray(_mem$read3),
+                mnemonic = _mem$read4[0],
+                operands = _mem$read4.slice(1);
 
             var _parseOperandSize2 = this.parseOperandSize(mnemonic),
                 prefix = _parseOperandSize2.prefix,
@@ -2250,48 +1977,542 @@ var Process = function () {
 module.exports = { Process: Process };
 
 /***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+function checkDCE() {
+  /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
+  if (
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined' ||
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== 'function'
+  ) {
+    return;
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    // This branch is unreachable because this function is only called
+    // in production, but the condition is true only in development.
+    // Therefore if the branch is still here, dead code elimination wasn't
+    // properly applied.
+    // Don't change the message. React DevTools relies on it. Also make sure
+    // this message doesn't occur elsewhere in this function, or it will cause
+    // a false positive.
+    throw new Error('^_^');
+  }
+  try {
+    // Verify that the code above has been dead code eliminated (DCE'd).
+    __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE(checkDCE);
+  } catch (err) {
+    // DevTools shouldn't crash React, no matter what.
+    // We should still report in case we break this code.
+    console.error(err);
+  }
+}
+
+if (process.env.NODE_ENV === 'production') {
+  // DCE check should happen before ReactDOM bundle executes so that
+  // DevTools can report bad minification during injection.
+  checkDCE();
+  module.exports = __webpack_require__(23);
+} else {
+  module.exports = __webpack_require__(26);
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @typechecks
+ */
+
+var emptyFunction = __webpack_require__(2);
+
+/**
+ * Upstream version of event listener. Does not take into account specific
+ * nature of platform.
+ */
+var EventListener = {
+  /**
+   * Listen to DOM events during the bubble phase.
+   *
+   * @param {DOMEventTarget} target DOM element to register listener on.
+   * @param {string} eventType Event type, e.g. 'click' or 'mouseover'.
+   * @param {function} callback Callback function.
+   * @return {object} Object with a `remove` method.
+   */
+  listen: function listen(target, eventType, callback) {
+    if (target.addEventListener) {
+      target.addEventListener(eventType, callback, false);
+      return {
+        remove: function remove() {
+          target.removeEventListener(eventType, callback, false);
+        }
+      };
+    } else if (target.attachEvent) {
+      target.attachEvent('on' + eventType, callback);
+      return {
+        remove: function remove() {
+          target.detachEvent('on' + eventType, callback);
+        }
+      };
+    }
+  },
+
+  /**
+   * Listen to DOM events during the capture phase.
+   *
+   * @param {DOMEventTarget} target DOM element to register listener on.
+   * @param {string} eventType Event type, e.g. 'click' or 'mouseover'.
+   * @param {function} callback Callback function.
+   * @return {object} Object with a `remove` method.
+   */
+  capture: function capture(target, eventType, callback) {
+    if (target.addEventListener) {
+      target.addEventListener(eventType, callback, true);
+      return {
+        remove: function remove() {
+          target.removeEventListener(eventType, callback, true);
+        }
+      };
+    } else {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Attempted to listen to events during the capture phase on a ' + 'browser that does not support the capture phase. Your application ' + 'will not receive some events.');
+      }
+      return {
+        remove: emptyFunction
+      };
+    }
+  },
+
+  registerDefault: function registerDefault() {}
+};
+
+module.exports = EventListener;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @typechecks
+ * 
+ */
+
+/*eslint-disable no-self-compare */
+
+
+
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+/**
+ * inlined Object.is polyfill to avoid requiring consumers ship their own
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+ */
+function is(x, y) {
+  // SameValue algorithm
+  if (x === y) {
+    // Steps 1-5, 7-10
+    // Steps 6.b-6.e: +0 != -0
+    // Added the nonzero y check to make Flow happy, but it is redundant
+    return x !== 0 || y !== 0 || 1 / x === 1 / y;
+  } else {
+    // Step 6.a: NaN == NaN
+    return x !== x && y !== y;
+  }
+}
+
+/**
+ * Performs equality by iterating through keys on an object and returning false
+ * when any key has values which are not strictly equal between the arguments.
+ * Returns true when the values of all keys are strictly equal.
+ */
+function shallowEqual(objA, objB) {
+  if (is(objA, objB)) {
+    return true;
+  }
+
+  if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
+    return false;
+  }
+
+  var keysA = Object.keys(objA);
+  var keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  // Test for A's keys different from B.
+  for (var i = 0; i < keysA.length; i++) {
+    if (!hasOwnProperty.call(objB, keysA[i]) || !is(objA[keysA[i]], objB[keysA[i]])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+module.exports = shallowEqual;
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * 
+ */
+
+var isTextNode = __webpack_require__(24);
+
+/*eslint-disable no-bitwise */
+
+/**
+ * Checks if a given DOM node contains or is another DOM node.
+ */
+function containsNode(outerNode, innerNode) {
+  if (!outerNode || !innerNode) {
+    return false;
+  } else if (outerNode === innerNode) {
+    return true;
+  } else if (isTextNode(outerNode)) {
+    return false;
+  } else if (isTextNode(innerNode)) {
+    return containsNode(outerNode, innerNode.parentNode);
+  } else if ('contains' in outerNode) {
+    return outerNode.contains(innerNode);
+  } else if (outerNode.compareDocumentPosition) {
+    return !!(outerNode.compareDocumentPosition(innerNode) & 16);
+  } else {
+    return false;
+  }
+}
+
+module.exports = containsNode;
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
+
+
+
+/**
+ * @param {DOMElement} node input/textarea to focus
+ */
+
+function focusNode(node) {
+  // IE8 can throw "Can't move focus to the control because it is invisible,
+  // not enabled, or of a type that does not accept the focus." for all kinds of
+  // reasons that are too expensive and fragile to test.
+  try {
+    node.focus();
+  } catch (e) {}
+}
+
+module.exports = focusNode;
+
+/***/ }),
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _react = __webpack_require__(2);
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @typechecks
+ */
+
+/* eslint-disable fb-www/typeof-undefined */
+
+/**
+ * Same as document.activeElement but wraps in a try-catch block. In IE it is
+ * not safe to call document.activeElement if there is nothing focused.
+ *
+ * The activeElement will be null only if the document or document body is not
+ * yet defined.
+ *
+ * @param {?DOMDocument} doc Defaults to current document.
+ * @return {?DOMElement}
+ */
+function getActiveElement(doc) /*?DOMElement*/{
+  doc = doc || (typeof document !== 'undefined' ? document : undefined);
+  if (typeof doc === 'undefined') {
+    return null;
+  }
+  try {
+    return doc.activeElement || doc.body;
+  } catch (e) {
+    return doc.body;
+  }
+}
+
+module.exports = getActiveElement;
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(21);
+var _RegisterView = __webpack_require__(36);
 
-var _reactDom2 = _interopRequireDefault(_reactDom);
+var _RegisterView2 = _interopRequireDefault(_RegisterView);
 
-var _ProcessView = __webpack_require__(35);
+var _TextView = __webpack_require__(37);
 
-var _ProcessView2 = _interopRequireDefault(_ProcessView);
+var _TextView2 = _interopRequireDefault(_TextView);
 
-var _Assembler = __webpack_require__(39);
+var _StackView = __webpack_require__(38);
+
+var _StackView2 = _interopRequireDefault(_StackView);
+
+var _StaticView = __webpack_require__(39);
+
+var _StaticView2 = _interopRequireDefault(_StaticView);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _require = __webpack_require__(40),
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ProcessContainer = function (_React$Component) {
+    _inherits(ProcessContainer, _React$Component);
+
+    function ProcessContainer(props) {
+        _classCallCheck(this, ProcessContainer);
+
+        var _this = _possibleConstructorReturn(this, (ProcessContainer.__proto__ || Object.getPrototypeOf(ProcessContainer)).call(this, props));
+
+        _this.step = _this.step.bind(_this);
+        _this.run = _this.run.bind(_this);
+        _this.toggleBreakpoint = _this.props.process.toggleBreakpoint.bind(_this.props.process);
+
+        // Do some preprocessing of labels and figure out which VM areas they live in
+        // TODO
+        return _this;
+    }
+
+    _createClass(ProcessContainer, [{
+        key: 'step',
+        value: function step() {
+            try {
+                this.props.process.step();
+            } catch (e) {
+                this.displayError(e);
+            }
+
+            // TODO: come up with a clever way to keep track of things that have changed
+            // and only redraw those things.  It seems like react wouldn't really be able to
+            // figure it out because most change lies deep within objects, unless the process
+            // object kept track of changes on itself
+            this.forceUpdate();
+        }
+    }, {
+        key: 'run',
+        value: function run() {
+            try {
+                this.props.process.run();
+            } catch (e) {
+                this.displayError(e);
+            }
+
+            this.forceUpdate();
+        }
+    }, {
+        key: 'componentDidCatch',
+        value: function componentDidCatch(error) {
+            this.displayError(error);
+        }
+    }, {
+        key: 'displayError',
+        value: function displayError(e) {
+            alert(e + '\n' + e.stack);
+            throw e;
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var p = this.props.process;
+
+            return _react2.default.createElement(
+                'div',
+                { className: 'process-container' },
+                _react2.default.createElement(
+                    'div',
+                    { id: 'controls', className: 'container' },
+                    _react2.default.createElement(
+                        'button',
+                        { id: 'step', className: 'control-button', onClick: this.step },
+                        '\u21E5'
+                    ),
+                    _react2.default.createElement(
+                        'button',
+                        { id: 'continue', className: 'control-button', onClick: this.run },
+                        '\u279E'
+                    )
+                ),
+                _react2.default.createElement(_TextView2.default, {
+                    pc: p.pc,
+                    text: p.mem.segments.text.data,
+                    labels: p.labeled,
+                    breakpoints: p.breakpoints,
+                    toggleBreakpoint: this.toggleBreakpoint }),
+                _react2.default.createElement(_RegisterView2.default, {
+                    regs: p.regs,
+                    flags: p.regs.flags }),
+                _react2.default.createElement(_StackView2.default, {
+                    mem: p.mem.segments.stack.data,
+                    origin: p.stackOrigin,
+                    pointer: +p.regs.read('rsp') }),
+                _react2.default.createElement(_StaticView2.default, {
+                    name: 'rodata',
+                    mem: p.mem.segments.rodata.data,
+                    hi: p.mem.segments.rodata.hi,
+                    lo: p.mem.segments.rodata.lo,
+                    labelFor: p.labeled }),
+                _react2.default.createElement(_StaticView2.default, {
+                    name: 'data',
+                    mem: p.mem.segments.data.data,
+                    hi: p.mem.segments.data.hi,
+                    lo: p.mem.segments.data.lo,
+                    labelFor: p.labeled }),
+                _react2.default.createElement(_StaticView2.default, {
+                    name: 'bss',
+                    mem: p.mem.segments.bss.data,
+                    hi: p.mem.segments.bss.hi,
+                    lo: p.mem.segments.bss.lo,
+                    labelFor: p.labeled })
+            );
+        }
+    }]);
+
+    return ProcessContainer;
+}(_react2.default.Component);
+
+exports.default = ProcessContainer;
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _react = __webpack_require__(1);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = __webpack_require__(13);
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _ProcessView = __webpack_require__(19);
+
+var _ProcessView2 = _interopRequireDefault(_ProcessView);
+
+var _Assembler = __webpack_require__(40);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _require = __webpack_require__(44),
     fibonacci = _require.fibonacci;
 
-var _require2 = __webpack_require__(17),
+var _require2 = __webpack_require__(12),
     Process = _require2.Process;
 
 // Loading example program(s)
 
 
 document.getElementById('load-fib').onclick = function loadFib() {
-	var p = new Process(fibonacci.text, fibonacci.labels);
+  var p = new Process(fibonacci.image, fibonacci.labels);
 
-	_reactDom2.default.render(_react2.default.createElement(_ProcessView2.default, { process: p }), document.getElementById('root'));
+  _reactDom2.default.render(_react2.default.createElement(_ProcessView2.default, { process: p }), document.getElementById('root'));
 };
 
 // Upload button
-document.getElementById('upload').onchange = _Assembler.uploadAndAssemble;
+document.getElementById('upload').onchange = function uploadAndAssemble() {
+  var input = event.target;
+  var reader = new FileReader();
+
+  reader.onload = function () {
+    // Assemble the text
+    var text = reader.result;
+
+    var asm = new _Assembler.Assembly(text);
+
+    var _asm$link = asm.link(),
+        image = _asm$link.image,
+        labels = _asm$link.labels;
+
+    // Start the process
+
+
+    var p = new Process(image, labels);
+
+    // Render it up
+    _reactDom2.default.render(_react2.default.createElement(_ProcessView2.default, { process: p }), document.getElementById('root'));
+  };
+
+  reader.readAsText(input.files[0]);
+};
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2304,7 +2525,7 @@ document.getElementById('upload').onchange = _Assembler.uploadAndAssemble;
  This source code is licensed under the MIT license found in the
  LICENSE file in the root directory of this source tree.
 */
-var f=__webpack_require__(4),p=__webpack_require__(5);__webpack_require__(3);var r=__webpack_require__(1);
+var f=__webpack_require__(5),p=__webpack_require__(6);__webpack_require__(3);var r=__webpack_require__(2);
 function t(a){for(var b=arguments.length-1,d="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,e=0;e<b;e++)d+="\x26args[]\x3d"+encodeURIComponent(arguments[e+1]);b=Error(d+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}
 var u={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};function v(a,b,d){this.props=a;this.context=b;this.refs=p;this.updater=d||u}v.prototype.isReactComponent={};v.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?t("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState")};v.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};
 function w(a,b,d){this.props=a;this.context=b;this.refs=p;this.updater=d||u}function x(){}x.prototype=v.prototype;var y=w.prototype=new x;y.constructor=w;f(y,v.prototype);y.isPureReactComponent=!0;function z(a,b,d){this.props=a;this.context=b;this.refs=p;this.updater=d||u}var A=z.prototype=new x;A.constructor=z;f(A,v.prototype);A.unstable_isAsyncReactComponent=!0;A.render=function(){return this.props.children};
@@ -2321,7 +2542,7 @@ module.exports={Children:{map:S.map,forEach:S.forEach,count:S.count,toArray:S.to
 
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2341,12 +2562,12 @@ if (process.env.NODE_ENV !== "production") {
 
 'use strict';
 
-var objectAssign$1 = __webpack_require__(4);
-var require$$0 = __webpack_require__(6);
-var emptyObject = __webpack_require__(5);
+var objectAssign$1 = __webpack_require__(5);
+var require$$0 = __webpack_require__(7);
+var emptyObject = __webpack_require__(6);
 var invariant = __webpack_require__(3);
-var emptyFunction = __webpack_require__(1);
-var checkPropTypes = __webpack_require__(8);
+var emptyFunction = __webpack_require__(2);
+var checkPropTypes = __webpack_require__(9);
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -4027,53 +4248,7 @@ module.exports = ReactEntry;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-function checkDCE() {
-  /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-  if (
-    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined' ||
-    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== 'function'
-  ) {
-    return;
-  }
-  if (process.env.NODE_ENV !== 'production') {
-    // This branch is unreachable because this function is only called
-    // in production, but the condition is true only in development.
-    // Therefore if the branch is still here, dead code elimination wasn't
-    // properly applied.
-    // Don't change the message. React DevTools relies on it. Also make sure
-    // this message doesn't occur elsewhere in this function, or it will cause
-    // a false positive.
-    throw new Error('^_^');
-  }
-  try {
-    // Verify that the code above has been dead code eliminated (DCE'd).
-    __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE(checkDCE);
-  } catch (err) {
-    // DevTools shouldn't crash React, no matter what.
-    // We should still report in case we break this code.
-    console.error(err);
-  }
-}
-
-if (process.env.NODE_ENV === 'production') {
-  // DCE check should happen before ReactDOM bundle executes so that
-  // DevTools can report bad minification during injection.
-  checkDCE();
-  module.exports = __webpack_require__(22);
-} else {
-  module.exports = __webpack_require__(25);
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4087,7 +4262,7 @@ if (process.env.NODE_ENV === 'production') {
  LICENSE file in the root directory of this source tree.
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(2);__webpack_require__(3);var l=__webpack_require__(10),n=__webpack_require__(4),ba=__webpack_require__(12),ca=__webpack_require__(1),da=__webpack_require__(5),ea=__webpack_require__(13),fa=__webpack_require__(14),ha=__webpack_require__(15),ia=__webpack_require__(16);
+var aa=__webpack_require__(1);__webpack_require__(3);var l=__webpack_require__(11),n=__webpack_require__(5),ba=__webpack_require__(14),ca=__webpack_require__(2),da=__webpack_require__(6),ea=__webpack_require__(15),fa=__webpack_require__(16),ha=__webpack_require__(17),ia=__webpack_require__(18);
 function w(a){for(var b=arguments.length-1,c="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)c+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(c+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}aa?void 0:w("227");
 function ja(a){switch(a){case "svg":return"http://www.w3.org/2000/svg";case "math":return"http://www.w3.org/1998/Math/MathML";default:return"http://www.w3.org/1999/xhtml"}}
 var ka={Namespaces:{html:"http://www.w3.org/1999/xhtml",mathml:"http://www.w3.org/1998/Math/MathML",svg:"http://www.w3.org/2000/svg"},getIntrinsicNamespace:ja,getChildNamespace:function(a,b){return null==a||"http://www.w3.org/1999/xhtml"===a?ja(b):"http://www.w3.org/2000/svg"===a&&"foreignObject"===b?"http://www.w3.org/1999/xhtml":a}},la=null,oa={};
@@ -4336,7 +4511,7 @@ unstable_deferredUpdates:Xj.deferredUpdates,flushSync:Xj.flushSync,__SECRET_INTE
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4351,7 +4526,7 @@ unstable_deferredUpdates:Xj.deferredUpdates,flushSync:Xj.flushSync,__SECRET_INTE
  * @typechecks
  */
 
-var isNode = __webpack_require__(24);
+var isNode = __webpack_require__(25);
 
 /**
  * @param {*} object The object to check.
@@ -4364,7 +4539,7 @@ function isTextNode(object) {
 module.exports = isTextNode;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4392,7 +4567,7 @@ function isNode(object) {
 module.exports = isNode;
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4412,23 +4587,23 @@ if (process.env.NODE_ENV !== "production") {
 
 'use strict';
 
-var react = __webpack_require__(2);
+var react = __webpack_require__(1);
 var invariant = __webpack_require__(3);
-var ExecutionEnvironment = __webpack_require__(10);
-var _assign = __webpack_require__(4);
-var EventListener = __webpack_require__(12);
-var require$$0 = __webpack_require__(6);
-var hyphenateStyleName = __webpack_require__(26);
-var emptyFunction = __webpack_require__(1);
-var camelizeStyleName = __webpack_require__(28);
-var performanceNow = __webpack_require__(30);
-var propTypes = __webpack_require__(32);
-var emptyObject = __webpack_require__(5);
-var checkPropTypes = __webpack_require__(8);
-var shallowEqual = __webpack_require__(13);
-var containsNode = __webpack_require__(14);
-var focusNode = __webpack_require__(15);
-var getActiveElement = __webpack_require__(16);
+var ExecutionEnvironment = __webpack_require__(11);
+var _assign = __webpack_require__(5);
+var EventListener = __webpack_require__(14);
+var require$$0 = __webpack_require__(7);
+var hyphenateStyleName = __webpack_require__(27);
+var emptyFunction = __webpack_require__(2);
+var camelizeStyleName = __webpack_require__(29);
+var performanceNow = __webpack_require__(31);
+var propTypes = __webpack_require__(33);
+var emptyObject = __webpack_require__(6);
+var checkPropTypes = __webpack_require__(9);
+var shallowEqual = __webpack_require__(15);
+var containsNode = __webpack_require__(16);
+var focusNode = __webpack_require__(17);
+var getActiveElement = __webpack_require__(18);
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -21621,7 +21796,7 @@ module.exports = ReactDOMFiberEntry;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21636,7 +21811,7 @@ module.exports = ReactDOMFiberEntry;
 
 
 
-var hyphenate = __webpack_require__(27);
+var hyphenate = __webpack_require__(28);
 
 var msPattern = /^ms-/;
 
@@ -21663,7 +21838,7 @@ function hyphenateStyleName(string) {
 module.exports = hyphenateStyleName;
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21699,7 +21874,7 @@ function hyphenate(string) {
 module.exports = hyphenate;
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21714,7 +21889,7 @@ module.exports = hyphenate;
 
 
 
-var camelize = __webpack_require__(29);
+var camelize = __webpack_require__(30);
 
 var msPattern = /^-ms-/;
 
@@ -21742,7 +21917,7 @@ function camelizeStyleName(string) {
 module.exports = camelizeStyleName;
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21777,7 +21952,7 @@ function camelize(string) {
 module.exports = camelize;
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21792,7 +21967,7 @@ module.exports = camelize;
  * @typechecks
  */
 
-var performance = __webpack_require__(31);
+var performance = __webpack_require__(32);
 
 var performanceNow;
 
@@ -21814,7 +21989,7 @@ if (performance.now) {
 module.exports = performanceNow;
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21829,7 +22004,7 @@ module.exports = performanceNow;
 
 
 
-var ExecutionEnvironment = __webpack_require__(10);
+var ExecutionEnvironment = __webpack_require__(11);
 
 var performance;
 
@@ -21840,7 +22015,7 @@ if (ExecutionEnvironment.canUseDOM) {
 module.exports = performance || {};
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/**
@@ -21865,17 +22040,17 @@ if (process.env.NODE_ENV !== 'production') {
   // By explicitly using `prop-types` you are opting into new development behavior.
   // http://fb.me/prop-types-in-prod
   var throwOnDirectAccess = true;
-  module.exports = __webpack_require__(33)(isValidElement, throwOnDirectAccess);
+  module.exports = __webpack_require__(34)(isValidElement, throwOnDirectAccess);
 } else {
   // By explicitly using `prop-types` you are opting into new production behavior.
   // http://fb.me/prop-types-in-prod
-  module.exports = __webpack_require__(34)();
+  module.exports = __webpack_require__(35)();
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21888,13 +22063,13 @@ if (process.env.NODE_ENV !== 'production') {
 
 
 
-var emptyFunction = __webpack_require__(1);
+var emptyFunction = __webpack_require__(2);
 var invariant = __webpack_require__(3);
-var warning = __webpack_require__(6);
-var assign = __webpack_require__(4);
+var warning = __webpack_require__(7);
+var assign = __webpack_require__(5);
 
-var ReactPropTypesSecret = __webpack_require__(9);
-var checkPropTypes = __webpack_require__(8);
+var ReactPropTypesSecret = __webpack_require__(10);
+var checkPropTypes = __webpack_require__(9);
 
 module.exports = function(isValidElement, throwOnDirectAccess) {
   /* global Symbol */
@@ -22425,7 +22600,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22438,9 +22613,9 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 
 
 
-var emptyFunction = __webpack_require__(1);
+var emptyFunction = __webpack_require__(2);
 var invariant = __webpack_require__(3);
-var ReactPropTypesSecret = __webpack_require__(9);
+var ReactPropTypesSecret = __webpack_require__(10);
 
 module.exports = function() {
   function shim(props, propName, componentName, location, propFullName, secret) {
@@ -22490,136 +22665,6 @@ module.exports = function() {
 
 
 /***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _RegisterView = __webpack_require__(36);
-
-var _RegisterView2 = _interopRequireDefault(_RegisterView);
-
-var _TextView = __webpack_require__(37);
-
-var _TextView2 = _interopRequireDefault(_TextView);
-
-var _StackView = __webpack_require__(38);
-
-var _StackView2 = _interopRequireDefault(_StackView);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var ProcessContainer = function (_React$Component) {
-    _inherits(ProcessContainer, _React$Component);
-
-    function ProcessContainer(props) {
-        _classCallCheck(this, ProcessContainer);
-
-        var _this = _possibleConstructorReturn(this, (ProcessContainer.__proto__ || Object.getPrototypeOf(ProcessContainer)).call(this, props));
-
-        _this.step = _this.step.bind(_this);
-        _this.run = _this.run.bind(_this);
-        _this.toggleBreakpoint = _this.props.process.toggleBreakpoint.bind(_this.props.process);
-        return _this;
-    }
-
-    _createClass(ProcessContainer, [{
-        key: 'step',
-        value: function step() {
-            try {
-                this.props.process.step();
-            } catch (e) {
-                this.displayError(e);
-            }
-
-            // TODO: come up with a clever way to keep track of things that have changed
-            // and only redraw those things.  It seems like react wouldn't really be able to
-            // figure it out because most change lies deep within objects, unless the process
-            // object kept track of changes on itself
-            this.forceUpdate();
-        }
-    }, {
-        key: 'run',
-        value: function run() {
-            try {
-                this.props.process.run();
-            } catch (e) {
-                this.displayError(e);
-            }
-
-            this.forceUpdate();
-        }
-    }, {
-        key: 'componentDidCatch',
-        value: function componentDidCatch(error) {
-            this.displayError(error);
-        }
-    }, {
-        key: 'displayError',
-        value: function displayError(e) {
-            alert(e + '\n' + e.stack);
-            throw e;
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            return _react2.default.createElement(
-                'div',
-                { className: 'process-container' },
-                _react2.default.createElement(
-                    'div',
-                    { id: 'controls', className: 'container' },
-                    _react2.default.createElement(
-                        'button',
-                        { id: 'step', className: 'control-button', onClick: this.step },
-                        '\u21E5'
-                    ),
-                    _react2.default.createElement(
-                        'button',
-                        { id: 'continue', className: 'control-button', onClick: this.run },
-                        '\u279E'
-                    )
-                ),
-                _react2.default.createElement(_TextView2.default, {
-                    pc: this.props.process.pc,
-                    text: this.props.process.text,
-                    labels: this.props.process.labeled,
-                    breakpoints: this.props.process.breakpoints,
-                    toggleBreakpoint: this.toggleBreakpoint }),
-                _react2.default.createElement(_RegisterView2.default, {
-                    regs: this.props.process.regs,
-                    flags: this.props.process.regs.flags }),
-                _react2.default.createElement(_StackView2.default, {
-                    mem: this.props.process.mem,
-                    origin: this.props.process.stackOrigin,
-                    pointer: +this.props.process.regs.read('rsp') })
-            );
-        }
-    }]);
-
-    return ProcessContainer;
-}(_react2.default.Component);
-
-exports.default = ProcessContainer;
-
-/***/ }),
 /* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -22632,11 +22677,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(2);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _decode = __webpack_require__(7);
+var _decode = __webpack_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22879,11 +22924,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(2);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _decode = __webpack_require__(7);
+var _decode = __webpack_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23064,11 +23109,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(2);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _decode = __webpack_require__(7);
+var _decode = __webpack_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23096,6 +23141,7 @@ var StackContainer = function (_React$Component) {
 	_createClass(StackContainer, [{
 		key: 'render',
 		value: function render() {
+			// This is pretty inefficient
 			var bytes = [];
 			for (var addr = this.props.origin - 1; addr >= this.props.pointer; addr--) {
 				bytes.push(_react2.default.createElement(ByteView, {
@@ -23158,7 +23204,7 @@ var ByteView = function (_React$Component2) {
 		value: function render() {
 			var style = {
 				address: {
-					visibility: this.props.isTop ? 'visible' : ''
+					visibility: this.props.isTop || this.props.address % 8 === 0 ? 'visible' : ''
 				}
 			};
 
@@ -23191,170 +23237,195 @@ var ByteView = function (_React$Component2) {
 
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-exports.uploadAndAssemble = uploadAndAssemble;
-exports.default = assemble;
-
-var _react = __webpack_require__(2);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(21);
-
-var _reactDom2 = _interopRequireDefault(_reactDom);
-
-var _ProcessView = __webpack_require__(35);
-
-var _ProcessView2 = _interopRequireDefault(_ProcessView);
-
-var _Process = __webpack_require__(17);
+var _decode = __webpack_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); } /**
-                                                                               * An assembler module, to parse an assembly file and convert it 
-                                                                               * to objects understood by our debugger
-                                                                               */
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var PRINTABLE = 33;
+
+var StaticView = function (_React$Component) {
+  _inherits(StaticView, _React$Component);
+
+  function StaticView(props) {
+    _classCallCheck(this, StaticView);
+
+    return _possibleConstructorReturn(this, (StaticView.__proto__ || Object.getPrototypeOf(StaticView)).call(this, props));
+  }
+
+  _createClass(StaticView, [{
+    key: 'render',
+    value: function render() {
+      // This is pretty inefficient
+      var bytes = [];
+      for (var addr = this.props.lo; addr < this.props.hi; addr++) {
+        bytes.push(_react2.default.createElement(ByteView, {
+          key: addr,
+          address: addr,
+          value: this.props.mem.read(addr, 1),
+          label: this.props.labelFor[addr] }));
+      }
+
+      return _react2.default.createElement(
+        'div',
+        { id: this.props.name, className: 'container' },
+        _react2.default.createElement(
+          'div',
+          { className: 'container-title' },
+          this.props.name
+        ),
+        _react2.default.createElement(
+          'div',
+          { id: this.props.name + '-content', className: 'content' },
+          bytes
+        )
+      );
+    }
+  }]);
+
+  return StaticView;
+}(_react2.default.Component);
 
 /**
- * An event handler for file uploads, to replace the current program with another
+ * @classdesc
+ * A view of a single byte, sort of different from the 
  */
-function uploadAndAssemble() {
-	var input = event.target;
-	var reader = new FileReader();
-
-	reader.onload = function () {
-		// Assemble the text
-		var text = reader.result;
-
-		var _assemble = assemble(text),
-		    instructions = _assemble.instructions,
-		    addresses = _assemble.addresses,
-		    labels = _assemble.labels;
-
-		// Start the process
 
 
-		var p = new _Process.Process(instructions, labels);
+exports.default = StaticView;
 
-		// Render it up
-		_reactDom2.default.render(_react2.default.createElement(_ProcessView2.default, { process: p }), document.getElementById('root'));
-	};
+var ByteView = function (_React$Component2) {
+  _inherits(ByteView, _React$Component2);
 
-	reader.readAsText(input.files[0]);
-}
+  function ByteView(props) {
+    _classCallCheck(this, ByteView);
+
+    var _this2 = _possibleConstructorReturn(this, (ByteView.__proto__ || Object.getPrototypeOf(ByteView)).call(this, props));
+
+    _this2.state = {
+      decode: _this2.props.name == 'rodata' ? 'char' : 'hex'
+    };
+
+    _this2.toggleDecoding = _this2.toggleDecoding.bind(_this2);
+    return _this2;
+  }
+
+  _createClass(ByteView, [{
+    key: 'toggleDecoding',
+    value: function toggleDecoding() {
+      this.setState(function (_ref) {
+        var decode = _ref.decode;
+
+        return decode == 'hex' ? 'char' : 'hex';
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var value = this.props.value > PRINTABLE && this.state.decode === 'char' ? '\'' + String.fromCharCode(this.props.value) + '\'' : (0, _decode.pad)(this.props.value.toString(16), 2);
+
+      var label = this.props.label ? this.props.label + ':' : null;
+      var showAddress = this.props.address % 8 == 0;
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'static-byte', onClick: this.toggleDecoding },
+        _react2.default.createElement(
+          'span',
+          { className: 'static-label' },
+          label
+        ),
+        _react2.default.createElement(
+          'span',
+          { className: 'byte-value' },
+          value
+        ),
+        _react2.default.createElement(
+          'span',
+          { className: 'byte-address' + (showAddress ? ' aligned' : '') },
+          this.props.address.toString(16)
+        )
+      );
+    }
+  }]);
+
+  return ByteView;
+}(_react2.default.Component);
+
+/***/ }),
+/* 40 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * An assembler module, to parse an assembly file and convert it 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * to objects understood by our debugger
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+var _FixedInt = __webpack_require__(4);
+
+function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// Hacky approximation of the average instruction length
+// Stretch goals would be to get actual instruction length but alas
+var INSTR_LEN = 2;
 
 /**
- * Assemble a text file containing assembly instructions in AT&T syntax
- * and return an object mapping labels to addresses, parellel lists of
- * instruction strings and instruction addresses, and an object to 
- * describe staticly allocated data.
+ * @classdesc
+ * Two-pass assembler.
+ * Use line numbers for relocation records
+ * Allow linking multiple files
  */
-function assemble(asm) {
-	var addresses = [];
-	var instructions = [];
-	var labels = {};
-	var addr = 0;
-
-	var section = '';
-
-	// Split assembly file by line
-	var lines = asm.split('\n');
-
-	var _iteratorNormalCompletion = true;
-	var _didIteratorError = false;
-	var _iteratorError = undefined;
-
-	try {
-		for (var _iterator = lines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-			var line = _step.value;
-
-			// Remove comments
-			var _line$trim$split = line.trim().split('#'),
-			    _line$trim$split2 = _toArray(_line$trim$split),
-			    code = _line$trim$split2[0],
-			    comments = _line$trim$split2.slice(1);
-			// Split on whitespace or commas
-
-
-			var tokens = code.split(/[\s,]+/g);
-
-			// Parse label (and remove from instruction)
-			if (tokens[0] && tokens[0].endsWith(':')) labels[tokens.shift().slice(0, -1)] = addr;
-
-			// Parse directive
-			if (tokens[0] && tokens[0].startsWith('.')) {
-				switch (tokens[0]) {
-					case '.section':
-						section = tokens[1];
-						break;
-					case '.text':
-						section = '.text';
-					// TODO: handle static allocation etc. 
-					case '.data':
-
-				}
-
-				continue;
-			}
-
-			// Add instruction to instruction list & increment address
-			if (section === '.text' && tokens.length > 0 && tokens[0]) {
-				for (var i in tokens) {
-					if (!tokens[i]) tokens.splice(i, 1);
-				}instructions.push(tokens);
-				addresses.push(addr);
-				addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT [eek]
-			}
-		}
-	} catch (err) {
-		_didIteratorError = true;
-		_iteratorError = err;
-	} finally {
-		try {
-			if (!_iteratorNormalCompletion && _iterator.return) {
-				_iterator.return();
-			}
-		} finally {
-			if (_didIteratorError) {
-				throw _iteratorError;
-			}
-		}
-	}
-
-	return { instructions: instructions, addresses: addresses, labels: labels };
-}
 
 var Assembly = function () {
 	/**
   * Instantiate a new assembler object by initializing empty data segments
   * @constructor
-  * @returns new Assembly object
+  * @returns {Assembly} an empty Assembly object
   */
-	function Assembly() {
+	function Assembly(asm) {
 		_classCallCheck(this, Assembly);
 
-		this.addresses = [];
-		this.instructions = [];
-		this.labels = {};
-
-		// Static memory
-		this.bss = {};
-		this.data = {};
-		this.rodata = {};
-
-		// Fake addr to keep track of relocation records
+		// Use line number to identify relocations
 		this.linenum = 0;
 
-		// Have we linked yet ? 
-		this.linked = false;
+		// Map line numbers to labels
+		this.labelFor = {};
+		// Map labels to addresses
+		this.labels = {};
+
+		// Map line numbers to instructions
+		this.instructions = {};
+		this.nInstructions = 0;
+
+		// Map line numbers to static memory (& keep track of sizes)
+		this.bss = {};
+		this.bssSz = 0;
+		this.data = {};
+		this.dataSz = 0;
+		this.rodata = {};
+		this.rodataSz = 0;
+
+		// Start assembling if a string was provided
+		if (asm !== undefined) this.assemble(asm);
 	}
 
 	/**
@@ -23367,122 +23438,412 @@ var Assembly = function () {
 		key: 'assemble',
 		value: function assemble(asm) {
 			var lines = asm.split('\n');
-			var section = '.text';
+			var section = 'text';
+
 			// TODO: 
-			// Remove multiline /* */ comments
-			// asm = preprocess(asm)
-			var _iteratorNormalCompletion2 = true;
-			var _didIteratorError2 = false;
-			var _iteratorError2 = undefined;
+			//  Remove multiline /* */ comments
+			//  replace .equ directives with values
+			//  convert characters to integers
+			//   --> abstract this into a preprocess function ? 
+
+			var _iteratorNormalCompletion = true;
+			var _didIteratorError = false;
+			var _iteratorError = undefined;
 
 			try {
-				for (var _iterator2 = lines[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-					var line = _step2.value;
+				for (var _iterator = lines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+					var line = _step.value;
 
 					// Remove comments
-					var _line$trim$split3 = line.trim().split('#'),
-					    _line$trim$split4 = _toArray(_line$trim$split3),
-					    code = _line$trim$split4[0],
-					    comments = _line$trim$split4.slice(1);
-					// Split on whitespace or commas
+					var _line$trim$split = line.trim().split('#'),
+					    _line$trim$split2 = _toArray(_line$trim$split),
+					    code = _line$trim$split2[0],
+					    comments = _line$trim$split2.slice(1);
+
+					// Split on whitespace or commas keep quotes intact
 
 
-					var tokens = code.split(/[\s,]+/g);
+					var tokens = code.match(/('.*'?|".*"|[^\s,]+)/g);
+					if (tokens == null) continue;
 
-					// Parse label (and remove from instruction)
-					if (tokens[0] && tokens[0].endsWith(':')) this.labels[tokens.shift().slice(0, -1)] = this.linenum;
+					// Parse label and identify with linenum (and remove from instruction)
+					if (tokens[0] && tokens[0].endsWith(':')) {
+						// TODO: ignore compiler-generated labels
+						this.labelFor[this.linenum] = tokens.shift().slice(0, -1);
+						// console.log(`line: ${this.linenum}, label: ${this.labelFor[this.linenum]}`)
+					}
 
-					// Parse new section
+					// Remove empty tokens
+					for (var i in tokens) {
+						if (!tokens[i]) tokens.splice(i, 1);
+					} // Skip empty lines
+					if (!tokens.length || !tokens[0] && tokens.length === 1) continue;
+
+					// Check if section has changed
 					var newSection = parseSection(tokens);
 					if (newSection) {
-						section = newSection;
+						// Hacky parsing of section name
+						section = newSection.split('.')[1];
 						continue;
 					}
 
 					// Handle the line in the context of the current section
 					switch (section) {
-						case '.text':
-							this.readText(tokens);
+						case 'text':
+							// Skip directives in text section
+							// (maybe do something with .loc or .cfi_* in the future)
+							if (tokens[0].startsWith('.')) continue;
+							// Save instruction
+							this.instructions[this.linenum] = tokens;
+							this.nInstructions++;
 							break;
-						case '.data':
-							this.readData(tokens);
-						case '.rodata':
-							this.readRodata(tokens);
-						case '.bss':
-							this.readBSS(tokens);
+						case 'data':
+						case 'rodata':
+						case 'bss':
+							var item = alloc(tokens);
+							if (item !== undefined) {
+								this[section][this.linenum] = item;
+								this[section + 'Sz'] += item.size * item.value.length;
+							}
+							break;
+						default:
+							console.log('Unknown section: ' + section + ' (parsed from ' + newSection + ')');
 					}
+
+					// Increment linenum only after succesfully parsing something
+					this.linenum += 1;
 				}
 			} catch (err) {
-				_didIteratorError2 = true;
-				_iteratorError2 = err;
+				_didIteratorError = true;
+				_iteratorError = err;
 			} finally {
 				try {
-					if (!_iteratorNormalCompletion2 && _iterator2.return) {
-						_iterator2.return();
+					if (!_iteratorNormalCompletion && _iterator.return) {
+						_iterator.return();
 					}
 				} finally {
-					if (_didIteratorError2) {
-						throw _iteratorError2;
+					if (_didIteratorError) {
+						throw _iteratorError;
 					}
 				}
 			}
+
+			return this;
 		}
+
+		/**
+   * Process all assembled files so far and "link" to a program runnable
+   * by the virtual machine defined in Process.js
+   *
+   * @param {Number} addr -- the start address of the text section
+   * @returns {Object} -- A representation of the program's binary image and
+   * 						the labels it contains
+   */
+
 	}, {
 		key: 'link',
-		value: function link() {}
-	}, {
-		key: 'readData',
-		value: function readData() {}
-	}, {
-		key: 'readBSS',
-		value: function readBSS() {}
-	}, {
-		key: 'readText',
-		value: function readText(tokens) {
-			for (var i in tokens) {
-				if (!tokens[i]) tokens.splice(i, 1);
-			}this.instructions.push(tokens);
-			this.addresses.push(this.linenum);
-			this.linenum += 1;
+		value: function link() {
+			var addr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0x08048000;
+
+			// TODO: include a version of crt0.S 
+			// (_start function, get argv, call main) 
+
+			// Single image object to represent an ELF binary
+			var image = {};
+
+			image.text = {
+				start: addr,
+				end: addr + INSTR_LEN * this.nInstructions,
+				contents: [],
+				addresses: []
+			};
+
+			image.rodata = {
+				start: image.text.end,
+				end: image.text.end + this.rodataSz,
+				contents: new ArrayBuffer(this.rodataSz)
+			};
+
+			image.data = {
+				start: image.rodata.end,
+				end: image.rodata.end + this.dataSz,
+				contents: new ArrayBuffer(this.dataSz)
+			};
+
+			image.bss = {
+				start: image.data.end,
+				end: image.data.end + this.bssSz,
+				contents: new ArrayBuffer(this.bssSz)
+			};
+
+			// Write text to image
+			for (var linenum in this.instructions) {
+				image.text.addresses.push(addr);
+				image.text.contents.push(this.instructions[linenum]);
+				addr += INSTR_LEN;
+
+				// Convert line number to label
+				if (linenum in this.labelFor) {
+					this.labels[this.labelFor[linenum]] = addr;
+				}
+			}
+
+			// Write each section to image
+			var _arr = ['rodata', 'data', 'bss'];
+			for (var _i = 0; _i < _arr.length; _i++) {
+				var section = _arr[_i];
+				var view = new DataView(image[section].contents);
+				addr = this.writeToImage(view, this[section], addr);
+
+				// TODO: alignment
+			}
+
+			return { image: image, labels: this.labels };
 		}
+
+		/**
+   * Write the contents of a static virtual memory area to an ArrayBuffer
+   * via the DataView view.  Also map labels to final addresses in the process 
+   *
+   * @param {DataView} view
+   * @param {Object} data
+   * @param {Number} addr
+   * @returns {Number} the current address after allocating this section
+   */
+
 	}, {
-		key: 'readRodata',
-		value: function readRodata() {}
+		key: 'writeToImage',
+		value: function writeToImage(view, data, addr) {
+			var start = addr;
+
+			for (var linenum in data) {
+				var item = data[linenum];
+				//console.log(`allocating ${item.type}: ${item.value}`);
+				// Write text to an ArrayBuffer
+				var _iteratorNormalCompletion2 = true;
+				var _didIteratorError2 = false;
+				var _iteratorError2 = undefined;
+
+				try {
+					for (var _iterator2 = item.value[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+						var val = _step2.value;
+
+						// Convert string to charCode
+						if (typeof val == 'string') {
+							val = val.charCodeAt(0);
+						}
+
+						// Write value to buffer
+						var x = new _FixedInt.FixedInt(item.size, val);
+						x.toBuffer(view, addr - start);
+
+						// Increment address 
+						addr += item.size;
+					}
+
+					// Convert line number to label
+				} catch (err) {
+					_didIteratorError2 = true;
+					_iteratorError2 = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion2 && _iterator2.return) {
+							_iterator2.return();
+						}
+					} finally {
+						if (_didIteratorError2) {
+							throw _iteratorError2;
+						}
+					}
+				}
+
+				if (this.labelFor[linenum] !== undefined) this.labels[this.labelFor[linenum]] = addr;
+			}
+
+			return addr;
+		}
 	}]);
 
 	return Assembly;
 }();
 
-function parseSection(tokens) {
-	if (tokens[0].startsWith('.')) {}
+/**
+ * Parse an assembly static memory allocation
+ * @param {String[]} tokens -- an Array of string tokens parsed from a line of assembly
+ * @returns {Object} a description of the allocated memory
+ */
+
+
+function alloc(tokens) {
+	var str = void 0;
+	switch (tokens[0]) {
+		case ".ascii":
+			// remove quotes
+			str = tokens[1].slice(1, -1);
+			return {
+				type: '.ascii',
+				size: 1,
+				value: str
+			};
+		case ".asciz":
+			str = tokens[1].slice(1, -1);
+			return {
+				type: '.asciz',
+				size: 1,
+				value: str + '\0'
+			};
+		case ".byte":
+			return {
+				type: '.byte',
+				size: 1,
+				value: tokens.slice(1).map(function (val) {
+					return parseInt(val);
+				})
+			};
+		case ".double":
+			return {
+				type: '.double',
+				size: 8,
+				value: tokens.slice(1).map(function (val) {
+					return parseFloat(val);
+				})
+			};
+		case ".int":
+		case ".long":
+			return {
+				type: '.int',
+				size: 4,
+				value: tokens.slice(1).map(function (val) {
+					return parseInt(val);
+				})
+			};
+		case ".octa":
+			return {
+				type: '.octa',
+				size: 16,
+				value: tokens.slice(1).map(function (val) {
+					return parseInt(val);
+				})
+			};
+		case ".quad":
+			return {
+				type: '.quad',
+				size: 8,
+				value: tokens.slice(1).map(function (val) {
+					return parseInt(val);
+				})
+			};
+		case ".single":
+			return {
+				type: '.single',
+				size: 4,
+				value: tokens.slice(1).map(function (val) {
+					return parseFloat(val);
+				})
+			};
+		case ".short":
+		case ".word":
+			return {
+				type: '.word',
+				size: 2,
+				value: tokens.slice(1).map(function (val) {
+					return parseInt(val);
+				})
+			};
+		case ".skip":
+		case ".zero":
+			var val = tokens[2] ? parseInt(tokens[2]) : 0;
+			return {
+				type: '.skip',
+				size: 1,
+				value: new Array(parseInt(tokens[1])).map(function (_) {
+					return val;
+				})
+			};
+	}
 
 	return undefined;
 }
 
-module.exports = { assemble: assemble, uploadAndAssemble: uploadAndAssemble };
+/**
+ * Determine if the current line defines a new assembly section, 
+ * and return its name if so.f
+ *
+ * @param {String[]} tokens -- A line of assembly language split on spaces
+ * @returns {String} the name of the current section or undefined if the line
+ *                   does not define a new section
+ */
+function parseSection(tokens) {
+	// Remove quotes
 
-/***/ }),
-/* 40 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _require = __webpack_require__(17),
-    Process = _require.Process;
-
-var fibonacci = {
-	text: [['pushl', '$1'], ['pushl', '$1'], ['movl', '$0', '%eax'], ['addl', '$1', '%eax'], ['movl', '4(%rsp)', '%ebx'], ['movl', '(%rsp)', '%ecx'], ['addl', '%ecx', '%ebx'], ['jb', 'end'], ['pushl', '%ebx'], ['jmp', 'loop'], ['hlt']],
-
-	labels: {
-		loop: 0x03,
-		end: 0x0a
+	if (tokens[0].startsWith('.')) {
+		if (tokens[0] === '.text') return '.text';
+		if (tokens[0] === '.data') return '.data';
+		if (tokens[0] === '.section') return tokens[1].replace(/["']/g, '');
 	}
-};
 
-module.exports = { fibonacci: fibonacci };
+	return undefined;
+}
 
-var p = new Process(fibonacci.text, fibonacci.labels);
+module.exports = { Assembly: Assembly };
+
+// /**
+//  * @deprecated: to be replaced with Class Assembly
+//  * Assemble a text file containing assembly instructions in AT&T syntax
+//  * and return an object mapping labels to addresses, parellel lists of
+//  * instruction strings and instruction addresses, and an object to 
+//  * describe staticly allocated data.
+//  */
+// export default function assemble(asm) {
+// 	let addresses = [];
+// 	let instructions = [];
+// 	let labels = {};
+// 	let addr = 0;
+
+// 	let section = '';
+
+// 	// Split assembly file by line
+// 	const lines = asm.split('\n');
+
+// 	for (let line of lines) {
+// 		// Remove comments
+// 		let [code, ...comments] = line.trim().split('#');
+// 		// Split on whitespace or commas
+// 		let tokens = code.split(/[\s,]+/g);
+
+// 		// Parse label (and remove from instruction)
+// 		if (tokens[0] && tokens[0].endsWith(':'))
+// 			labels[tokens.shift().slice(0,-1)] = addr;
+
+// 		// Parse directive
+// 		if (tokens[0] && tokens[0].startsWith('.')) {
+// 			switch (tokens[0]) {
+// 				case '.section':
+// 					section = tokens[1];
+// 					break;
+// 				case '.text':
+// 					section = '.text';
+// 				// TODO: handle static allocation etc. 
+// 				case '.data':
+
+// 			}
+
+// 			continue;
+// 		}
+
+// 		// Add instruction to instruction list & increment address
+// 		if (section === '.text' && tokens.length > 0 && tokens[0]) {
+// 			for (let i in tokens)
+// 				if (!tokens[i]) tokens.splice(i, 1);
+
+// 			instructions.push(tokens);
+// 			addresses.push(addr);
+// 			addr += 1; // REPLACE WITH LENGTH OF INSTRUCTION AT SOME POINT [eek]
+// 		}
+// 	}
+
+// 	return { instructions, addresses, labels };
+// }
 
 /***/ }),
 /* 41 */
@@ -23493,13 +23854,13 @@ var p = new Process(fibonacci.text, fibonacci.labels);
 // Package for handling 64-bit data
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+  value: true
 });
 exports.TextSegment = exports.MemorySegment = exports.InvalidAccess = exports.SegFault = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _FixedInt = __webpack_require__(11);
+var _FixedInt = __webpack_require__(4);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -23508,154 +23869,174 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 /**
- * An error to throw for a page fault in our virtual memory scheme
+ * An error to throw for a segmentation fault in our virtual memory scheme
  */
 var SegFault = exports.SegFault = function (_Error) {
-	_inherits(SegFault, _Error);
+  _inherits(SegFault, _Error);
 
-	function SegFault(addr, msg) {
-		_classCallCheck(this, SegFault);
+  function SegFault(addr, msg) {
+    _classCallCheck(this, SegFault);
 
-		var _this = _possibleConstructorReturn(this, (SegFault.__proto__ || Object.getPrototypeOf(SegFault)).call(this, 'Segmentation Fault @' + addr + ': ' + msg));
+    var _this = _possibleConstructorReturn(this, (SegFault.__proto__ || Object.getPrototypeOf(SegFault)).call(this, 'Segmentation Fault @' + addr + ': ' + msg));
 
-		_this.name = 'SegFault';
-		_this.addr = addr;
-		return _this;
-	}
+    _this.name = 'SegFault';
+    _this.addr = addr;
+    return _this;
+  }
 
-	return SegFault;
-}(Error);
-
-var InvalidAccess = exports.InvalidAccess = function (_Error2) {
-	_inherits(InvalidAccess, _Error2);
-
-	function InvalidAccess(addr, msg) {
-		_classCallCheck(this, InvalidAccess);
-
-		var _this2 = _possibleConstructorReturn(this, (InvalidAccess.__proto__ || Object.getPrototypeOf(InvalidAccess)).call(this, 'Invalid Access @' + addr + ': ' + msg));
-
-		_this2.name = 'InvalidAccess';
-		_this2.addr = addr;
-		return _this2;
-	}
-
-	return InvalidAccess;
+  return SegFault;
 }(Error);
 
 /**
+ * An error to throw for illegal memory accesses that do not count as 
+ * a segmentation fault. 
+ *
+ * e.g. Unaligned read from a section that does
+ * not support unaligned reads
+ */
+
+
+var InvalidAccess = exports.InvalidAccess = function (_Error2) {
+  _inherits(InvalidAccess, _Error2);
+
+  function InvalidAccess(addr, msg) {
+    _classCallCheck(this, InvalidAccess);
+
+    var _this2 = _possibleConstructorReturn(this, (InvalidAccess.__proto__ || Object.getPrototypeOf(InvalidAccess)).call(this, 'Invalid Access @' + addr + ': ' + msg));
+
+    _this2.name = 'InvalidAccess';
+    _this2.addr = addr;
+    return _this2;
+  }
+
+  return InvalidAccess;
+}(Error);
+
+/**
+ * @classdesc
  * An object to represent byte-addressable memory
  * Implemented by creating a dataview on a 
  */
 
 
 var MemorySegment = exports.MemorySegment = function () {
-	function MemorySegment(hiAddr) {
-		var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1024;
-		var name = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+  /**
+   * @constructor
+   * @returns {MemorySegment} a new MemorySegment object
+   */
+  function MemorySegment(hiAddr) {
+    var sizeOrData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1024;
+    var name = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-		_classCallCheck(this, MemorySegment);
+    _classCallCheck(this, MemorySegment);
 
-		//, resizable = false) {
-		// Size of memory, in bytes
-		this.size = size;
-		// Name of the section
-		this.name = name;
+    //, resizable = false) {
+    if (sizeOrData instanceof ArrayBuffer) {
+      // Instantiate memory from preexisting arraybuffer
+      this.buf = sizeOrData;
+      this.size = this.buf.byteLength;
+    } else {
+      // Size of memory, in bytes
+      this.size = sizeOrData;
+      // Initialize to the provided size (will resize dynamically?)
+      this.buf = new ArrayBuffer(this.size);
+    }
 
-		// Can the memory resize?
-		// this.resizable = resizable
+    // Define a view into the buffer which will be used to read values
+    this.mem = new DataView(this.buf);
 
-		// 4-byte addresses that corresponds to the beginning and end of the array
-		// Accesses outside of this range will throw a segmentation fault
-		this.hiAddr = hiAddr;
-		this.loAddr = hiAddr - size;
+    // Name of the section
+    this.name = name;
 
-		// Initialize to the provided size, will resize dynamically
-		this.buf = new ArrayBuffer(size);
+    // Can the memory resize?
+    // this.resizable = resizable
 
-		// Define a view into the buffer which will be used to read values
-		this.mem = new DataView(this.buf);
-	}
+    // 4-byte addresses that corresponds to the beginning and end of the array
+    // Accesses outside of this range will throw a segmentation fault
+    this.hiAddr = hiAddr;
+    this.loAddr = hiAddr - this.size;
+  }
 
-	/**
-  * Double the size of the underlying ArrayBuffer.  Copy the old
-  * ArrayBuffer into the top or bottom half of the new one depending
-  * on whether addr is above or below the currently mapped address space.
-  */
-	// resize(addr) {
-	// 	// Double the size of the buffer
-	// 	this.buf = ArrayBuffer.transfer(this.buf, 2*this.size);
+  /**
+   * Double the size of the underlying ArrayBuffer.  Copy the old
+   * ArrayBuffer into the top or bottom half of the new one depending
+   * on whether addr is above or below the currently mapped address space.
+   */
+  // resize(addr) {
+  // 	// Double the size of the buffer
+  // 	this.buf = ArrayBuffer.transfer(this.buf, 2*this.size);
 
-	// 	if (addr < this.loAddr) {
-	// 		// Move the contents into the second half of the buffer
-	// 		let tmpView = new Uint8Array(this.buf);
-	// 		tmpView.copyWithin(this.size, 0);
-	// 		this.loAddr -= this.size;
-	// 	} else {
-	// 		// First half of the buffer is already correct
-	// 		this.hiAddr += this.size;
-	// 	}
+  // 	if (addr < this.loAddr) {
+  // 		// Move the contents into the second half of the buffer
+  // 		let tmpView = new Uint8Array(this.buf);
+  // 		tmpView.copyWithin(this.size, 0);
+  // 		this.loAddr -= this.size;
+  // 	} else {
+  // 		// First half of the buffer is already correct
+  // 		this.hiAddr += this.size;
+  // 	}
 
-	// 	this.size *= 2;
-	// }
+  // 	this.size *= 2;
+  // }
 
-	/**
-  * Verify that a requested address is currently mapped by the memory
-  * space, and return its byte index into the underlying ArrayBuffer.
-  * If the requested address is not mapped, resize the memory, and return
-  * the index into the new version.
-  * @param {FixedInt|Number} addr
-  * @param {Number} size
-  */
-
-
-	_createClass(MemorySegment, [{
-		key: 'addrToIdx',
-		value: function addrToIdx(addr, size) {
-			// Convert address to integer
-			addr = +addr;
-
-			// Throw a segfault for accessing memory above current range
-			// Otherwise resize
-			if (addr + size > this.hiAddr) throw new SegFault(addr, size);else if (addr < this.loAddr) {
-				// Perhaps add support for resizing at some point
-				// if (this.resizable)
-				// 	   this.resize(addr);
-				throw new SegFault(addr, size);
-			}
-
-			return this.hiAddr - addr - size;
-		}
-
-		/**
-   * Return the value of the given size at the specified address
+  /**
+   * Verify that a requested address is currently mapped by the memory
+   * space, and return its byte index into the underlying ArrayBuffer.
+   * If the requested address is not mapped, resize the memory, and return
+   * the index into the new version.
    * @param {FixedInt|Number} addr
    * @param {Number} size
-   * @returns {FixedInt} the value at the requested address
    */
 
-	}, {
-		key: 'read',
-		value: function read(addr, size) {
-			var idx = this.addrToIdx(addr, size);
 
-			return new _FixedInt.FixedInt(size, this.mem, idx);
-		}
+  _createClass(MemorySegment, [{
+    key: 'addrToIdx',
+    value: function addrToIdx(addr, size) {
+      // Convert address to integer
+      addr = +addr;
 
-		/**
-   * Store value at the specified address
-   * @param {FixedInt} value
-   * @param {FixedInt|Number} addr
-   */
+      // Throw a segfault for accessing memory above current range
+      // Otherwise resize
+      if (addr + size > this.hiAddr) throw new SegFault(addr, 'Reading ' + size + ' bytes of section ' + this.name);else if (addr < this.loAddr) {
+        // Perhaps add support for resizing at some point
+        // if (this.resizable)
+        // 	   this.resize(addr);
+        throw new SegFault(addr, 'Reading ' + size + ' bytes of section ' + this.name);
+      }
 
-	}, {
-		key: 'write',
-		value: function write(value, addr) {
-			var idx = this.addrToIdx(addr, value.size);
-			value.toBuffer(this.mem, idx);
-		}
-	}]);
+      return this.hiAddr - addr - size;
+    }
 
-	return MemorySegment;
+    /**
+     * Return the value of the given size at the specified address
+     * @param {FixedInt|Number} addr
+     * @param {Number} size
+     * @returns {FixedInt} the value at the requested address
+     */
+
+  }, {
+    key: 'read',
+    value: function read(addr, size) {
+      var idx = this.addrToIdx(addr, size);
+
+      return new _FixedInt.FixedInt(size, this.mem, idx, false);
+    }
+
+    /**
+     * Store value at the specified address
+     * @param {FixedInt} value
+     * @param {FixedInt|Number} addr
+     */
+
+  }, {
+    key: 'write',
+    value: function write(value, addr) {
+      var idx = this.addrToIdx(addr, value.size);
+      value.toBuffer(this.mem, idx, false);
+    }
+  }]);
+
+  return MemorySegment;
 }();
 
 /**
@@ -23665,110 +24046,179 @@ var MemorySegment = exports.MemorySegment = function () {
 
 
 var TextSegment = exports.TextSegment = function () {
-	function TextSegment(instructions, addresses) {
-		var offset = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+  function TextSegment(instructions, addresses) {
+    var offset = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
 
-		_classCallCheck(this, TextSegment);
+    _classCallCheck(this, TextSegment);
 
-		// Validate provided addresses
-		if (addresses && instructions.length != addresses.length) throw new TypeError('addresses must be same length as instructions');
+    // Validate provided addresses
+    if (addresses && instructions.length != addresses.length) throw new TypeError('addresses must be same length as instructions');
 
-		// Intiialize mapping from address to instruction list index
-		this.addrToIdx = {};
-		this.idxToAddr = [];
-		this.instructions = instructions;
+    // Intiialize mapping from address to instruction list index
+    this.addrToIdx = {};
+    this.idxToAddr = [];
+    this.instructions = instructions;
 
-		for (var i = 0; i < instructions.length; i++) {
-			if (addresses) {
-				if (addresses[i] <= addresses[i - 1]) throw new TypeError('addresses must be increasing');
+    for (var i = 0; i < instructions.length; i++) {
+      if (addresses) {
+        if (addresses[i] <= addresses[i - 1]) throw new TypeError('addresses must be increasing');
 
-				// Keep track of forward and reverse mapping
-				this.addrToIdx[addresses[i] + offset] = i;
-				this.idxToAddr.push(addresses[i] + offset);
-			} else {
-				this.addrToIdx[i + offset] = i;
-				this.idxToAddr.push(i + offset);
-			}
-		}
+        // Keep track of forward and reverse mapping
+        this.addrToIdx[addresses[i] + offset] = i;
+        this.idxToAddr.push(addresses[i] + offset);
+      } else {
+        this.addrToIdx[i + offset] = i;
+        this.idxToAddr.push(i + offset);
+      }
+    }
 
-		this.loAddr = addresses ? addresses[0] : 0;
-	}
+    this.loAddr = addresses ? addresses[0] : 0;
+  }
 
-	/* Return the instruction at the specified address */
+  /* Return the instruction at the specified address */
 
 
-	_createClass(TextSegment, [{
-		key: 'read',
-		value: function read(addr) {
-			addr = +addr;
-			if (!(addr in this.addrToIdx)) throw new InvalidAccess(addr, 'Unaligned read from text section');
+  _createClass(TextSegment, [{
+    key: 'read',
+    value: function read(addr) {
+      addr = +addr;
+      if (!(addr in this.addrToIdx)) throw new InvalidAccess(addr, 'Unaligned read from text section');
 
-			return this.instructions[this.addrToIdx[addr]];
-		}
+      return this.instructions[this.addrToIdx[addr]];
+    }
 
-		/* Return the address of the next instruction after the specified instruction */
+    /* Return the address of the next instruction after the specified instruction */
 
-	}, {
-		key: 'next',
-		value: function next(addr) {
-			addr = +addr;
-			return this.idxToAddr[this.addrToIdx[addr] + 1];
-		}
+  }, {
+    key: 'next',
+    value: function next(addr) {
+      addr = +addr;
+      return this.idxToAddr[this.addrToIdx[addr] + 1];
+    }
 
-		/* Refuse writing to text section */
+    /* Refuse writing to text section */
 
-	}, {
-		key: 'write',
-		value: function write() {
-			throw new SegFault(addr, 0);
-		}
-	}]);
+  }, {
+    key: 'write',
+    value: function write() {
+      throw new SegFault(addr, 0);
+    }
+  }]);
 
-	return TextSegment;
+  return TextSegment;
 }();
 
 /**
  * Memory in general, wrapping several segments of different types
- * 
+ * Initialized with an Image object specifying layout and contents of static memory
+ *
+ * This is analogous to an Operating system structure which keeps track of a
+ * process' virtual memory and the areas 
  */
 
 
 var Memory = function () {
-	function Memory(segments) {
-		_classCallCheck(this, Memory);
+  function Memory(image) {
+    var stackOrigin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0xC0000000;
 
-		this.segments = segments;
-	}
+    _classCallCheck(this, Memory);
 
-	_createClass(Memory, [{
-		key: 'getSegment',
-		value: function getSegment(addr) {
-			for (s in this.segments) {
-				var seg = this.segments[s];
-				if (seg.lo < addr && addr < seg.hi) {
-					return seg.data;
-				}
-			}
-		}
-	}, {
-		key: 'read',
-		value: function read(addr, size) {
-			return getSegment(addr).read(addr, size);
-		}
-	}, {
-		key: 'write',
-		value: function write(value, addr) {
-			getSegment(addr).write(value, addr);
-		}
-	}]);
+    // Initialize a registry of mapped virtual memory areas for a process
+    this.segments = {};
+    for (var s in image) {
+      if (s == 'text') {
+        // Intialize TextSegment holding string assembly instructions
+        this.segments.text = {
+          hi: image.text.end,
+          lo: image.text.start,
+          data: new TextSegment(image.text.contents, image.text.addresses)
+        };
+      } else {
+        // Initialize static MemorySegments with preallocated contents
+        this.segments[s] = {
+          hi: image[s].end,
+          lo: image[s].start,
+          data: new MemorySegment(image[s].end, image[s].contents, s)
+        };
+      }
+    }
 
-	return Memory;
+    // TODO: fix/replace with better solution
+    var STACK_SIZE = 1024;
+    var HEAP_SIZE = 1024;
+
+    // Initialize Stack and Heap segments
+    this.segments.stack = {
+      hi: stackOrigin,
+      lo: stackOrigin - STACK_SIZE,
+      data: new MemorySegment(stackOrigin, STACK_SIZE, 'stack')
+    };
+
+    // Compute end of static sections
+    var endStatic = this.segments.bss.hi || this.segments.data.hi || this.segments.rodata.hi || this.segments.text.hi;
+
+    var brk = endStatic + HEAP_SIZE;
+    this.segments.heap = {
+      hi: brk,
+      lo: brk - HEAP_SIZE,
+      data: new MemorySegment(brk, HEAP_SIZE, 'heap')
+    };
+  }
+
+  /**
+   * Compute the segment that maps the request virtual address
+   * @param {Number} addr
+   * @returns {MemorySegment|TextSegment}
+   */
+
+
+  _createClass(Memory, [{
+    key: 'getSegment',
+    value: function getSegment(addr) {
+      // TODO: Incorporate read and write permissions and check those here
+      for (var s in this.segments) {
+        var seg = this.segments[s];
+        if (seg.lo <= addr && addr <= seg.hi) {
+          return seg.data;
+        }
+      }
+
+      throw new SegFault('Address 0x' + addr.toString(16) + ' not mapped');
+    }
+  }, {
+    key: 'read',
+    value: function read(addr, size) {
+      return this.getSegment(addr).read(addr, size);
+    }
+  }, {
+    key: 'write',
+    value: function write(value, addr) {
+      this.getSegment(addr).write(value, addr);
+    }
+
+    /**
+     * Compute the next valid address after addr
+     * really only relevant for text section, where only addresses are valid
+     *
+     * Note: this is kind of a hack to keep segment type out of Process.js
+     */
+
+  }, {
+    key: 'next',
+    value: function next(addr) {
+      if (this.segments.text.lo <= addr && addr <= this.segments.text.hi) return this.segments.text.data.next(addr);
+
+      throw new InvalidAccess('0x' + addr.toString(16), 'Not in text segment ' + ('(lo = ' + this.segments.text.lo + ', hi = ' + this.segments.text.hi + ')'));
+    }
+  }]);
+
+  return Memory;
 }();
 
 exports.default = Memory;
 
 
-module.exports = { MemorySegment: MemorySegment, TextSegment: TextSegment };
+module.exports = { Memory: Memory, MemorySegment: MemorySegment, TextSegment: TextSegment };
 
 /***/ }),
 /* 42 */
@@ -23786,7 +24236,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _FixedInt = __webpack_require__(11);
+var _FixedInt = __webpack_require__(4);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -23938,8 +24388,7 @@ exports.default = RegisterSet;
 module.exports = { RegisterSet: RegisterSet };
 
 /***/ }),
-/* 43 */,
-/* 44 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23949,7 +24398,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _FixedInt = __webpack_require__(11);
+var _FixedInt = __webpack_require__(4);
 
 var WORD_SIZE = 8;
 
@@ -24410,6 +24859,37 @@ var x86 = { chip: chip, registers: registers, WORD_SIZE: WORD_SIZE };
 exports.default = x86;
 
 module.exports = x86;
+
+/***/ }),
+/* 44 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _require = __webpack_require__(12),
+    Process = _require.Process;
+
+var fibonacci = {
+	image: {
+		text: {
+			start: 0x8048000,
+			end: 0x8048016,
+			contents: [['pushl', '$1'], ['pushl', '$1'], ['movl', '$0', '%eax'], ['addl', '$1', '%eax'], ['movl', '4(%rsp)', '%ebx'], ['movl', '(%rsp)', '%ecx'], ['addl', '%ecx', '%ebx'], ['jb', 'end'], ['pushl', '%ebx'], ['jmp', 'loop'], ['hlt']],
+			addresses: [0x8048000, 0x8048002, 0x8048004, 0x8048006, 0x8048008, 0x804800a, 0x804800c, 0x804800e, 0x8048010, 0x8048012, 0x8048014]
+		},
+		rodata: {},
+		data: {},
+		bss: {}
+	},
+
+	labels: {
+		loop: 0x8048006,
+		end: 0x8048014
+	}
+};
+
+module.exports = { fibonacci: fibonacci };
 
 /***/ })
 /******/ ]);

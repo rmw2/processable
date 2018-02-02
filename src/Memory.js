@@ -3,7 +3,7 @@
 import {FixedInt, ALU} from './FixedInt.js';
 
 /**
- * An error to throw for a page fault in our virtual memory scheme
+ * An error to throw for a segmentation fault in our virtual memory scheme
  */
 export class SegFault extends Error {
 	constructor(addr, msg) {
@@ -13,6 +13,13 @@ export class SegFault extends Error {
 	}
 }
 
+/**
+ * An error to throw for illegal memory accesses that do not count as 
+ * a segmentation fault. 
+ *
+ * e.g. Unaligned read from a section that does
+ * not support unaligned reads
+ */
 export class InvalidAccess extends Error {
     constructor(addr, msg) {
         super(`Invalid Access @${addr}: ${msg}`);
@@ -22,14 +29,30 @@ export class InvalidAccess extends Error {
 }
 
 /**
+ * @classdesc
  * An object to represent byte-addressable memory
  * Implemented by creating a dataview on a 
  */
 export class MemorySegment {
+	/**
+	 * @constructor
+	 * @returns {MemorySegment} a new MemorySegment object
+	 */
+	constructor(hiAddr, sizeOrData = 1024, name='') { //, resizable = false) {
+		if (sizeOrData instanceof ArrayBuffer) {
+			// Instantiate memory from preexisting arraybuffer
+			this.buf = sizeOrData;
+			this.size = this.buf.byteLength;
+		} else {
+			// Size of memory, in bytes
+			this.size = sizeOrData;
+			// Initialize to the provided size (will resize dynamically?)
+			this.buf = new ArrayBuffer(this.size);
+		}
 
-	constructor(hiAddr, size = 1024, name='') { //, resizable = false) {
-		// Size of memory, in bytes
-		this.size = size;
+		// Define a view into the buffer which will be used to read values
+		this.mem = new DataView(this.buf);
+
         // Name of the section
 		this.name = name;
 
@@ -39,13 +62,7 @@ export class MemorySegment {
 		// 4-byte addresses that corresponds to the beginning and end of the array
 		// Accesses outside of this range will throw a segmentation fault
 		this.hiAddr = hiAddr;
-		this.loAddr = hiAddr - size;
-
-		// Initialize to the provided size, will resize dynamically
-		this.buf = new ArrayBuffer(size);
-
-		// Define a view into the buffer which will be used to read values
-		this.mem = new DataView(this.buf);
+		this.loAddr = hiAddr - this.size;
 	}
 	
 	/**
@@ -85,13 +102,13 @@ export class MemorySegment {
 		// Throw a segfault for accessing memory above current range
 		// Otherwise resize
 		if (addr + size > this.hiAddr) 
-			throw new SegFault(addr, `Reading ${size}-bytes of section ${this.name}`);
+			throw new SegFault(addr, `Reading ${size} bytes of section ${this.name}`);
 
 		else if (addr < this.loAddr) {
             // Perhaps add support for resizing at some point
 			// if (this.resizable)
 			// 	   this.resize(addr);
-			throw new SegFault(addr, `Reading ${size}-bytes of section ${this.name}`);
+			throw new SegFault(addr, `Reading ${size} bytes of section ${this.name}`);
 		}
 
 		return (this.hiAddr - addr - size);
@@ -106,7 +123,7 @@ export class MemorySegment {
 	read(addr, size) {
 		let idx = this.addrToIdx(addr, size);
 
-		return new FixedInt(size, this.mem, idx);
+		return new FixedInt(size, this.mem, idx, false);
 	}
 
 	/**
@@ -116,7 +133,7 @@ export class MemorySegment {
 	 */
 	write(value, addr) {
 		let idx = this.addrToIdx(addr, value.size);
-		value.toBuffer(this.mem, idx);
+		value.toBuffer(this.mem, idx, false);
 	}
 }
 
@@ -176,29 +193,96 @@ export class TextSegment {
 
 /**
  * Memory in general, wrapping several segments of different types
- * 
+ * Initialized with an Image object specifying layout and contents of static memory
+ *
+ * This is analogous to an Operating system structure which keeps track of a
+ * process' virtual memory and the areas 
  */
 export default class Memory {
-    constructor(segments) {
-        this.segments = segments;
+    constructor(image, stackOrigin=0xC0000000) {
+    	// Initialize a registry of mapped virtual memory areas for a process
+    	this.segments = {};
+    	for (let s in image) {
+    		if (s == 'text') {
+    			// Intialize TextSegment holding string assembly instructions
+    			this.segments.text = {
+    				hi: image.text.end,
+    				lo: image.text.start,
+    				data: new TextSegment(image.text.contents, image.text.addresses)
+    			};
+    		} else {
+    			// Initialize static MemorySegments with preallocated contents
+    			this.segments[s] = {
+    				hi: image[s].end,
+    				lo: image[s].start,
+    				data: new MemorySegment(image[s].end, image[s].contents, s)
+    			};
+    		}
+    	}
+
+    	// TODO: fix/replace with better solution
+    	const STACK_SIZE = 1024;
+    	const HEAP_SIZE = 1024;
+
+    	// Initialize Stack and Heap segments
+    	this.segments.stack = {
+    		hi: stackOrigin,
+    		lo: stackOrigin - STACK_SIZE, 
+    		data: new MemorySegment(stackOrigin, STACK_SIZE, 'stack')
+    	};
+
+    	// Compute end of static sections
+    	let endStatic = this.segments.bss.hi 
+    		|| this.segments.data.hi
+    		|| this.segments.rodata.hi
+    		|| this.segments.text.hi;
+
+    	let brk = endStatic + HEAP_SIZE;
+    	this.segments.heap = {
+    		hi: brk,
+    		lo: brk - HEAP_SIZE,
+    		data: new MemorySegment(brk, HEAP_SIZE, 'heap')
+    	};
     }
 
+    /**
+     * Compute the segment that maps the request virtual address
+     * @param {Number} addr
+     * @returns {MemorySegment|TextSegment}
+     */
     getSegment(addr) {
-    	for (s in this.segments) {
+    	// TODO: Incorporate read and write permissions and check those here
+    	for (let s in this.segments) {
     		const seg = this.segments[s];
-    		if (seg.lo < addr && addr < seg.hi) {
+    		if (seg.lo <= addr && addr <= seg.hi) {
     			return seg.data;
     		}
     	}
+
+    	throw new SegFault(`Address 0x${addr.toString(16)} not mapped`);
     }
 
     read(addr, size) {
-    	return getSegment(addr).read(addr, size);
+    	return this.getSegment(addr).read(addr, size);
     }
 
     write(value, addr) {
-    	getSegment(addr).write(value, addr);
+    	this.getSegment(addr).write(value, addr);
+    }
+
+    /**
+     * Compute the next valid address after addr
+     * really only relevant for text section, where only addresses are valid
+     *
+     * Note: this is kind of a hack to keep segment type out of Process.js
+     */
+    next(addr) {
+    	if (this.segments.text.lo <= addr && addr <= this.segments.text.hi)
+    		return this.segments.text.data.next(addr);
+
+    	throw new InvalidAccess(`0x${addr.toString(16)}`, `Not in text segment ` +
+    		`(lo = ${this.segments.text.lo}, hi = ${this.segments.text.hi})`);
     }
 }
 
-module.exports = { MemorySegment, TextSegment };
+module.exports = { Memory, MemorySegment, TextSegment };
