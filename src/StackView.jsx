@@ -34,9 +34,14 @@ export default class StackContainer extends React.Component {
 					alignment={this.state.alignment}
 					pointer={pointer} />
 			);
-		}
 
-		console.log(bytes);
+			if (addr % this.state.alignment === 0)
+				bytes.push(
+					<DecodeView
+					 key={`${addr}-decode`}
+					 value={this.props.mem.read(addr, this.state.alignment)} />
+				);
+		}
 
 		return (
 			<div id="stack" className="container">
@@ -56,6 +61,33 @@ export default class StackContainer extends React.Component {
 				<div id="stack-content" className="content">
 					{bytes}
 				</div>
+			</div>
+		);
+	}
+}
+
+class DecodeView extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+		// HACK
+		// TODO: make this more elegant
+		let size = this.props.value.size;
+
+		const BYTE_HEIGHT = 1.2; // em
+
+		let style = {
+			height: `${size * BYTE_HEIGHT}em`,
+			transform: `translateY(calc(1px - ${size * BYTE_HEIGHT}em))`,
+			paddingTop: `${(size * BYTE_HEIGHT - 1)/ 2}em`,
+			backgroundColor: `#ddf`
+		};
+
+		return (
+			<div style={style} className="stack-decode">
+				{this.props.value.toString(10)}
 			</div>
 		);
 	}

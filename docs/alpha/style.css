@@ -306,6 +306,13 @@ label.file {
 	font-size: 0.75em;
 }
 
+.stack-decode {
+	float: right;
+	border: 1px solid rgba(0,0,0,0.2);
+	width: 6em;
+	text-align: center;
+}
+
 .stack-byte > span, .static-byte > span {
 	display: inline-block;
 }

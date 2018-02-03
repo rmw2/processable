@@ -23166,9 +23166,11 @@ var StackContainer = function (_React$Component) {
 					address: addr,
 					alignment: this.state.alignment,
 					pointer: pointer }));
-			}
 
-			console.log(bytes);
+				if (addr % this.state.alignment === 0) bytes.push(_react2.default.createElement(DecodeView, {
+					key: addr + '-decode',
+					value: this.props.mem.read(addr, this.state.alignment) }));
+			}
 
 			return _react2.default.createElement(
 				'div',
@@ -23212,15 +23214,51 @@ var StackContainer = function (_React$Component) {
 	return StackContainer;
 }(_react2.default.Component);
 
+exports.default = StackContainer;
+
+var DecodeView = function (_React$Component2) {
+	_inherits(DecodeView, _React$Component2);
+
+	function DecodeView(props) {
+		_classCallCheck(this, DecodeView);
+
+		return _possibleConstructorReturn(this, (DecodeView.__proto__ || Object.getPrototypeOf(DecodeView)).call(this, props));
+	}
+
+	_createClass(DecodeView, [{
+		key: 'render',
+		value: function render() {
+			// HACK
+			// TODO: make this more elegant
+			var size = this.props.value.size;
+
+			var BYTE_HEIGHT = 1.2; // em
+
+			var style = {
+				height: size * BYTE_HEIGHT + 'em',
+				transform: 'translateY(calc(1px - ' + size * BYTE_HEIGHT + 'em))',
+				paddingTop: (size * BYTE_HEIGHT - 1) / 2 + 'em',
+				backgroundColor: '#ddf'
+			};
+
+			return _react2.default.createElement(
+				'div',
+				{ style: style, className: 'stack-decode' },
+				this.props.value.toString(10)
+			);
+		}
+	}]);
+
+	return DecodeView;
+}(_react2.default.Component);
+
 /**
  * A single byte on the stack
  */
 
 
-exports.default = StackContainer;
-
-var ByteView = function (_React$Component2) {
-	_inherits(ByteView, _React$Component2);
+var ByteView = function (_React$Component3) {
+	_inherits(ByteView, _React$Component3);
 
 	function ByteView(props) {
 		_classCallCheck(this, ByteView);
