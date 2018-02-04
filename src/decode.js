@@ -1,12 +1,18 @@
 /**
  * A module for decoding 
  */
-
 import {FixedInt, ALU} from './FixedInt.js';
 
-// 
-const ENCODINGS = ['hex', 'int', 'uint', 'char', 'bin'];
+const BITS_PER_BYTE = 8;
+// Mask for lowest 8 bits of a number
+const BYTE_MASK = 0xFF;
+// Lowest printable character code
+const PRINTABLE = 33;
 
+/**
+ * @classdesc
+ * An error to be thrown when there are problems decoding values.
+ */
 class DecodeError extends Error {
 	constructor(msg) {
         super(`Decode Error: ${msg}`);
@@ -14,17 +20,19 @@ class DecodeError extends Error {
     }
 }
 
+/**
+ * Pad a number or string to a specific length
+ *
+ * @param {Number|String} n -- the value to be padded
+ * @param {Number} width    -- the width of the result
+ * @param {String} [z]      -- the character to pad with, defaults to zero
+ * @returns {String}        -- the given value, padded to width with z
+ */
 export function pad(n, width, z='0') {
+    // Convert n to string
     n = n + '';
+    // Really hacky padding
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-}
-
-export function nextEncoding(state) {
-	const nextIdx = (state.encIdx + 1) % ENCODINGS.length;
-	return {
-		encoding: ENCODINGS[nextIdx],
-		encIdx: nextIdx
-	};
 }
 
 /**

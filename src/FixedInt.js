@@ -221,16 +221,23 @@ export default class FixedInt {
   }
 
   /**
-   * Print this number as a string in the given base
-   * @param {Number} radix -- base 
+   * Print this number as a string in the given base, or as a string
+   * @param {Number\String} radix -- base 
    * @param {boolean} [signed] -- how to interpret this number when printing
+   * @returns {String} -- the string representation of this number
    */
   toString(radix=10, signed=false) {
+    // Only consider sign if number is negative and base is 10
     signed = (signed && this.isNegative() && radix == 10);
 
-    if (this.size < 8) 
-      return (signed) ? 'TODO' : this.lo.toString(radix);
+    // Defer to built-in toString methods for small ints
+    if (this.size < 8) {
+      if (radix == 'char') 
+        return toPrintableCharacters(this.lo, this.size);
+      return (signed) ? `-${ALU.neg(this).lo.toString(radix)}` : this.lo.toString(radix);
+    }
 
+    // Custom handling for 64-bit integers
     switch (radix) {
       case 2:
         return this.hi.toString(radix) + pad(this.lo.toString(radix), 32);
@@ -238,49 +245,14 @@ export default class FixedInt {
         return this.hi.toString(radix) + pad(this.lo.toString(radix), 8);
       case 10:
         return 'TODO';
-        // SKipped
+        // Skipped
         let hi = this.hi.toString(radix);
         let lo = pad(this.lo.toString(radix), 64/radix);
+      case 'char':
+        return toPrintableCharacters(this.hi, 4) + toPrintableCharacters(this.lo, 4);
+      default:
+        throw new FixedIntError(`Cannot decode 64-bit FixedInt to base '${radix}'`);
     }
-        // char* itoa(int num, char* str, int base)
-    // {
-    //     int i = 0;
-    let i = 0;
-    //     bool isNegative = false;
-    let isNegative = signed && this.isNegative() && radix === 10;
-     
-    //     /* Handle 0 explicitely, otherwise empty string is printed for 0 */
-
-    //     if (num == 0)
-    //     {
-    //         str[i++] = '0';
-    //         str[i] = '\0';
-    //         return str;
-    //     }
-    if (+this == 0)
-      return '0';
-
-    let num;
-    while (false) {}
-    //     // Process individual digits
-    //     while (num != 0)
-    //     {
-    //         int rem = num % base;
-    //         str[i++] = (rem > 9)? (rem-10) + 'a' : rem + '0';
-    //         num = num/base;
-    //     }
-     
-    //     // If number is negative, append '-'
-    //     if (isNegative)
-    //         str[i++] = '-';
-     
-    //     str[i] = '\0'; // Append string terminator
-     
-    //     // Reverse the string
-    //     reverse(str, i);
-     
-    //     return str;
-    // }
   }
 
   /**
@@ -319,7 +291,6 @@ let _SF = false;
 
 let _PF = false; /* Not implemented */
 let _AF = false; /* Not implemented */
-
 
 /* An auxiliary value to be stored by the ALU */
 let _aux;
@@ -618,6 +589,7 @@ export class ALU {
  * Recursive helper function to perform division with remainder.
  * @param {FixedInt} dividend
  * @param {FixedInt} divisor
+ * @returns {[FixedInt, FixedInt]} the quotient and remainder
  */
 function divmod(dividend, divisor) {
   // Base case
@@ -639,6 +611,10 @@ function divmod(dividend, divisor) {
 
 /**
  * Ensure that the operands are the same size, or coerce both to FixedInt
+ * @param {FixedInt} a
+ * @param {FixedInt|Number} b
+ * @returns {{a: FixedInt, b: FixedInt}}
+ * @throws {FixedIntError} if a and b are not the same size, or a is not FixedInt
  */
 function validateOperands(a, b) {
   // Validate type
@@ -657,11 +633,36 @@ function validateOperands(a, b) {
 }
 
 /**
- * Helper function for printing strings
+ * Pad a number or string to a specific length
+ *
+ * @param {Number|String} n -- the value to be padded
+ * @param {Number} width    -- the width of the result
+ * @param {String} [z]      -- the character to pad with, defaults to zero
+ * @returns {String}        -- the given value, padded to width with z
  */
-function pad(n, width, z='0') {
+export function pad(n, width, z='0') {
+    // Convert n to string
     n = n + '';
+    // Really hacky padding
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+/**
+ * Convert an integer to n ASCII characters, byte by byte.
+ * All non-printable characters are rendered as spaces
+ *
+ * @param {Number} val -- the number to convert 
+ * @param {Number} [n] -- the number of characters to decode (1-4)
+ * @returns {String}   -- the ASCII
+ */
+export function toPrintableCharacters(val, n=4) {
+    let str = '';
+    for (let i = 0; i < n; i++) {
+        let charCode = (val >> (i*BITS_PER_BYTE)) & BYTE_MASK;
+        str += (charCode >= PRINTABLE) ? String.fromCharCode(charCode) : ' ';
+    }
+
+    return str;
 }
 
 module.exports = { FixedInt, ALU, SIGN_MASK, VAL_MASK, MODULUS, MAX_SAFE_HI };
