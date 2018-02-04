@@ -3,11 +3,12 @@
  */
 import {FixedInt, ALU} from './FixedInt.js';
 
-const BITS_PER_BYTE = 8;
-// Mask for lowest 8 bits of a number
-const BYTE_MASK = 0xFF;
 // Lowest printable character code
-const PRINTABLE = 33;
+const UNPRINTABLE = 0x20;
+
+// Other helpful constants
+const BYTE_MASK = 0xFF;
+const BITS_PER_BYTE = 0x8;
 
 /**
  * @classdesc
@@ -35,7 +36,57 @@ export function pad(n, width, z='0') {
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
+// Enumeration of the different available encodings
+export const Encodings = {
+    HEX:    0,
+    INT:    1,
+    UINT:   2,
+    CHAR:   3,
+    BIN:    4,
+    length: 5
+};
+
+/** 
+ * Decode a FixedInt object according to the specified decoding index
+ */
+export function decode(val, encoding) {
+    switch (encoding) {
+        case Encodings.INT:
+            return val.toString(10, true)
+        case Encodings.UINT:
+            return val.toString(10, false);
+        case Encodings.HEX:
+            return pad(val.toString(16), 2*val.size).replace(/(.{8})/g, "$1<wbr>");
+        case Encodings.BIN:
+            return pad(val.toString(2), 8*val.size).replace(/(.{8})/g, "$1<wbr>");
+        case Encodings.CHAR:
+            return (val.size === 8)
+                ? `'${toPrintableCharacters(val.hi, 4)}${toPrintableCharacters(val.lo, 4)}'`
+                : `'${toPrintableCharacters(val.lo, val.size)}'`;
+    }
+}
+
 /**
+ * Convert an integer to n ASCII characters, byte by byte.
+ * All non-printable characters are rendered as spaces
+ *
+ * @param {Number} val -- the number to convert 
+ * @param {Number} [n] -- the number of characters to decode (1-4)
+ * @returns {String}   -- the ASCII
+ */
+export function toPrintableCharacters(val, n=4) {
+    let str = '';
+    for (let i = 0; i < n; i++) {
+        let charCode = (val >> (i*BITS_PER_BYTE)) & BYTE_MASK;
+        str += (charCode > UNPRINTABLE) ? String.fromCharCode(charCode) : ' ';
+    }
+
+    return str;
+}
+
+/**
+ * TRYNA GET AWAY FROM THIS FUNC AND REPLACE WITH FIXEDINT STUFF
+ *
  * Take a DataView data, and decode its contents to a string
  * according to the specified encoding and size
  */

@@ -90,11 +90,11 @@ export default class FixedInt {
           break;
         case 8:
           if (littleEndian) {
-            this._lo = view.getUint32(offset, littleEndian);
-            this._hi = view.getUint32(offset + 4, littleEndian);
+            this._lo = view.getUint32(offset, true);
+            this._hi = view.getUint32(offset + 4, true);
           } else {
-            this._hi = view.getUint32(offset, !littleEndian);
-            this._lo = view.getUint32(offset + 4, !littleEndian);
+            this._hi = view.getUint32(offset, false);
+            this._lo = view.getUint32(offset + 4, false);
           }
       }
     }
@@ -222,19 +222,18 @@ export default class FixedInt {
 
   /**
    * Print this number as a string in the given base, or as a string
-   * @param {Number\String} radix -- base 
-   * @param {boolean} [signed] -- how to interpret this number when printing
-   * @returns {String} -- the string representation of this number
+   * @param {Number|String} radix -- base 
+   * @param {boolean} [signed]    -- how to interpret this number when printing
+   * @returns {String}            -- the string representation of this number
    */
   toString(radix=10, signed=false) {
     // Only consider sign if number is negative and base is 10
     signed = (signed && this.isNegative() && radix == 10);
 
-    // Defer to built-in toString methods for small ints
     if (this.size < 8) {
-      if (radix == 'char') 
-        return toPrintableCharacters(this.lo, this.size);
-      return (signed) ? `-${ALU.neg(this).lo.toString(radix)}` : this.lo.toString(radix);
+      return (signed) 
+        ? `-${ALU.neg(this).lo.toString(radix)}` 
+        : this.lo.toString(radix);
     }
 
     // Custom handling for 64-bit integers
@@ -244,12 +243,10 @@ export default class FixedInt {
       case 16:
         return this.hi.toString(radix) + pad(this.lo.toString(radix), 8);
       case 10:
-        return 'TODO';
+        return this.isSafeInteger() ? (+this).toString() : 'TODO';
         // Skipped
         let hi = this.hi.toString(radix);
         let lo = pad(this.lo.toString(radix), 64/radix);
-      case 'char':
-        return toPrintableCharacters(this.hi, 4) + toPrintableCharacters(this.lo, 4);
       default:
         throw new FixedIntError(`Cannot decode 64-bit FixedInt to base '${radix}'`);
     }
@@ -645,24 +642,6 @@ export function pad(n, width, z='0') {
     n = n + '';
     // Really hacky padding
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-}
-
-/**
- * Convert an integer to n ASCII characters, byte by byte.
- * All non-printable characters are rendered as spaces
- *
- * @param {Number} val -- the number to convert 
- * @param {Number} [n] -- the number of characters to decode (1-4)
- * @returns {String}   -- the ASCII
- */
-export function toPrintableCharacters(val, n=4) {
-    let str = '';
-    for (let i = 0; i < n; i++) {
-        let charCode = (val >> (i*BITS_PER_BYTE)) & BYTE_MASK;
-        str += (charCode >= PRINTABLE) ? String.fromCharCode(charCode) : ' ';
-    }
-
-    return str;
 }
 
 module.exports = { FixedInt, ALU, SIGN_MASK, VAL_MASK, MODULUS, MAX_SAFE_HI };
