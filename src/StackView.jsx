@@ -2,7 +2,10 @@
  * The stack, broh
  */
 import React from 'react';
-import { pad } from './decode.js'
+
+import { nextEncoding } from './util.js';
+import { pad } from './decode.js';
+
 /**
  * A component to display view
  */
@@ -66,9 +69,21 @@ export default class StackContainer extends React.Component {
 	}
 }
 
+/**
+ * @classdesc
+ * A component to show a decoded view of a particular group of 
+ * bytes on the stack, toggleable between string, signed/unsigned decimal int,
+ * and hex or binary digits.
+ */
 class DecodeView extends React.Component {
 	constructor(props) {
 		super(props);
+
+		this.toggleDecoding = this.toggleDecoding.bind(this);
+	}
+
+	toggleDecoding() {
+		this.setState(nextEncoding);
 	}
 
 	render() {
@@ -77,7 +92,6 @@ class DecodeView extends React.Component {
 		let size = this.props.value.size;
 
 		const BYTE_HEIGHT = 1.2; // em
-
 		let style = {
 			height: `${size * BYTE_HEIGHT}em`,
 			transform: `translateY(calc(1px - ${size * BYTE_HEIGHT}em))`,
@@ -86,7 +100,7 @@ class DecodeView extends React.Component {
 		};
 
 		return (
-			<div style={style} className="stack-decode">
+			<div style={style} onClick={this.toggleDecoding} className="stack-decode">
 				{this.props.value.toString(10)}
 			</div>
 		);
@@ -101,6 +115,9 @@ class ByteView extends React.Component {
 		super(props);
 	}
 
+	/** 
+	 * Ensure that items newly pushed to the stack are scrolled into view
+	 */
 	componentDidMount() {
 		this.refs.thisbyte.scrollIntoView(false);
 	}
@@ -108,13 +125,15 @@ class ByteView extends React.Component {
 	render() {
 		const aligned = (this.props.address % this.props.alignment === 0) ? ' aligned' : '';
 
+		// If a pointer was provided, render its name and an arrow before the byte value
 		const pointer = this.props.pointer ? (
 			<span className="stack-pointer">
 				{this.props.pointer}
-				<span className="arrow" dangerouslySetInnerHTML={{__html: ' &rarr;'}}></span>
+				<span className="arrow"> &rarr;</span>
 			</span>
 		) : <span className="stack-pointer" />;
 
+		// Render byte's value in hex, along with pointer and address if applicable
 		return (
 			<div ref="thisbyte" className={'stack-byte' + aligned}>
 				{pointer}

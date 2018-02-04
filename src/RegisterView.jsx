@@ -2,7 +2,9 @@
  * Display registers and such
  */
 import React from 'react';
-import { nextEncoding, decodeFromBuffer } from './decode.js';
+
+import { nextEncoding } from './util.js';
+import { decodeFromBuffer } from './decode.js';
 
 export default class RegisterContainer extends React.Component {
     constructor(props) {
