@@ -3,7 +3,7 @@
  */
 import React from 'react';
 
-import { nextEncoding } from './util.js';
+import { nextEncoding, encStyle, regStyle } from './util.js';
 import { decodeFromBuffer } from './decode.js';
 
 export default class RegisterContainer extends React.Component {
@@ -132,21 +132,6 @@ class MultiSizeRegisterView extends React.Component {
     }
 
     render() {
-        const encStyle = {
-            hex:  {backgroundColor:  '#ffe3e3'},
-            int:  {backgroundColor:  '#ccfff6'},
-            uint: {backgroundColor:  '#e0ffdc'},
-            char: {backgroundColor:  '#fffdda'},
-            bin:  {backgroundColor:  '#deddff'}
-        };
-
-        const regStyle = {
-            1: {backgroundColor: '#c9a762'},
-            2: {backgroundColor: '#b48166'},
-            4: {backgroundColor: '#9a4456'},
-            8: {backgroundColor: '#742c3d'},
-        };
-
         return (
             <div className="register">
                 <button 
