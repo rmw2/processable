@@ -392,6 +392,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+exports.pad = pad;
+exports.toPrintableCharacters = toPrintableCharacters;
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -633,9 +636,10 @@ var FixedInt = function () {
     }
 
     /**
-     * Print this number as a string in the given base
-     * @param {Number} radix -- base 
+     * Print this number as a string in the given base, or as a string
+     * @param {Number\String} radix -- base 
      * @param {boolean} [signed] -- how to interpret this number when printing
+     * @returns {String} -- the string representation of this number
      */
 
   }, {
@@ -644,10 +648,16 @@ var FixedInt = function () {
       var radix = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 10;
       var signed = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
+      // Only consider sign if number is negative and base is 10
       signed = signed && this.isNegative() && radix == 10;
 
-      if (this.size < 8) return signed ? 'TODO' : this.lo.toString(radix);
+      // Defer to built-in toString methods for small ints
+      if (this.size < 8) {
+        if (radix == 'char') return toPrintableCharacters(this.lo, this.size);
+        return signed ? '-' + ALU.neg(this).lo.toString(radix) : this.lo.toString(radix);
+      }
 
+      // Custom handling for 64-bit integers
       switch (radix) {
         case 2:
           return this.hi.toString(radix) + pad(this.lo.toString(radix), 32);
@@ -655,48 +665,14 @@ var FixedInt = function () {
           return this.hi.toString(radix) + pad(this.lo.toString(radix), 8);
         case 10:
           return 'TODO';
-          // SKipped
+          // Skipped
           var hi = this.hi.toString(radix);
           var lo = pad(this.lo.toString(radix), 64 / radix);
+        case 'char':
+          return toPrintableCharacters(this.hi, 4) + toPrintableCharacters(this.lo, 4);
+        default:
+          throw new FixedIntError('Cannot decode 64-bit FixedInt to base \'' + radix + '\'');
       }
-      // char* itoa(int num, char* str, int base)
-      // {
-      //     int i = 0;
-      var i = 0;
-      //     bool isNegative = false;
-      var isNegative = signed && this.isNegative() && radix === 10;
-
-      //     /* Handle 0 explicitely, otherwise empty string is printed for 0 */
-
-      //     if (num == 0)
-      //     {
-      //         str[i++] = '0';
-      //         str[i] = '\0';
-      //         return str;
-      //     }
-      if (+this == 0) return '0';
-
-      var num = void 0;
-      while (false) {}
-      //     // Process individual digits
-      //     while (num != 0)
-      //     {
-      //         int rem = num % base;
-      //         str[i++] = (rem > 9)? (rem-10) + 'a' : rem + '0';
-      //         num = num/base;
-      //     }
-
-      //     // If number is negative, append '-'
-      //     if (isNegative)
-      //         str[i++] = '-';
-
-      //     str[i] = '\0'; // Append string terminator
-
-      //     // Reverse the string
-      //     reverse(str, i);
-
-      //     return str;
-      // }
     }
 
     /**
@@ -1152,6 +1128,7 @@ var ALU = exports.ALU = function () {
  * Recursive helper function to perform division with remainder.
  * @param {FixedInt} dividend
  * @param {FixedInt} divisor
+ * @returns {[FixedInt, FixedInt]} the quotient and remainder
  */
 
 
@@ -1180,6 +1157,10 @@ function divmod(dividend, divisor) {
 
 /**
  * Ensure that the operands are the same size, or coerce both to FixedInt
+ * @param {FixedInt} a
+ * @param {FixedInt|Number} b
+ * @returns {{a: FixedInt, b: FixedInt}}
+ * @throws {FixedIntError} if a and b are not the same size, or a is not FixedInt
  */
 function validateOperands(a, b) {
   // Validate type
@@ -1196,13 +1177,40 @@ function validateOperands(a, b) {
 }
 
 /**
- * Helper function for printing strings
+ * Pad a number or string to a specific length
+ *
+ * @param {Number|String} n -- the value to be padded
+ * @param {Number} width    -- the width of the result
+ * @param {String} [z]      -- the character to pad with, defaults to zero
+ * @returns {String}        -- the given value, padded to width with z
  */
 function pad(n, width) {
   var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '0';
 
+  // Convert n to string
   n = n + '';
+  // Really hacky padding
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+/**
+ * Convert an integer to n ASCII characters, byte by byte.
+ * All non-printable characters are rendered as spaces
+ *
+ * @param {Number} val -- the number to convert 
+ * @param {Number} [n] -- the number of characters to decode (1-4)
+ * @returns {String}   -- the ASCII
+ */
+function toPrintableCharacters(val) {
+  var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+
+  var str = '';
+  for (var i = 0; i < n; i++) {
+    var charCode = val >> i * BITS_PER_BYTE & BYTE_MASK;
+    str += charCode >= PRINTABLE ? String.fromCharCode(charCode) : ' ';
+  }
+
+  return str;
 }
 
 module.exports = { FixedInt: FixedInt, ALU: ALU, SIGN_MASK: SIGN_MASK, VAL_MASK: VAL_MASK, MODULUS: MODULUS, MAX_SAFE_HI: MAX_SAFE_HI };
@@ -1408,7 +1416,6 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.pad = pad;
-exports.nextEncoding = nextEncoding;
 exports.decodeFromBuffer = decodeFromBuffer;
 
 var _FixedInt = __webpack_require__(4);
@@ -1421,8 +1428,17 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 * A module for decoding 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 */
 
-// 
-var ENCODINGS = ['hex', 'int', 'uint', 'char', 'bin'];
+
+var BITS_PER_BYTE = 8;
+// Mask for lowest 8 bits of a number
+var BYTE_MASK = 0xFF;
+// Lowest printable character code
+var PRINTABLE = 33;
+
+/**
+ * @classdesc
+ * An error to be thrown when there are problems decoding values.
+ */
 
 var DecodeError = function (_Error) {
     _inherits(DecodeError, _Error);
@@ -1439,19 +1455,23 @@ var DecodeError = function (_Error) {
     return DecodeError;
 }(Error);
 
+/**
+ * Pad a number or string to a specific length
+ *
+ * @param {Number|String} n -- the value to be padded
+ * @param {Number} width    -- the width of the result
+ * @param {String} [z]      -- the character to pad with, defaults to zero
+ * @returns {String}        -- the given value, padded to width with z
+ */
+
+
 function pad(n, width) {
     var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '0';
 
+    // Convert n to string
     n = n + '';
+    // Really hacky padding
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-}
-
-function nextEncoding(state) {
-    var nextIdx = (state.encIdx + 1) % ENCODINGS.length;
-    return {
-        encoding: ENCODINGS[nextIdx],
-        encIdx: nextIdx
-    };
 }
 
 /**
@@ -22683,6 +22703,8 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
+var _util = __webpack_require__(45);
+
 var _decode = __webpack_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -22827,7 +22849,7 @@ var MultiSizeRegisterView = function (_React$Component3) {
     _createClass(MultiSizeRegisterView, [{
         key: 'toggleEncoding',
         value: function toggleEncoding() {
-            this.setState(_decode.nextEncoding);
+            this.setState(_util.nextEncoding);
         }
 
         /**
@@ -23115,6 +23137,8 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
+var _util = __webpack_require__(45);
+
 var _decode = __webpack_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -23214,6 +23238,14 @@ var StackContainer = function (_React$Component) {
 	return StackContainer;
 }(_react2.default.Component);
 
+/**
+ * @classdesc
+ * A component to show a decoded view of a particular group of 
+ * bytes on the stack, toggleable between string, signed/unsigned decimal int,
+ * and hex or binary digits.
+ */
+
+
 exports.default = StackContainer;
 
 var DecodeView = function (_React$Component2) {
@@ -23222,10 +23254,18 @@ var DecodeView = function (_React$Component2) {
 	function DecodeView(props) {
 		_classCallCheck(this, DecodeView);
 
-		return _possibleConstructorReturn(this, (DecodeView.__proto__ || Object.getPrototypeOf(DecodeView)).call(this, props));
+		var _this3 = _possibleConstructorReturn(this, (DecodeView.__proto__ || Object.getPrototypeOf(DecodeView)).call(this, props));
+
+		_this3.toggleDecoding = _this3.toggleDecoding.bind(_this3);
+		return _this3;
 	}
 
 	_createClass(DecodeView, [{
+		key: 'toggleDecoding',
+		value: function toggleDecoding() {
+			this.setState(_util.nextEncoding);
+		}
+	}, {
 		key: 'render',
 		value: function render() {
 			// HACK
@@ -23233,7 +23273,6 @@ var DecodeView = function (_React$Component2) {
 			var size = this.props.value.size;
 
 			var BYTE_HEIGHT = 1.2; // em
-
 			var style = {
 				height: size * BYTE_HEIGHT + 'em',
 				transform: 'translateY(calc(1px - ' + size * BYTE_HEIGHT + 'em))',
@@ -23243,7 +23282,7 @@ var DecodeView = function (_React$Component2) {
 
 			return _react2.default.createElement(
 				'div',
-				{ style: style, className: 'stack-decode' },
+				{ style: style, onClick: this.toggleDecoding, className: 'stack-decode' },
 				this.props.value.toString(10)
 			);
 		}
@@ -23266,6 +23305,11 @@ var ByteView = function (_React$Component3) {
 		return _possibleConstructorReturn(this, (ByteView.__proto__ || Object.getPrototypeOf(ByteView)).call(this, props));
 	}
 
+	/** 
+  * Ensure that items newly pushed to the stack are scrolled into view
+  */
+
+
 	_createClass(ByteView, [{
 		key: 'componentDidMount',
 		value: function componentDidMount() {
@@ -23276,13 +23320,19 @@ var ByteView = function (_React$Component3) {
 		value: function render() {
 			var aligned = this.props.address % this.props.alignment === 0 ? ' aligned' : '';
 
+			// If a pointer was provided, render its name and an arrow before the byte value
 			var pointer = this.props.pointer ? _react2.default.createElement(
 				'span',
 				{ className: 'stack-pointer' },
 				this.props.pointer,
-				_react2.default.createElement('span', { className: 'arrow', dangerouslySetInnerHTML: { __html: ' &rarr;' } })
+				_react2.default.createElement(
+					'span',
+					{ className: 'arrow' },
+					' \u2192'
+				)
 			) : _react2.default.createElement('span', { className: 'stack-pointer' });
 
+			// Render byte's value in hex, along with pointer and address if applicable
 			return _react2.default.createElement(
 				'div',
 				{ ref: 'thisbyte', className: 'stack-byte' + aligned },
@@ -23406,15 +23456,21 @@ var ByteView = function (_React$Component2) {
       this.setState(function (_ref) {
         var decode = _ref.decode;
 
-        return decode == 'hex' ? 'char' : 'hex';
+        return {
+          decode: decode == 'hex' ? 'char' : 'hex'
+        };
       });
     }
   }, {
     key: 'render',
     value: function render() {
+      // Decode as character or hex byte, depending on printability and state
       var value = this.props.value > PRINTABLE && this.state.decode === 'char' ? '\'' + String.fromCharCode(this.props.value) + '\'' : (0, _decode.pad)(this.props.value.toString(16), 2);
 
       var label = this.props.label ? this.props.label + ':' : null;
+
+      // Align on 8-byte boundaries
+      // TODO: make this customizable
       var showAddress = this.props.address % 8 == 0;
 
       return _react2.default.createElement(
@@ -24966,6 +25022,34 @@ var fibonacci = {
 };
 
 module.exports = { fibonacci: fibonacci };
+
+/***/ }),
+/* 45 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.nextEncoding = nextEncoding;
+/**
+ * A module of strange utility functions that don't belong anywhere else
+ */
+
+var ENCODINGS = ['hex', 'int', 'uint', 'char', 'bin'];
+
+/**
+ * Function to pass to setState to toggle encoding between the above options
+ */
+function nextEncoding(state) {
+	var nextIdx = (state.encIdx + 1) % ENCODINGS.length;
+	return {
+		encoding: ENCODINGS[nextIdx],
+		encIdx: nextIdx
+	};
+}
 
 /***/ })
 /******/ ]);

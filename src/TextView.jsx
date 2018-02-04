@@ -2,7 +2,7 @@
  * Display instructions and such
  */
 import React from 'react';
-import { pad } from './decode.js'
+import { pad } from './decode.js';
 
 export default class TextContainer extends React.Component {
     constructor(props) {
