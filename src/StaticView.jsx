@@ -49,16 +49,22 @@ class ByteView extends React.Component {
 
   toggleDecoding() {
     this.setState(({decode}) => {
-      return (decode == 'hex') ? 'char' : 'hex';
+      return {
+        decode: (decode == 'hex') ? 'char' : 'hex'
+      };
     });
   }
 
   render() {
+    // Decode as character or hex byte, depending on printability and state
     let value = (this.props.value > PRINTABLE && this.state.decode === 'char')
       ? `'${String.fromCharCode(this.props.value)}'`
       : pad(this.props.value.toString(16), 2);
 
     let label = this.props.label  ? this.props.label + ':' : null;
+
+    // Align on 8-byte boundaries
+    // TODO: make this customizable
     let showAddress = (this.props.address % 8 == 0);
 
     return (
