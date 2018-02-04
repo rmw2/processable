@@ -328,12 +328,13 @@ label.file {
 	visibility: hidden;
 	padding: 0 0.25em;
 }
+
 /*
-.stack-byte:hover .byte-address,
+.stack-byte:hover .byte-address,*/
 .static-byte:hover .byte-address, 
 .current {
 	visibility: visible;
-}*/
+}
 
 .aligned {
 	box-shadow: 1px 1px 0px rgba(0,0,0,0.2);
