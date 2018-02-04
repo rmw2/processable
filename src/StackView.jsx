@@ -3,8 +3,11 @@
  */
 import React from 'react';
 
-import { nextEncoding } from './util.js';
-import { pad } from './decode.js';
+import { encStyle } from './util.js';
+import { Encodings, decode, pad } from './decode.js';
+
+const BYTE_HEIGHT = 1.2; // em
+
 
 /**
  * A component to display view
@@ -24,7 +27,7 @@ export default class StackContainer extends React.Component {
 
 	render() {
 		// This is pretty inefficient
-		let bytes = [];
+		let bytes = [], decoded = [];
 		for (let addr = this.props.origin - 1; addr >= this.props.rsp; addr--) {
 			let pointer = (addr == this.props.rsp) ? '%rsp' : 
 				(addr == this.props.rbp) ? '%rbp' : null;
@@ -39,9 +42,9 @@ export default class StackContainer extends React.Component {
 			);
 
 			if (addr % this.state.alignment === 0)
-				bytes.push(
+				decoded.push(
 					<DecodeView
-					 key={`${addr}-decode`}
+					 key={addr}
 					 value={this.props.mem.read(addr, this.state.alignment)} />
 				);
 		}
@@ -62,7 +65,8 @@ export default class StackContainer extends React.Component {
 					)}
 				</div>
 				<div id="stack-content" className="content">
-					{bytes}
+					<div id="stack-bytes-raw">{bytes}</div>
+					<div id="stack-bytes-decoded">{decoded}</div>
 				</div>
 			</div>
 		);
@@ -79,29 +83,45 @@ class DecodeView extends React.Component {
 	constructor(props) {
 		super(props);
 
+		this.state = {
+			encoding: Encodings.INT,
+		};
+
 		this.toggleDecoding = this.toggleDecoding.bind(this);
 	}
 
 	toggleDecoding() {
-		this.setState(nextEncoding);
+		this.setState(({encoding}) => {
+			return {encoding: ++encoding % Encodings.length}
+		});
 	}
 
 	render() {
+		let {encoding} = this.state;
+
 		// HACK
 		// TODO: make this more elegant
 		let size = this.props.value.size;
 
-		const BYTE_HEIGHT = 1.2; // em
+
+		// Hackily set the position of the box
 		let style = {
+			// VERY STRANGE WORLD.  For some reason (maybe rounding EM to px?) the 8-byte object is
+			// 1px smaller than the 8 bytes to its left.  We correct that with a calc().
+			// Maybe we can figure out why this happens at some point ?? Probably hard to avoid
+			// seeing as we're trying to line up two columns that don't actually share any positioning
 			height: `${size * BYTE_HEIGHT}em`,
-			transform: `translateY(calc(1px - ${size * BYTE_HEIGHT}em))`,
-			paddingTop: `${(size * BYTE_HEIGHT - 1)/ 2}em`,
-			backgroundColor: `#ddf`
 		};
 
+		// Set background color by encoding
+		Object.assign(style, encStyle[encoding]);
+
 		return (
-			<div style={style} onClick={this.toggleDecoding} className="stack-decode">
-				{this.props.value.toString(10)}
+			<div style={style} 
+				className="stack-decode" 
+				onClick={this.toggleDecoding} >
+				<span className="stack-decode-content"
+					dangerouslySetInnerHTML={{__html: decode(this.props.value, encoding)}} />
 			</div>
 		);
 	}
@@ -135,7 +155,7 @@ class ByteView extends React.Component {
 
 		// Render byte's value in hex, along with pointer and address if applicable
 		return (
-			<div ref="thisbyte" className={'stack-byte' + aligned}>
+			<div ref="thisbyte" className={'stack-byte' + aligned} style={{height: `${BYTE_HEIGHT}em`}}>
 				{pointer}
 				<span style={{visibility: (this.props.pointer || aligned) ? 'visible' : 'hidden'}} 
 					className="byte-address">

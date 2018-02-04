@@ -393,7 +393,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 exports.pad = pad;
-exports.toPrintableCharacters = toPrintableCharacters;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -502,11 +501,11 @@ var FixedInt = function () {
           break;
         case 8:
           if (littleEndian) {
-            this._lo = view.getUint32(offset, littleEndian);
-            this._hi = view.getUint32(offset + 4, littleEndian);
+            this._lo = view.getUint32(offset, true);
+            this._hi = view.getUint32(offset + 4, true);
           } else {
-            this._hi = view.getUint32(offset, !littleEndian);
-            this._lo = view.getUint32(offset + 4, !littleEndian);
+            this._hi = view.getUint32(offset, false);
+            this._lo = view.getUint32(offset + 4, false);
           }
       }
     }
@@ -637,9 +636,9 @@ var FixedInt = function () {
 
     /**
      * Print this number as a string in the given base, or as a string
-     * @param {Number\String} radix -- base 
-     * @param {boolean} [signed] -- how to interpret this number when printing
-     * @returns {String} -- the string representation of this number
+     * @param {Number|String} radix -- base 
+     * @param {boolean} [signed]    -- how to interpret this number when printing
+     * @returns {String}            -- the string representation of this number
      */
 
   }, {
@@ -651,9 +650,7 @@ var FixedInt = function () {
       // Only consider sign if number is negative and base is 10
       signed = signed && this.isNegative() && radix == 10;
 
-      // Defer to built-in toString methods for small ints
       if (this.size < 8) {
-        if (radix == 'char') return toPrintableCharacters(this.lo, this.size);
         return signed ? '-' + ALU.neg(this).lo.toString(radix) : this.lo.toString(radix);
       }
 
@@ -664,12 +661,10 @@ var FixedInt = function () {
         case 16:
           return this.hi.toString(radix) + pad(this.lo.toString(radix), 8);
         case 10:
-          return 'TODO';
+          return this.isSafeInteger() ? (+this).toString() : 'TODO';
           // Skipped
           var hi = this.hi.toString(radix);
           var lo = pad(this.lo.toString(radix), 64 / radix);
-        case 'char':
-          return toPrintableCharacters(this.hi, 4) + toPrintableCharacters(this.lo, 4);
         default:
           throw new FixedIntError('Cannot decode 64-bit FixedInt to base \'' + radix + '\'');
       }
@@ -1193,26 +1188,6 @@ function pad(n, width) {
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
-/**
- * Convert an integer to n ASCII characters, byte by byte.
- * All non-printable characters are rendered as spaces
- *
- * @param {Number} val -- the number to convert 
- * @param {Number} [n] -- the number of characters to decode (1-4)
- * @returns {String}   -- the ASCII
- */
-function toPrintableCharacters(val) {
-  var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
-
-  var str = '';
-  for (var i = 0; i < n; i++) {
-    var charCode = val >> i * BITS_PER_BYTE & BYTE_MASK;
-    str += charCode >= PRINTABLE ? String.fromCharCode(charCode) : ' ';
-  }
-
-  return str;
-}
-
 module.exports = { FixedInt: FixedInt, ALU: ALU, SIGN_MASK: SIGN_MASK, VAL_MASK: VAL_MASK, MODULUS: MODULUS, MAX_SAFE_HI: MAX_SAFE_HI };
 
 /***/ }),
@@ -1415,7 +1390,10 @@ module.exports = warning;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.Encodings = undefined;
 exports.pad = pad;
+exports.decode = decode;
+exports.toPrintableCharacters = toPrintableCharacters;
 exports.decodeFromBuffer = decodeFromBuffer;
 
 var _FixedInt = __webpack_require__(4);
@@ -1429,11 +1407,12 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 */
 
 
-var BITS_PER_BYTE = 8;
-// Mask for lowest 8 bits of a number
-var BYTE_MASK = 0xFF;
 // Lowest printable character code
-var PRINTABLE = 33;
+var UNPRINTABLE = 0x20;
+
+// Other helpful constants
+var BYTE_MASK = 0xFF;
+var BITS_PER_BYTE = 0x8;
 
 /**
  * @classdesc
@@ -1474,7 +1453,57 @@ function pad(n, width) {
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
+// Enumeration of the different available encodings
+var Encodings = exports.Encodings = {
+    HEX: 0,
+    INT: 1,
+    UINT: 2,
+    CHAR: 3,
+    BIN: 4,
+    length: 5
+};
+
+/** 
+ * Decode a FixedInt object according to the specified decoding index
+ */
+function decode(val, encoding) {
+    switch (encoding) {
+        case Encodings.INT:
+            return val.toString(10, true);
+        case Encodings.UINT:
+            return val.toString(10, false);
+        case Encodings.HEX:
+            return pad(val.toString(16), 2 * val.size).replace(/(.{8})/g, "$1<wbr>");
+        case Encodings.BIN:
+            return pad(val.toString(2), 8 * val.size).replace(/(.{8})/g, "$1<wbr>");
+        case Encodings.CHAR:
+            return val.size === 8 ? '\'' + toPrintableCharacters(val.hi, 4) + toPrintableCharacters(val.lo, 4) + '\'' : '\'' + toPrintableCharacters(val.lo, val.size) + '\'';
+    }
+}
+
 /**
+ * Convert an integer to n ASCII characters, byte by byte.
+ * All non-printable characters are rendered as spaces
+ *
+ * @param {Number} val -- the number to convert 
+ * @param {Number} [n] -- the number of characters to decode (1-4)
+ * @returns {String}   -- the ASCII
+ */
+function toPrintableCharacters(val) {
+    var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+
+    var str = '';
+    for (var i = 0; i < n; i++) {
+        var charCode = val >> i * BITS_PER_BYTE & BYTE_MASK;
+        str += charCode > UNPRINTABLE ? String.fromCharCode(charCode) : ' ';
+    }
+
+    return str;
+}
+
+/**
+ * TRYNA GET AWAY FROM THIS FUNC AND REPLACE WITH FIXEDINT STUFF
+ *
  * Take a DataView data, and decode its contents to a string
  * according to the specified encoding and size
  */
@@ -22893,21 +22922,6 @@ var MultiSizeRegisterView = function (_React$Component3) {
     }, {
         key: 'render',
         value: function render() {
-            var encStyle = {
-                hex: { backgroundColor: '#ffe3e3' },
-                int: { backgroundColor: '#ccfff6' },
-                uint: { backgroundColor: '#e0ffdc' },
-                char: { backgroundColor: '#fffdda' },
-                bin: { backgroundColor: '#deddff' }
-            };
-
-            var regStyle = {
-                1: { backgroundColor: '#c9a762' },
-                2: { backgroundColor: '#b48166' },
-                4: { backgroundColor: '#9a4456' },
-                8: { backgroundColor: '#742c3d' }
-            };
-
             return _react2.default.createElement(
                 'div',
                 { className: 'register' },
@@ -22916,7 +22930,7 @@ var MultiSizeRegisterView = function (_React$Component3) {
                     {
                         className: 'toggle toggle-register',
                         onClick: this.toggleRegister,
-                        style: regStyle[this.state.size] },
+                        style: _util.regStyle[this.state.size] },
                     this.state.name
                 ),
                 _react2.default.createElement('span', { className: 'register-value', dangerouslySetInnerHTML: this.decode() }),
@@ -22925,7 +22939,7 @@ var MultiSizeRegisterView = function (_React$Component3) {
                     {
                         className: 'toggle toggle-encoding',
                         onClick: this.toggleEncoding,
-                        style: encStyle[this.state.encoding] },
+                        style: _util.encStyle[this.state.encoding] },
                     this.state.encoding
                 )
             );
@@ -23152,9 +23166,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 */
 
 
+var BYTE_HEIGHT = 1.2; // em
+
+
 /**
  * A component to display view
  */
+
 var StackContainer = function (_React$Component) {
 	_inherits(StackContainer, _React$Component);
 
@@ -23180,7 +23198,8 @@ var StackContainer = function (_React$Component) {
 			var _this2 = this;
 
 			// This is pretty inefficient
-			var bytes = [];
+			var bytes = [],
+			    decoded = [];
 			for (var addr = this.props.origin - 1; addr >= this.props.rsp; addr--) {
 				var pointer = addr == this.props.rsp ? '%rsp' : addr == this.props.rbp ? '%rbp' : null;
 
@@ -23191,8 +23210,8 @@ var StackContainer = function (_React$Component) {
 					alignment: this.state.alignment,
 					pointer: pointer }));
 
-				if (addr % this.state.alignment === 0) bytes.push(_react2.default.createElement(DecodeView, {
-					key: addr + '-decode',
+				if (addr % this.state.alignment === 0) decoded.push(_react2.default.createElement(DecodeView, {
+					key: addr,
 					value: this.props.mem.read(addr, this.state.alignment) }));
 			}
 
@@ -23229,7 +23248,16 @@ var StackContainer = function (_React$Component) {
 				_react2.default.createElement(
 					'div',
 					{ id: 'stack-content', className: 'content' },
-					bytes
+					_react2.default.createElement(
+						'div',
+						{ id: 'stack-bytes-raw' },
+						bytes
+					),
+					_react2.default.createElement(
+						'div',
+						{ id: 'stack-bytes-decoded' },
+						decoded
+					)
 				)
 			);
 		}
@@ -23256,6 +23284,10 @@ var DecodeView = function (_React$Component2) {
 
 		var _this3 = _possibleConstructorReturn(this, (DecodeView.__proto__ || Object.getPrototypeOf(DecodeView)).call(this, props));
 
+		_this3.state = {
+			encoding: _decode.Encodings.INT
+		};
+
 		_this3.toggleDecoding = _this3.toggleDecoding.bind(_this3);
 		return _this3;
 	}
@@ -23263,27 +23295,41 @@ var DecodeView = function (_React$Component2) {
 	_createClass(DecodeView, [{
 		key: 'toggleDecoding',
 		value: function toggleDecoding() {
-			this.setState(_util.nextEncoding);
+			this.setState(function (_ref) {
+				var encoding = _ref.encoding;
+
+				return { encoding: ++encoding % _decode.Encodings.length };
+			});
 		}
 	}, {
 		key: 'render',
 		value: function render() {
+			var encoding = this.state.encoding;
+
 			// HACK
 			// TODO: make this more elegant
+
 			var size = this.props.value.size;
 
-			var BYTE_HEIGHT = 1.2; // em
+			// Hackily set the position of the box
 			var style = {
-				height: size * BYTE_HEIGHT + 'em',
-				transform: 'translateY(calc(1px - ' + size * BYTE_HEIGHT + 'em))',
-				paddingTop: (size * BYTE_HEIGHT - 1) / 2 + 'em',
-				backgroundColor: '#ddf'
+				// VERY STRANGE WORLD.  For some reason (maybe rounding EM to px?) the 8-byte object is
+				// 1px smaller than the 8 bytes to its left.  We correct that with a calc().
+				// Maybe we can figure out why this happens at some point ?? Probably hard to avoid
+				// seeing as we're trying to line up two columns that don't actually share any positioning
+				height: size * BYTE_HEIGHT + 'em'
 			};
+
+			// Set background color by encoding
+			Object.assign(style, _util.encStyle[encoding]);
 
 			return _react2.default.createElement(
 				'div',
-				{ style: style, onClick: this.toggleDecoding, className: 'stack-decode' },
-				this.props.value.toString(10)
+				{ style: style,
+					className: 'stack-decode',
+					onClick: this.toggleDecoding },
+				_react2.default.createElement('span', { className: 'stack-decode-content',
+					dangerouslySetInnerHTML: { __html: (0, _decode.decode)(this.props.value, encoding) } })
 			);
 		}
 	}]);
@@ -23335,7 +23381,7 @@ var ByteView = function (_React$Component3) {
 			// Render byte's value in hex, along with pointer and address if applicable
 			return _react2.default.createElement(
 				'div',
-				{ ref: 'thisbyte', className: 'stack-byte' + aligned },
+				{ ref: 'thisbyte', className: 'stack-byte' + aligned, style: { height: BYTE_HEIGHT + 'em' } },
 				pointer,
 				_react2.default.createElement(
 					'span',
@@ -25031,25 +25077,53 @@ module.exports = { fibonacci: fibonacci };
 
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+  value: true
 });
 exports.nextEncoding = nextEncoding;
 /**
  * A module of strange utility functions that don't belong anywhere else
+ * 
+ * Anything in here is likely to be some hacky glue for the front-end
+ * display, quarantined in here so that we don't pollute the code base
+ * with such grossness.
  */
 
-var ENCODINGS = ['hex', 'int', 'uint', 'char', 'bin'];
+var NAMES = ['hex', 'int', 'uint', 'char', 'bin'];
 
 /**
  * Function to pass to setState to toggle encoding between the above options
  */
 function nextEncoding(state) {
-	var nextIdx = (state.encIdx + 1) % ENCODINGS.length;
-	return {
-		encoding: ENCODINGS[nextIdx],
-		encIdx: nextIdx
-	};
+  var nextIdx = (state.encIdx + 1) % NAMES.length;
+  return {
+    encoding: NAMES[nextIdx],
+    encIdx: nextIdx
+  };
 }
+
+// Common stles for each encoding
+var encStyle = exports.encStyle = {
+  // String mapping
+  hex: { backgroundColor: '#ffe3e3' },
+  int: { backgroundColor: '#ccfff6' },
+  uint: { backgroundColor: '#e0ffdc' },
+  char: { backgroundColor: '#fffdda' },
+  bin: { backgroundColor: '#deddff' },
+
+  // Super hack, repeat mapping by index
+  0: { backgroundColor: '#ffe3e3' },
+  1: { backgroundColor: '#ccfff6' },
+  2: { backgroundColor: '#e0ffdc' },
+  3: { backgroundColor: '#fffdda' },
+  4: { backgroundColor: '#deddff' }
+};
+
+var regStyle = exports.regStyle = {
+  1: { backgroundColor: '#c9a762' },
+  2: { backgroundColor: '#b48166' },
+  4: { backgroundColor: '#9a4456' },
+  8: { backgroundColor: '#742c3d' }
+};
 
 /***/ })
 /******/ ]);

@@ -284,7 +284,21 @@ label.file {
 /* Stack and static stuff */
 #stack-content {
 	border-top: 1px solid #000;
+	position: relative;
 }
+
+#stack-bytes-raw, #stack-bytes-decoded {
+	display: inline-block;
+	vertical-align: top;
+}
+
+#stack-bytes-decoded {
+	width: 35%;
+}
+
+/*.stack-byte {
+	height: 1.2em;
+}*/
 
 .stack-pointer, .static-label {
 	width: 5em;
@@ -307,10 +321,30 @@ label.file {
 }
 
 .stack-decode {
-	float: right;
-	border: 1px solid rgba(0,0,0,0.2);
+	cursor: pointer;
+
 	width: 6em;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	border-top: 1px solid rgba(0, 0, 0, 0.2);
+	border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.stack-decode-content {
+	display: block;
+	width: 100%;
 	text-align: center;
+
+	/* prevent weird text selection */
+	-webkit-touch-callout: none; /* iOS Safari */
+	  -webkit-user-select: none; /* Safari */
+	   -khtml-user-select: none; /* Konqueror HTML */
+	     -moz-user-select: none; /* Firefox */
+	      -ms-user-select: none; /* Internet Explorer/Edge */
+	          user-select: none; /* Non-prefixed version, currently
+		                              supported by Chrome and Opera */
 }
 
 .stack-byte > span, .static-byte > span {
@@ -321,12 +355,12 @@ label.file {
 	background-color: #aaa;
 	border-top: 1px solid #000;
 	padding: 0 0.5em;
-	margin: 0 0.5em;
+	height: 100%;
 }
 
 .byte-address {
 	visibility: hidden;
-	padding: 0 0.25em;
+	padding: 0 0.5em;
 }
 
 /*
@@ -337,7 +371,7 @@ label.file {
 }
 
 .aligned {
-	box-shadow: 1px 1px 0px rgba(0,0,0,0.2);
+	box-shadow: 0px 1px 0px rgba(0,0,0,0.2);
 }
 
 .button-group {
