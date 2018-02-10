@@ -57,7 +57,7 @@ label.file {
 }
 
 .modal-content button {
-	background-color: #aaf; 
+	background-color: #aaf;
 	border: 1px solid #aaf;
 
 	border-radius: 0.5em;
@@ -104,7 +104,23 @@ label.file {
 	height: 100%;
 }
 
-#rodata {
+#static {
+	top: 60%;
+	left: 0;
+	width: 35%;
+	height: 40%;
+
+	padding-top: 0;
+}
+
+#console {
+	top: 60%;
+	left: 35%;
+	width: 40%;
+	height: 40%;
+}
+
+/*#rodata {
 	top: 60%;
 	left: 0;
 	width: 25%;
@@ -123,7 +139,7 @@ label.file {
 	left: 50%;
 	width: 25%;
 	height: 40%;
-}
+}*/
 
 .container {
 	padding: 1em;
@@ -150,6 +166,7 @@ label.file {
 	font-weight: bold;
 	height: 1em;
 	display: inline-block;
+	padding: 0 0.5em;
 }
 
 /* Controls */
@@ -172,6 +189,38 @@ label.file {
 
 #continue {
 
+}
+
+/* Console */
+#console {
+	background-color: #000;
+	color: #fff;
+
+	overflow-y: scroll;
+}
+
+.console-input {
+	display: inline-block;
+	width: 90%;
+
+	resize: none;
+	border: none;
+
+	background-color: #000;
+	font-family: Courier;
+	color: #fff;
+	margin: 0;
+}
+
+.console-input:active, .console-input:focus {
+	border: none;
+	outline: none;
+}
+
+.console-line, .console-input {
+	font-size: 12pt;
+	margin: 0;
+	min-height: 1.5em;
 }
 
 /* Register stuff */
@@ -224,8 +273,8 @@ label.file {
 }
 
 .instruction-label,
-.instruction-operand, 
-.instruction-mnemonic, 
+.instruction-operand,
+.instruction-mnemonic,
 .instruction-address {
 	display: inline-block;
 }
@@ -280,7 +329,6 @@ label.file {
 	top: 0;
 }
 
-
 /* Stack and static stuff */
 #stack-content {
 	border-top: 1px solid #000;
@@ -295,10 +343,6 @@ label.file {
 #stack-bytes-decoded {
 	width: 35%;
 }
-
-/*.stack-byte {
-	height: 1.2em;
-}*/
 
 .stack-pointer, .static-label {
 	width: 5em;
@@ -358,6 +402,10 @@ label.file {
 	height: 100%;
 }
 
+.static-byte > .byte-value {
+	height: 1.2em;
+}
+
 .byte-address {
 	visibility: hidden;
 	padding: 0 0.5em;
@@ -365,7 +413,7 @@ label.file {
 
 /*
 .stack-byte:hover .byte-address,*/
-.static-byte:hover .byte-address, 
+.static-byte:hover .byte-address,
 .current {
 	visibility: visible;
 }
@@ -387,4 +435,19 @@ label.file {
 	font-size: 0.5em;
 	font-family: initial;
 	transform: translateY(-1em);
+}
+
+/* Static stuff */
+
+.tab {
+	height: 2em;
+	padding: 0.5em;
+	cursor: pointer;
+}
+
+.tab-selected {
+	font-weight: bold;
+	border: 1px solid #aaa;
+	border-top: none;
+	border-radius: 0 0  0.5em 0.5em;
 }

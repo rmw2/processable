@@ -1,5 +1,5 @@
 "use strict";
-/** 
+/**
  * Module that defines a single-threaded processor
  * to execute instructions
  */
@@ -7,6 +7,8 @@
 import { FixedInt } from './FixedInt.js';
 import { Memory } from './Memory.js';
 import { RegisterSet } from './Registers.js';
+import { Stdlib } from './lib.js';
+import Console from './IO.js';
 import x86 from './x86.js';
 
 class AsmSyntaxError extends Error {
@@ -35,6 +37,17 @@ class Process {
 
         // Object containing handlers indexed by instruction
         this.chip = arch.chip.call(this);
+
+        // Bind the console
+        let cons = new Console();
+        this.io = {
+            stdout: cons,
+            stdin: cons,
+            stderr: cons
+        };
+
+        // Bind standard library to process
+        this.lib = Stdlib.call(this, this.io);
 
         // Intialize breakpoint dictionary
         this.breakpoints = {};
@@ -75,7 +88,7 @@ class Process {
 
     /**
      * Write the value to the location in memory specified by the operand.
-     * Operand is a string that defines either a register destination or 
+     * Operand is a string that defines either a register destination or
      * a memory address
      */
     write(operand, value, size) {
@@ -113,14 +126,16 @@ class Process {
         } else if (parseInt(+operand)) {
             this.pc = parseInt(+operand);
         } else {
-            let address = this.labels[operand];
-            // TODO: include bridge for "standard library" calls
-            if (address === undefined) throw new AsmSyntaxError(`Unkown label: ${operand}`)
-            this.pc = address;
+            if (operand in this.labels)
+                this.pc = this.labels[operand];
+            else if (operand in this.lib) {
+                // Bridge for "standard library" calls
+                this.lib[operand]();
+            }
         }
     }
 
-    /** 
+    /**
      * Get the value of a memory expression written in base/displacement or
      * scaled indexed form.
      *
@@ -166,7 +181,7 @@ class Process {
             // Fetch mnemonic and operands from Text section
             let [mnemonic, ...operands] = this.mem.read(this.pc);
 
-            if (verbose) 
+            if (verbose)
                 this.print(pc, true, true);
 
             // Advance instruction pointer and execute
