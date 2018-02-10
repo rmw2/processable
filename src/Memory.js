@@ -14,8 +14,8 @@ export class SegFault extends Error {
 }
 
 /**
- * An error to throw for illegal memory accesses that do not count as 
- * a segmentation fault. 
+ * An error to throw for illegal memory accesses that do not count as
+ * a segmentation fault.
  *
  * e.g. Unaligned read from a section that does
  * not support unaligned reads
@@ -31,7 +31,7 @@ export class InvalidAccess extends Error {
 /**
  * @classdesc
  * An object to represent byte-addressable memory
- * Implemented by creating a dataview on a 
+ * Implemented by creating a dataview on a
  */
 export class MemorySegment {
 	/**
@@ -41,8 +41,16 @@ export class MemorySegment {
 	constructor(hiAddr, sizeOrData = 1024, name='') { //, resizable = false) {
 		if (sizeOrData instanceof ArrayBuffer) {
 			// Instantiate memory from preexisting arraybuffer
-			this.buf = sizeOrData;
-			this.size = this.buf.byteLength;
+			this.buf = new ArrayBuffer(sizeOrData.byteLength);
+
+            let from = new Uint8Array(sizeOrData);
+            let to = new Uint8Array(this.buf);
+
+            this.size = this.buf.byteLength;
+
+            // Copy over in reverse order
+            for (let i = 0; i < this.size; i++)
+                to[i] = from[this.size - i];
 		} else {
 			// Size of memory, in bytes
 			this.size = sizeOrData;
@@ -64,7 +72,7 @@ export class MemorySegment {
 		this.hiAddr = hiAddr;
 		this.loAddr = hiAddr - this.size;
 	}
-	
+
 	/**
 	 * Double the size of the underlying ArrayBuffer.  Copy the old
 	 * ArrayBuffer into the top or bottom half of the new one depending
@@ -101,14 +109,16 @@ export class MemorySegment {
 
 		// Throw a segfault for accessing memory above current range
 		// Otherwise resize
-		if (addr + size > this.hiAddr) 
-			throw new SegFault(addr, `Reading ${size} bytes of section ${this.name}`);
+		if (addr + size > this.hiAddr)
+			throw new SegFault(addr.toString(16), `Reading ${size} bytes of section ${this.name}.`
+                + ` [0x${this.loAddr.toString(16)}, ${this.hiAddr.toString(16)}]`);
 
 		else if (addr < this.loAddr) {
             // Perhaps add support for resizing at some point
 			// if (this.resizable)
 			// 	   this.resize(addr);
-			throw new SegFault(addr, `Reading ${size} bytes of section ${this.name}`);
+			throw new SegFault(addr.toString(16), `Reading ${size} bytes of section ${this.name}.`
+                + ` [0x${this.loAddr.toString(16)}, ${this.hiAddr.toString(16)}]`);
 		}
 
 		return (this.hiAddr - addr - size);
@@ -138,7 +148,7 @@ export class MemorySegment {
 }
 
 /**
- * An object to represent addressable text.  Text will be stored as an 
+ * An object to represent addressable text.  Text will be stored as an
  * array of string instructions.
  */
 export class TextSegment {
@@ -154,7 +164,7 @@ export class TextSegment {
 
         for (let i = 0; i < instructions.length; i++) {
             if (addresses) {
-            	if (addresses[i] <= addresses[i-1]) 
+            	if (addresses[i] <= addresses[i-1])
             		throw new TypeError('addresses must be increasing');
 
             	// Keep track of forward and reverse mapping
@@ -165,7 +175,7 @@ export class TextSegment {
                 this.idxToAddr.push(i + offset);
             }
         }
-        
+
         this.loAddr = addresses ? addresses[0] : 0;
     }
 
@@ -186,7 +196,7 @@ export class TextSegment {
 
     /* Refuse writing to text section */
     write() {
-        throw new SegFault(addr, 0);
+        throw new SegFault(addr.toString(16), 0);
     }
 }
 
@@ -196,7 +206,7 @@ export class TextSegment {
  * Initialized with an Image object specifying layout and contents of static memory
  *
  * This is analogous to an Operating system structure which keeps track of a
- * process' virtual memory and the areas 
+ * process' virtual memory and the areas
  */
 export default class Memory {
     constructor(image, stackOrigin=0xC0000000) {
@@ -227,12 +237,12 @@ export default class Memory {
     	// Initialize Stack and Heap segments
     	this.segments.stack = {
     		hi: stackOrigin,
-    		lo: stackOrigin - STACK_SIZE, 
+    		lo: stackOrigin - STACK_SIZE,
     		data: new MemorySegment(stackOrigin, STACK_SIZE, 'stack')
     	};
 
     	// Compute end of static sections
-    	let endStatic = this.segments.bss.hi 
+    	let endStatic = this.segments.bss.hi
     		|| this.segments.data.hi
     		|| this.segments.rodata.hi
     		|| this.segments.text.hi;
@@ -254,12 +264,12 @@ export default class Memory {
     	// TODO: Incorporate read and write permissions and check those here
     	for (let s in this.segments) {
     		const seg = this.segments[s];
-    		if (seg.lo <= addr && addr <= seg.hi) {
+    		if (seg.lo <= addr && addr < seg.hi) {
     			return seg.data;
     		}
     	}
 
-    	throw new SegFault(`Address 0x${addr.toString(16)} not mapped`);
+    	throw new SegFault(addr.toString(16), `Address not mapped`);
     }
 
     read(addr, size) {
