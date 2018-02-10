@@ -19,12 +19,12 @@ export class RegisterError extends Error {
  */
 export default class RegisterSet {
 	/**
-	 * Create a set of registers from an object which gives 
+	 * Create a set of registers from an object which gives
 	 * register names mapped to byte offsets and byte lengths
 	 * for each available register.  The word size and endianness
 	 * can also be specified at construction.
 	 */
-	constructor(descriptor, littleEndian = true) {		
+	constructor(descriptor, littleEndian = true) {
 		// Dave properties of registers
 		this.littleEndian = littleEndian;
 		this.n = descriptor.info.n;
@@ -45,7 +45,7 @@ export default class RegisterSet {
 				// Calculate offset from this register
 				aligned.push({
 					name: reg,
-					offset: group[reg][0] - idx*this.size, 
+					offset: group[reg][0] - idx*this.size,
 					size: group[reg][1]
 				});
 			}
@@ -78,9 +78,9 @@ export default class RegisterSet {
 			throw new RegisterError(reg, 'Does not exist');
 		}
 
-		if (value.size !== size) 
+		if (value.size !== size)
 			throw new RegisterError(`Can't write ${value.size}-byte value to ${size}-byte register`);
-		
+
 		value.toBuffer(this.view, idx);
 	}
 

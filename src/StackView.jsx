@@ -41,12 +41,13 @@ export default class StackContainer extends React.Component {
 					pointer={pointer} />
 			);
 
-			if (addr % this.state.alignment === 0)
+			if (addr % this.state.alignment === 0) {
 				decoded.push(
 					<DecodeView
 					 key={addr}
 					 value={this.props.mem.read(addr, this.state.alignment)} />
 				);
+			}
 		}
 
 		return (

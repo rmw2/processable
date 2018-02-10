@@ -1,8 +1,8 @@
 /**
- * An assembler module, to parse an assembly file and convert it 
+ * An assembler module, to parse an assembly file and convert it
  * to objects understood by our debugger
  */
- 
+
 import { FixedInt } from './FixedInt.js';
 
 // Hacky approximation of the average instruction length
@@ -48,6 +48,16 @@ class Assembly {
 	}
 
 	/**
+	 * @param {String} asm -- the contents of the file to preprocess
+	 */
+	preprocess(asm) {
+		// Remove multiline comments
+		// NOT a good solution actually
+		asm.replace(/\/\*[^]*?\*\//g, '\n');
+		return asm;
+	}
+
+	/**
 	 * Add the contents of an assembly file to the current assembly
 	 * @param {String} asm -- the contents of the file to assemble
 	 */
@@ -55,11 +65,11 @@ class Assembly {
 		const lines = asm.split('\n');
 		let section = 'text';
 
-		// TODO: 
+		// TODO:
 		//  Remove multiline /* */ comments
 		//  replace .equ directives with values
 		//  convert characters to integers
-		//   --> abstract this into a preprocess function ? 
+		//   --> abstract this into a preprocess function ?
 
 		for (const line of lines) {
 			// Remove comments
@@ -132,8 +142,8 @@ class Assembly {
 	 * 						the labels it contains
 	 */
 	link(addr=0x08048000) {
-		// TODO: include a version of crt0.S 
-		// (_start function, get argv, call main) 
+		// TODO: include a version of crt0.S
+		// (_start function, get argv, call main)
 
 		// Single image object to represent an ELF binary
 		let image = {};
@@ -188,7 +198,7 @@ class Assembly {
 
 	/**
 	 * Write the contents of a static virtual memory area to an ArrayBuffer
-	 * via the DataView view.  Also map labels to final addresses in the process 
+	 * via the DataView view.  Also map labels to final addresses in the process
 	 *
 	 * @param {DataView} view
 	 * @param {Object} data
@@ -199,6 +209,10 @@ class Assembly {
 		let start = addr;
 
 		for (const linenum in data) {
+			// Convert line number to label
+			if (this.labelFor[linenum] !== undefined)
+				this.labels[this.labelFor[linenum]] = addr;
+
 			let item = data[linenum];
 			//console.log(`allocating ${item.type}: ${item.value}`);
 			// Write text to an ArrayBuffer
@@ -212,13 +226,9 @@ class Assembly {
 				let x = new FixedInt(item.size, val);
 				x.toBuffer(view, addr - start);
 
-				// Increment address 
+				// Increment address
 				addr += item.size;
 			}
-
-			// Convert line number to label
-			if (this.labelFor[linenum] !== undefined)
-				this.labels[this.labelFor[linenum]] = addr;
 		}
 
 		return addr;
@@ -306,7 +316,7 @@ function alloc(tokens) {
 }
 
 /**
- * Determine if the current line defines a new assembly section, 
+ * Determine if the current line defines a new assembly section,
  * and return its name if so.f
  *
  * @param {String[]} tokens -- A line of assembly language split on spaces
@@ -334,7 +344,7 @@ module.exports = { Assembly };
 //  * @deprecated: to be replaced with Class Assembly
 //  * Assemble a text file containing assembly instructions in AT&T syntax
 //  * and return an object mapping labels to addresses, parellel lists of
-//  * instruction strings and instruction addresses, and an object to 
+//  * instruction strings and instruction addresses, and an object to
 //  * describe staticly allocated data.
 //  */
 // export default function assemble(asm) {
@@ -366,7 +376,7 @@ module.exports = { Assembly };
 // 					break;
 // 				case '.text':
 // 					section = '.text';
-// 				// TODO: handle static allocation etc. 
+// 				// TODO: handle static allocation etc.
 // 				case '.data':
 
 // 			}

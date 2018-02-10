@@ -1,5 +1,5 @@
 /*********************************************************************
- * A module for representing fixed-width integers and performing 
+ * A module for representing fixed-width integers and performing
  * logical and arithmetic operations on them.
  *
  *********************************************************************/
@@ -37,7 +37,7 @@ const MODULUS = {
 };
 
 /**
- * @classdesc 
+ * @classdesc
  * An immutable data type representing a fixed width integer
  * its size in bytes can be 1, 2, 4, or 8
  * All methods are static, and return new FixedInt objects
@@ -52,7 +52,7 @@ export default class FixedInt {
    *     FixedInt(fixedInt)
    *
    * @constructor
-   * @param {int | Object} sizeOrObject An object 
+   * @param {int | Object} sizeOrObject An object
    * @param {int | DataView} [loOrDataView]
    * @param {int} [hiOrOffset]
    * @param {boolean} [littleEndian] How to read from ArrayBuffer. Only use with the DataView constructor
@@ -67,7 +67,7 @@ export default class FixedInt {
     }
 
     // Validate size
-    if ([1,2,4,8].indexOf(sizeOrObject) < 0) 
+    if ([1,2,4,8].indexOf(sizeOrObject) < 0)
       throw new FixedIntError(`Invalid size in bytes: ${sizeOrObject}`);
     this._size = sizeOrObject;
 
@@ -103,14 +103,14 @@ export default class FixedInt {
     else {
       // Validate size of input number
       if (this.size === 8) {
-        if (hiOrOffset && loOrDataView >= MODULUS[4]) 
+        if (hiOrOffset && loOrDataView >= MODULUS[4])
           throw new FixedIntError('hi and lo must be less than 2^32');
         if (loOrDataView > Number.MAX_SAFE_INTEGER)
           throw new FixedIntError('Value larger than max safe integer.  Use two-part constructor.');
 
         // Set hi and lo
         if (loOrDataView < 0) {
-          if (hiOrOffset) 
+          if (hiOrOffset)
             throw new FixedIntError(
               `Cannot construct negative number in two parts: lo=${loOrDataView}, hi=${hiOrOffset}`);
 
@@ -129,7 +129,7 @@ export default class FixedInt {
   }
 
   /**
-   * Getters for size, lo, and hi.  
+   * Getters for size, lo, and hi.
    * All are read-only properties, setters do nothing
    * @return {Number} the size of this object
    */
@@ -150,13 +150,13 @@ export default class FixedInt {
    * @returns {boolean}
    */
   isNegative() {
-    return (this.size == 8) 
+    return (this.size == 8)
       ? !!(this.hi & SIGN_MASK[4])
       : !!(this.lo & SIGN_MASK[this.size]);
   }
 
   /**
-   * Is this integer less than that integer, 
+   * Is this integer less than that integer,
    * when both are interpreted as unsigned
    * @returns {boolean}
    */
@@ -202,7 +202,7 @@ export default class FixedInt {
   }
 
   /**
-   * Return a new FixedInt with the same value as this with the 
+   * Return a new FixedInt with the same value as this with the
    * specified size, truncating if necessary
    * @returns {FixedInt}
    */
@@ -211,18 +211,18 @@ export default class FixedInt {
   }
 
   /**
-   * Is this integer the same value as that? 
+   * Is this integer the same value as that?
    * @returns {boolean}
    */
   equals(that) {
     return (this.size == that.size)
-      && (this.lo == that.lo) 
+      && (this.lo == that.lo)
       && (this.size < 8 || this.hi == that.hi);
   }
 
   /**
    * Print this number as a string in the given base, or as a string
-   * @param {Number|String} radix -- base 
+   * @param {Number|String} radix -- base
    * @param {boolean} [signed]    -- how to interpret this number when printing
    * @returns {String}            -- the string representation of this number
    */
@@ -231,8 +231,8 @@ export default class FixedInt {
     signed = (signed && this.isNegative() && radix == 10);
 
     if (this.size < 8) {
-      return (signed) 
-        ? `-${ALU.neg(this).lo.toString(radix)}` 
+      return (signed)
+        ? `-${ALU.neg(this).lo.toString(radix)}`
         : this.lo.toString(radix);
     }
 
@@ -560,7 +560,7 @@ export class ALU {
 
   /**
    * @param {FixedInt} a -- the number to be negated
-   * @returns {FixedInt} a new FixedInt with the same size as a 
+   * @returns {FixedInt} a new FixedInt with the same size as a
    * and its 2s complement value
    */
   static neg(a) {
@@ -620,7 +620,7 @@ function validateOperands(a, b) {
 
   // Validate sizes
   if (b instanceof FixedInt) {
-    if (b.size !== a.size) 
+    if (b.size !== a.size)
       throw new FixedIntError(`FixedInt operands must be the same size.  a: ${a.size} b: ${b.size}`);
   } else {
     b = new FixedInt(a.size, b);
