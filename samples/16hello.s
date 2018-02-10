@@ -3,11 +3,10 @@
         ## ============================================================
 
         ## ============================================================
-                                .section ".data"
+                                .section ".rodata"
         ## ============================================================
         
-pcGreeting:
-        .asciz  "Hello\n"
+pcGreeting: .asciz  "Hello World\n"
         
         ## ============================================================
                                 .section ".bss"
@@ -35,8 +34,7 @@ main:
         movl    %esp, %ebp
 
         ## printf("Hello\n");
-        movl    $pcGreeting, %eax 
-        pushl   %eax 
+        movabsq $pcGreeting, %rdi 
         call    printf
         movl    $4, %eax 
         addl    %eax, %esp 

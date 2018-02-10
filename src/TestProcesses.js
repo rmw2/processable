@@ -43,4 +43,47 @@ const fibonacci = {
 	},
 };
 
-module.exports = { fibonacci };
+const hello = {
+	image: {
+		text: {
+			start: 134512640,
+			end: 134512660,
+			contents: [
+				["pushl", "%ebp"],
+				["movl", "%esp", "%ebp"],
+				["movabsq", "$pcGreeting", "%rdi"],
+				["call", "printf"],
+				["movl", "$4", "%eax"],
+				["addl", "%eax", "%esp"],
+				["movl", "$0", "%eax"],
+				["movl", "%ebp", "%esp"],
+				["popl", "%ebp"],
+				["ret"],
+			],
+			addresses: [
+				134512640,
+				134512642,
+				134512644,
+				134512646,
+				134512648,
+				134512650,
+				134512652,
+				134512654,
+				134512656,
+				134512658,
+			],
+		},
+		rodata: {
+			start: 134512660,
+			end: 134512674,
+			contents: new Uint8Array('Hello World!\n\0'.split('').map((c) => c.charCodeAt(0))).buffer,
+		},
+		bss: {},
+		data: {},
+	},
+	labels: {
+		pcGreeting: 134512660
+	}
+};
+
+module.exports = { fibonacci, hello };

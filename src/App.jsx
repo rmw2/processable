@@ -2,18 +2,22 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import ProcessContainer from './ProcessView.jsx';
 import { Assembly } from './Assembler.js';
+import { Process } from './Process.js';
 
-const { fibonacci } = require('./TestProcesses.js');
-const { Process } = require('./Process.js');
+const examples = require('./TestProcesses.js');
+const exnames = ['fibonacci', 'hello'];
+
 
 // Loading example program(s)
-document.getElementById('load-fib').onclick = function loadFib() {
-  let p = new Process(fibonacci.image, fibonacci.labels);
+for (let ex of exnames) {
+  document.getElementById(ex).onclick = function () {
+    let p = new Process(examples[ex].image, examples[ex].labels);
 
-	ReactDOM.render(
-		React.createElement(ProcessContainer, {process: p}), 
-		document.getElementById('root')
-	);
+    ReactDOM.render(
+      React.createElement(ProcessContainer, {process: p}), 
+      document.getElementById('root')
+    );
+  }
 }
 
 // Upload button
