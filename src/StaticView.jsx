@@ -1,9 +1,54 @@
 import React from 'react';
 import { pad } from './decode.js';
 
+import {Tabs, Tab, TabList, TabPanel} from 'react-tabs';
+
 const PRINTABLE = 33;
 
-export default class StaticView extends React.Component {
+/**
+ * The main thingio
+ */
+const TabbedStaticContainer = ({labeled, segments}) => {
+  const {rodata, data, bss} = segments;
+
+  return (
+    <div id="static" className="container">
+      <Tabs>
+        <TabList>
+          <Tab selectedClassName="tab-selected" className="tab container-title">rodata</Tab>
+          <Tab selectedClassName="tab-selected" className="tab container-title">data</Tab>
+          <Tab selectedClassName="tab-selected" className="tab container-title">bss</Tab>
+        </TabList>
+        <TabPanel>
+          <StaticContainer
+            name="rodata"
+            mem={rodata.data}
+            hi={rodata.hi}
+            lo={rodata.lo}
+            labelFor={labeled} />
+        </TabPanel>
+        <TabPanel>
+          <StaticContainer
+            name="data"
+            mem={data.data}
+            hi={data.hi}
+            lo={data.lo}
+            labelFor={labeled} />
+        </TabPanel>
+        <TabPanel>
+          <StaticContainer
+            name="bss"
+            mem={bss.data}
+            hi={bss.hi}
+            lo={bss.lo}
+            labelFor={labeled} />
+        </TabPanel>
+      </Tabs>
+    </div>
+  );
+}
+
+export class StaticContainer extends React.Component {
 	constructor(props) {
 		super(props);
 	}
@@ -13,17 +58,16 @@ export default class StaticView extends React.Component {
     let bytes = [];
     for (let addr = this.props.lo; addr < this.props.hi; addr++) {
       bytes.push(
-        <ByteView 
-          key={addr} 
+        <ByteView
+          key={addr}
           address={addr}
-          value={this.props.mem.read(addr, 1)} 
+          value={this.props.mem.read(addr, 1)}
           label={this.props.labelFor[addr]} />
       );
     }
 
 		return (
-			<div id={this.props.name} className="container">
-        <div className="container-title">{this.props.name}</div>
+			<div id={this.props.name} className="tabbed-container">
         <div id={this.props.name + '-content'} className="content">
           {bytes}
         </div>
@@ -32,9 +76,29 @@ export default class StaticView extends React.Component {
 	}
 }
 
+class LabeledByteGroup extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  toggleDecoding() {
+
+  }
+
+  render() {
+
+    return (
+      <div className="static-byte-group">
+        <span className="static-label">{this.props.label}</span>
+        {}
+      </div>
+    );
+  }
+}
+
 /**
  * @classdesc
- * A view of a single byte, sort of different from the 
+ * A view of a single byte, sort of different from the
  */
 class ByteView extends React.Component {
   constructor(props) {
@@ -76,3 +140,5 @@ class ByteView extends React.Component {
     );
   }
 }
+
+export default TabbedStaticContainer;
