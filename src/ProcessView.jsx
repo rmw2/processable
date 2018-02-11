@@ -43,14 +43,22 @@ export default class ProcessContainer extends React.Component {
     this.forceUpdate();
   }
 
+
+  /**
+   * Error handling for internal/react errors
+   * Should print a different and more apologetic message at some point
+   */
   componentDidCatch(error) {
     this.displayError(error);
   }
 
+  /**
+   * Error handling for errors in code running on the VM
+   * Print the error to the screen and try to give as much information as possible
+   */
   displayError(e) {
     // Write it to the console....
-    this.props.process.io.stdout.write(`${e}`);
-    this.props.process.io.stdout.flush();
+    this.props.process.io.stderr.write(`${e}`);
     throw e;
   }
 
@@ -60,8 +68,18 @@ export default class ProcessContainer extends React.Component {
     return (
       <div className="process-container">
         <div id="controls" className="container">
-          <button id="step" className="control-button" onClick={this.step}>&#8677;</button>
-          <button id="continue" className="control-button" onClick={this.run}>&#10142;</button>
+          <div className="button-box">
+            <div className="button-caption">restart</div>
+            <button id="restart" className="control-button" onClick={() => null}>&#8634;</button>
+          </div>
+          <div className="button-box">
+            <div className="button-caption">step</div>
+            <button id="step" className="control-button" onClick={this.step}>&#8677;</button>
+          </div>
+          <div className="button-box">
+            <div className="button-caption">continue</div>
+            <button id="continue" className="control-button" onClick={this.run}>&#10142;</button>
+          </div>
         </div>
         <TextContainer
           pc={p.pc}

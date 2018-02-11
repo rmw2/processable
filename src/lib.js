@@ -81,14 +81,14 @@ function readString(pointer) {
 /**
  * The library of C functions
  *
+ * NOTE/TODO: probably change the io {stdout, stdin, stderr} to
+ * an array fd [] of "file descriptors", just for more extensibility
  */
 export function Stdlib(io) {
 	// Bind helper functions
 	readString = readString.bind(this);
 	SysV_arg = SysV_arg.bind(this);
 	SysV_ret = SysV_ret.bind(this);
-
-	console.log(io);
 
 	return {
 		printf: () => {
@@ -131,6 +131,8 @@ export function Stdlib(io) {
 		},
 
 		exit: () => {
+			// flush any output
+			io.stdout.flush();
 			// TODO: Set return value or something?
 			this.pc = undefined;
 		}

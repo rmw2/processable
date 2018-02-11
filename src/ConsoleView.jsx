@@ -14,6 +14,7 @@ export default class Console extends React.Component {
 
         // Bind it up
         this.addLine = this.addLine.bind(this);
+        this.submitLine = this.submitLine.bind(this);
         this.focusInput = this.focusInput.bind(this);
         this.write = this.write.bind(this);
         this.flush = this.flush.bind(this);
@@ -21,19 +22,31 @@ export default class Console extends React.Component {
         // Take over the stdio
         this.props.io.stdout = this;
         this.props.io.stdin = this;
+        this.props.io.stderr = {
+            write: (value) => this.error(value)
+        };
     }
 
     /**
      * Write a value to the buffer, flush if buffer contains newline
      */
     write(value) {
-        console.log(`In write. received ${value}`);
         let lines = value.split('\n');
         for (let i = 0; i < lines.length - 1; i++) {
             this.addLine(lines[i]);
         }
 
         this.buf = lines[lines.length - 1];
+    }
+
+    /**
+     * Write an error to the buffer, flush immediately and color it red
+     */
+    error(value) {
+        const lines = value.split('\n');
+
+        for (const line of lines)
+            this.addLine(line, '#f99');
     }
 
     /**
@@ -54,12 +67,21 @@ export default class Console extends React.Component {
     /**
      * Commit a line to the console history, making it uneditable
      */
-    addLine(line) {
+    addLine(text, color="#fff") {
         this.setState(({lines}) => {
             let newLines = lines.slice();
-            newLines.push(line);
+            newLines.push({text, color});
             return {lines: newLines};
         });
+    }
+
+    /**
+     * Parse a line of text from the console, interpret it as a command
+     *
+     */
+    submitLine(line) {
+        // TODO: Parse line and look for commands ??
+        addLine(line);
     }
 
     /**
@@ -77,8 +99,8 @@ export default class Console extends React.Component {
                 className="container"
                 onClick={this.focusInput} >
                 {this.state.lines.map((line, idx) =>
-                    <div className="console-line" key={idx}>
-                        {line}
+                    <div className="console-line" key={idx} style={{color: line.color}}>
+                        {line.text}
                     </div>
                 )}
                 <InputLine
