@@ -1,10 +1,10 @@
 /**
- * A module for decoding 
+ * A module for decoding
  */
 import {FixedInt, ALU} from './FixedInt.js';
 
 // Lowest printable character code
-const UNPRINTABLE = 0x20;
+const UNPRINTABLE = 0x19;
 
 // Other helpful constants
 const BYTE_MASK = 0xFF;
@@ -46,7 +46,7 @@ export const Encodings = {
     length: 5
 };
 
-/** 
+/**
  * Decode a FixedInt object according to the specified decoding index
  */
 export function decode(val, encoding) {
@@ -70,7 +70,7 @@ export function decode(val, encoding) {
  * Convert an integer to n ASCII characters, byte by byte.
  * All non-printable characters are rendered as spaces
  *
- * @param {Number} val -- the number to convert 
+ * @param {Number} val -- the number to convert
  * @param {Number} [n] -- the number of characters to decode (1-4)
  * @returns {String}   -- the ASCII
  */
@@ -78,10 +78,29 @@ export function toPrintableCharacters(val, n=4) {
     let str = '';
     for (let i = 0; i < n; i++) {
         let charCode = (val >> (i*BITS_PER_BYTE)) & BYTE_MASK;
-        str += (charCode > UNPRINTABLE) ? String.fromCharCode(charCode) : ' ';
+        str += escapeChar(charCode);
     }
 
     return str;
+}
+
+export function escapeChar(charCode) {
+    if (charCode > UNPRINTABLE)
+        return String.fromCharCode(charCode);
+
+    console.log(charCode);
+    switch (charCode) {
+        case 0x08:
+            return '\\b';
+        case 0x09:
+            return '\\t';
+        case 0x0a:
+            return '\\n';
+        case 0x0d:
+            return '\\r';
+        default:
+            return `\\${charCode}`;
+    }
 }
 
 /**
