@@ -14,7 +14,7 @@ export default class Console {
 	}
 
 	write(str) {
-
+        console.log(str);
 	}
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { pad } from './decode.js';
+import { pad, escapeChar } from './decode.js';
+import { encStyle } from './util.js';
 
 import {Tabs, Tab, TabList, TabPanel} from 'react-tabs';
 
@@ -55,21 +56,45 @@ export class StaticContainer extends React.Component {
 
 	render() {
     // This is pretty inefficient
-    let bytes = [];
+    let bytes;
+    let groups = [];
+    let labels = [];
+
     for (let addr = this.props.lo; addr < this.props.hi; addr++) {
-      bytes.push(
-        <ByteView
-          key={addr}
-          address={addr}
-          value={this.props.mem.read(addr, 1)}
-          label={this.props.labelFor[addr]} />
-      );
+      if (addr in this.props.labelFor) {
+        // Push label
+        labels.push(this.props.labelFor[addr]);
+
+        // Push byte group for previous label
+        if (bytes !== undefined)
+          groups.push(bytes);
+
+        bytes = [];
+      }
+
+      if (bytes === undefined)
+        bytes = [];
+
+      // Add the byte to the current labeled group
+      bytes.push({
+        addr,
+        value: this.props.mem.read(addr, 1)
+      });
     }
+
+    // Add the last group
+    if (bytes !== undefined)
+      groups.push(bytes);
 
 		return (
 			<div id={this.props.name} className="tabbed-container">
         <div id={this.props.name + '-content'} className="content">
-          {bytes}
+          {groups[0] && groups.map((bytes, idx) =>
+            <LabeledByteGroup
+              key={idx}
+              bytes={bytes}
+              label={labels[idx]} />
+          )}
         </div>
       </div>
 		);
@@ -86,59 +111,88 @@ class LabeledByteGroup extends React.Component {
   }
 
   render() {
+    let {label, bytes} = this.props;
+
+    // Decoding
+    let str = '';
+    for (let b of bytes) {
+      str += escapeChar(+b.value);
+    }
 
     return (
       <div className="static-byte-group">
-        <span className="static-label">{this.props.label}</span>
-        {}
+        <div className="static-label">{label}:</div>
+        <div className="static-value">
+          <div className="static-bytes">
+          {bytes && bytes.map(({addr, value}, idx) =>
+            <Byte key={addr}
+              addr={addr}
+              value={+value} />
+          )}
+          </div>
+          <div className="static-decoded" style={encStyle['char']}>
+            {str}
+          </div>
+        </div>
       </div>
     );
   }
 }
 
 /**
- * @classdesc
- * A view of a single byte, sort of different from the
+ *
  */
-class ByteView extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      decode: (this.props.name == 'rodata') ? 'char' : 'hex'
-    };
-
-    this.toggleDecoding = this.toggleDecoding.bind(this);
-  }
-
-  toggleDecoding() {
-    this.setState(({decode}) => {
-      return {
-        decode: (decode == 'hex') ? 'char' : 'hex'
-      };
-    });
-  }
-
-  render() {
-    // Decode as character or hex byte, depending on printability and state
-    let value = (this.props.value > PRINTABLE && this.state.decode === 'char')
-      ? `'${String.fromCharCode(this.props.value)}'`
-      : pad(this.props.value.toString(16), 2);
-
-    let label = this.props.label  ? this.props.label + ':' : null;
-
-    // Align on 8-byte boundaries
-    // TODO: make this customizable
-    let showAddress = (this.props.address % 8 == 0);
-
-    return (
-      <div className="static-byte" onClick={this.toggleDecoding} >
-        <span className="static-label">{label}</span>
-        <span className="byte-value">{value}</span>
-        <span className={'byte-address' + (showAddress ? ' aligned' : '')}>{this.props.address.toString(16)}</span>
-      </div>
-    );
-  }
+const Byte = ({addr, value}) => {
+  return (
+    <span className="static-byte-value">
+      {pad(value.toString(16), 2)}
+    </span>
+  );
 }
+
+// /**
+//  * @classdesc
+//  * A view of a single byte, sort of different from the
+//  */
+// class ByteView extends React.Component {
+//   constructor(props) {
+//     super(props);
+
+//     this.state = {
+//       decode: (this.props.name == 'rodata') ? 'char' : 'hex'
+//     };
+
+//     this.toggleDecoding = this.toggleDecoding.bind(this);
+//   }
+
+//   toggleDecoding() {
+//     this.setState(({decode}) => {
+//       return {
+//         decode: (decode == 'hex') ? 'char' : 'hex'
+//       };
+//     });
+//   }
+
+//   render() {
+//     // Decode as character or hex byte, depending on printability and state
+//     let value = (this.props.value > PRINTABLE && this.state.decode === 'char')
+//       ? `'${String.fromCharCode(this.props.value)}'`
+//       : pad(this.props.value.toString(16), 2);
+
+//     let label = this.props.label  ? this.props.label + ':' : null;
+
+//     // Align on 8-byte boundaries
+//     // TODO: make this customizable
+//     let showAddress = (this.props.address % 8 == 0);
+
+//     return (
+//       <div className="static-byte" onClick={this.toggleDecoding} >
+//         <span className="static-label">{label}</span>
+//         <span className="byte-value">{value}</span>
+//         <span className={'byte-address' + (showAddress ? ' aligned' : '')}>{this.props.address.toString(16)}</span>
+//       </div>
+//     );
+//   }
+// }
 
 export default TabbedStaticContainer;

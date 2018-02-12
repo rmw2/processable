@@ -1429,6 +1429,7 @@ exports.Encodings = undefined;
 exports.pad = pad;
 exports.decode = decode;
 exports.toPrintableCharacters = toPrintableCharacters;
+exports.escapeChar = escapeChar;
 exports.decodeFromBuffer = decodeFromBuffer;
 
 var _FixedInt = __webpack_require__(5);
@@ -1438,12 +1439,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /**
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * A module for decoding 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * A module for decoding
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 */
 
 
 // Lowest printable character code
-var UNPRINTABLE = 0x20;
+var UNPRINTABLE = 0x19;
 
 // Other helpful constants
 var BYTE_MASK = 0xFF;
@@ -1498,7 +1499,7 @@ var Encodings = exports.Encodings = {
     length: 5
 };
 
-/** 
+/**
  * Decode a FixedInt object according to the specified decoding index
  */
 function decode(val, encoding) {
@@ -1520,7 +1521,7 @@ function decode(val, encoding) {
  * Convert an integer to n ASCII characters, byte by byte.
  * All non-printable characters are rendered as spaces
  *
- * @param {Number} val -- the number to convert 
+ * @param {Number} val -- the number to convert
  * @param {Number} [n] -- the number of characters to decode (1-4)
  * @returns {String}   -- the ASCII
  */
@@ -1530,10 +1531,28 @@ function toPrintableCharacters(val) {
     var str = '';
     for (var i = 0; i < n; i++) {
         var charCode = val >> i * BITS_PER_BYTE & BYTE_MASK;
-        str += charCode > UNPRINTABLE ? String.fromCharCode(charCode) : ' ';
+        str += escapeChar(charCode);
     }
 
     return str;
+}
+
+function escapeChar(charCode) {
+    if (charCode > UNPRINTABLE) return String.fromCharCode(charCode);
+
+    console.log(charCode);
+    switch (charCode) {
+        case 0x08:
+            return '\\b';
+        case 0x09:
+            return '\\t';
+        case 0x0a:
+            return '\\n';
+        case 0x0d:
+            return '\\r';
+        default:
+            return '\\' + charCode;
+    }
 }
 
 /**
@@ -23018,17 +23037,28 @@ var ProcessContainer = function (_React$Component) {
 
       this.forceUpdate();
     }
+
+    /**
+     * Error handling for internal/react errors
+     * Should print a different and more apologetic message at some point
+     */
+
   }, {
     key: 'componentDidCatch',
     value: function componentDidCatch(error) {
       this.displayError(error);
     }
+
+    /**
+     * Error handling for errors in code running on the VM
+     * Print the error to the screen and try to give as much information as possible
+     */
+
   }, {
     key: 'displayError',
     value: function displayError(e) {
       // Write it to the console....
-      this.props.process.io.stdout.write('' + e);
-      this.props.process.io.stdout.flush();
+      this.props.process.io.stderr.write('' + e);
       throw e;
     }
   }, {
@@ -23043,14 +23073,48 @@ var ProcessContainer = function (_React$Component) {
           'div',
           { id: 'controls', className: 'container' },
           _react2.default.createElement(
-            'button',
-            { id: 'step', className: 'control-button', onClick: this.step },
-            '\u21E5'
+            'div',
+            { className: 'button-box' },
+            _react2.default.createElement(
+              'div',
+              { className: 'button-caption' },
+              'restart'
+            ),
+            _react2.default.createElement(
+              'button',
+              { id: 'restart', className: 'control-button', onClick: function onClick() {
+                  return null;
+                } },
+              '\u21BA'
+            )
           ),
           _react2.default.createElement(
-            'button',
-            { id: 'continue', className: 'control-button', onClick: this.run },
-            '\u279E'
+            'div',
+            { className: 'button-box' },
+            _react2.default.createElement(
+              'div',
+              { className: 'button-caption' },
+              'step'
+            ),
+            _react2.default.createElement(
+              'button',
+              { id: 'step', className: 'control-button', onClick: this.step },
+              '\u21E5'
+            )
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'button-box' },
+            _react2.default.createElement(
+              'div',
+              { className: 'button-caption' },
+              'continue'
+            ),
+            _react2.default.createElement(
+              'button',
+              { id: 'continue', className: 'control-button', onClick: this.run },
+              '\u279E'
+            )
           )
         ),
         _react2.default.createElement(_TextView2.default, {
@@ -23788,6 +23852,8 @@ var _react2 = _interopRequireDefault(_react);
 
 var _decode = __webpack_require__(9);
 
+var _util = __webpack_require__(21);
+
 var _reactTabs = __webpack_require__(22);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -23883,14 +23949,32 @@ var StaticContainer = exports.StaticContainer = function (_React$Component) {
     key: 'render',
     value: function render() {
       // This is pretty inefficient
-      var bytes = [];
+      var bytes = void 0;
+      var groups = [];
+      var labels = [];
+
       for (var addr = this.props.lo; addr < this.props.hi; addr++) {
-        bytes.push(_react2.default.createElement(ByteView, {
-          key: addr,
-          address: addr,
-          value: this.props.mem.read(addr, 1),
-          label: this.props.labelFor[addr] }));
+        if (addr in this.props.labelFor) {
+          // Push label
+          labels.push(this.props.labelFor[addr]);
+
+          // Push byte group for previous label
+          if (bytes !== undefined) groups.push(bytes);
+
+          bytes = [];
+        }
+
+        if (bytes === undefined) bytes = [];
+
+        // Add the byte to the current labeled group
+        bytes.push({
+          addr: addr,
+          value: this.props.mem.read(addr, 1)
+        });
       }
+
+      // Add the last group
+      if (bytes !== undefined) groups.push(bytes);
 
       return _react2.default.createElement(
         'div',
@@ -23898,7 +23982,12 @@ var StaticContainer = exports.StaticContainer = function (_React$Component) {
         _react2.default.createElement(
           'div',
           { id: this.props.name + '-content', className: 'content' },
-          bytes
+          groups[0] && groups.map(function (bytes, idx) {
+            return _react2.default.createElement(LabeledByteGroup, {
+              key: idx,
+              bytes: bytes,
+              label: labels[idx] });
+          })
         )
       );
     }
@@ -23922,14 +24011,66 @@ var LabeledByteGroup = function (_React$Component2) {
   }, {
     key: 'render',
     value: function render() {
+      var _props = this.props,
+          label = _props.label,
+          bytes = _props.bytes;
+
+      // Decoding
+
+      var str = '';
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = bytes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var b = _step.value;
+
+          str += (0, _decode.escapeChar)(+b.value);
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
 
       return _react2.default.createElement(
         'div',
         { className: 'static-byte-group' },
         _react2.default.createElement(
-          'span',
+          'div',
           { className: 'static-label' },
-          this.props.label
+          label,
+          ':'
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'static-value' },
+          _react2.default.createElement(
+            'div',
+            { className: 'static-bytes' },
+            bytes && bytes.map(function (_ref2, idx) {
+              var addr = _ref2.addr,
+                  value = _ref2.value;
+              return _react2.default.createElement(Byte, { key: addr,
+                addr: addr,
+                value: +value });
+            })
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'static-decoded', style: _util.encStyle['char'] },
+            str
+          )
         )
       );
     }
@@ -23939,74 +24080,65 @@ var LabeledByteGroup = function (_React$Component2) {
 }(_react2.default.Component);
 
 /**
- * @classdesc
- * A view of a single byte, sort of different from the
+ *
  */
 
 
-var ByteView = function (_React$Component3) {
-  _inherits(ByteView, _React$Component3);
+var Byte = function Byte(_ref3) {
+  var addr = _ref3.addr,
+      value = _ref3.value;
 
-  function ByteView(props) {
-    _classCallCheck(this, ByteView);
+  return _react2.default.createElement(
+    'span',
+    { className: 'static-byte-value' },
+    (0, _decode.pad)(value.toString(16), 2)
+  );
+};
 
-    var _this3 = _possibleConstructorReturn(this, (ByteView.__proto__ || Object.getPrototypeOf(ByteView)).call(this, props));
+// /**
+//  * @classdesc
+//  * A view of a single byte, sort of different from the
+//  */
+// class ByteView extends React.Component {
+//   constructor(props) {
+//     super(props);
 
-    _this3.state = {
-      decode: _this3.props.name == 'rodata' ? 'char' : 'hex'
-    };
+//     this.state = {
+//       decode: (this.props.name == 'rodata') ? 'char' : 'hex'
+//     };
 
-    _this3.toggleDecoding = _this3.toggleDecoding.bind(_this3);
-    return _this3;
-  }
+//     this.toggleDecoding = this.toggleDecoding.bind(this);
+//   }
 
-  _createClass(ByteView, [{
-    key: 'toggleDecoding',
-    value: function toggleDecoding() {
-      this.setState(function (_ref2) {
-        var decode = _ref2.decode;
+//   toggleDecoding() {
+//     this.setState(({decode}) => {
+//       return {
+//         decode: (decode == 'hex') ? 'char' : 'hex'
+//       };
+//     });
+//   }
 
-        return {
-          decode: decode == 'hex' ? 'char' : 'hex'
-        };
-      });
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      // Decode as character or hex byte, depending on printability and state
-      var value = this.props.value > PRINTABLE && this.state.decode === 'char' ? '\'' + String.fromCharCode(this.props.value) + '\'' : (0, _decode.pad)(this.props.value.toString(16), 2);
+//   render() {
+//     // Decode as character or hex byte, depending on printability and state
+//     let value = (this.props.value > PRINTABLE && this.state.decode === 'char')
+//       ? `'${String.fromCharCode(this.props.value)}'`
+//       : pad(this.props.value.toString(16), 2);
 
-      var label = this.props.label ? this.props.label + ':' : null;
+//     let label = this.props.label  ? this.props.label + ':' : null;
 
-      // Align on 8-byte boundaries
-      // TODO: make this customizable
-      var showAddress = this.props.address % 8 == 0;
+//     // Align on 8-byte boundaries
+//     // TODO: make this customizable
+//     let showAddress = (this.props.address % 8 == 0);
 
-      return _react2.default.createElement(
-        'div',
-        { className: 'static-byte', onClick: this.toggleDecoding },
-        _react2.default.createElement(
-          'span',
-          { className: 'static-label' },
-          label
-        ),
-        _react2.default.createElement(
-          'span',
-          { className: 'byte-value' },
-          value
-        ),
-        _react2.default.createElement(
-          'span',
-          { className: 'byte-address' + (showAddress ? ' aligned' : '') },
-          this.props.address.toString(16)
-        )
-      );
-    }
-  }]);
-
-  return ByteView;
-}(_react2.default.Component);
+//     return (
+//       <div className="static-byte" onClick={this.toggleDecoding} >
+//         <span className="static-label">{label}</span>
+//         <span className="byte-value">{value}</span>
+//         <span className={'byte-address' + (showAddress ? ' aligned' : '')}>{this.props.address.toString(16)}</span>
+//       </div>
+//     );
+//   }
+// }
 
 exports.default = TabbedStaticContainer;
 
@@ -24752,6 +24884,12 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _FixedInt = __webpack_require__(5);
 
+var _runtimes = __webpack_require__(61);
+
+var _runtimes2 = _interopRequireDefault(_runtimes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -24929,6 +25067,7 @@ var Assembly = function () {
 		key: 'link',
 		value: function link() {
 			var addr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0x08048000;
+			var runtime = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _runtimes2.default;
 
 			// TODO: include a version of crt0.S
 			// (_start function, get argv, call main)
@@ -24938,7 +25077,7 @@ var Assembly = function () {
 
 			image.text = {
 				start: addr,
-				end: addr + INSTR_LEN * this.nInstructions,
+				end: addr + INSTR_LEN * (this.nInstructions + runtime.length),
 				contents: [],
 				addresses: []
 			};
@@ -24961,7 +25100,37 @@ var Assembly = function () {
 				contents: new ArrayBuffer(this.bssSz)
 			};
 
-			// Write text to image
+			// Write the runtime to the image
+			this.labels['_start'] = addr;
+			var _iteratorNormalCompletion2 = true;
+			var _didIteratorError2 = false;
+			var _iteratorError2 = undefined;
+
+			try {
+				for (var _iterator2 = runtime[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+					var inst = _step2.value;
+
+					image.text.addresses.push(addr);
+					image.text.contents.push(inst);
+					addr += INSTR_LEN;
+				}
+
+				// Write text to image
+			} catch (err) {
+				_didIteratorError2 = true;
+				_iteratorError2 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion2 && _iterator2.return) {
+						_iterator2.return();
+					}
+				} finally {
+					if (_didIteratorError2) {
+						throw _iteratorError2;
+					}
+				}
+			}
+
 			for (var linenum in this.instructions) {
 				image.text.addresses.push(addr);
 				image.text.contents.push(this.instructions[linenum]);
@@ -25008,13 +25177,13 @@ var Assembly = function () {
 				var item = data[linenum];
 				//console.log(`allocating ${item.type}: ${item.value}`);
 				// Write text to an ArrayBuffer
-				var _iteratorNormalCompletion2 = true;
-				var _didIteratorError2 = false;
-				var _iteratorError2 = undefined;
+				var _iteratorNormalCompletion3 = true;
+				var _didIteratorError3 = false;
+				var _iteratorError3 = undefined;
 
 				try {
-					for (var _iterator2 = item.value[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-						var val = _step2.value;
+					for (var _iterator3 = item.value[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+						var val = _step3.value;
 
 						// Convert string to charCode
 						if (typeof val == 'string') {
@@ -25029,16 +25198,16 @@ var Assembly = function () {
 						addr += item.size;
 					}
 				} catch (err) {
-					_didIteratorError2 = true;
-					_iteratorError2 = err;
+					_didIteratorError3 = true;
+					_iteratorError3 = err;
 				} finally {
 					try {
-						if (!_iteratorNormalCompletion2 && _iterator2.return) {
-							_iterator2.return();
+						if (!_iteratorNormalCompletion3 && _iterator3.return) {
+							_iterator3.return();
 						}
 					} finally {
-						if (_didIteratorError2) {
-							throw _iteratorError2;
+						if (_didIteratorError3) {
+							throw _iteratorError3;
 						}
 					}
 				}
@@ -25326,7 +25495,7 @@ var MemorySegment = exports.MemorySegment = function () {
 
       // Copy over in reverse order
       for (var i = 0; i < this.size; i++) {
-        to[i] = from[this.size - i];
+        to[i] = from[this.size - i - 1];
       }
     } else {
       // Size of memory, in bytes
@@ -25423,7 +25592,9 @@ var MemorySegment = exports.MemorySegment = function () {
 
   }, {
     key: 'write',
-    value: function write(value, addr) {
+    value: function write(value, addr, size) {
+      if (!(value instanceof _FixedInt.FixedInt)) value = new _FixedInt.FixedInt(size, value);
+
       var idx = this.addrToIdx(addr, value.size);
       value.toBuffer(this.mem, idx, false);
     }
@@ -25583,6 +25754,11 @@ var Memory = function () {
     value: function read(addr, size) {
       return this.getSegment(addr).read(addr, size);
     }
+
+    /**
+     * Write the value
+     */
+
   }, {
     key: 'write',
     value: function write(value, addr) {
@@ -25876,6 +26052,8 @@ function readString(pointer) {
 /**
  * The library of C functions
  *
+ * NOTE/TODO: probably change the io {stdout, stdin, stderr} to
+ * an array fd [] of "file descriptors", just for more extensibility
  */
 function Stdlib(io) {
 	var _this = this;
@@ -25884,8 +26062,6 @@ function Stdlib(io) {
 	readString = readString.bind(this);
 	SysV_arg = SysV_arg.bind(this);
 	SysV_ret = SysV_ret.bind(this);
-
-	console.log(io);
 
 	return {
 		printf: function printf() {
@@ -25928,6 +26104,8 @@ function Stdlib(io) {
 		},
 
 		exit: function exit() {
+			// flush any output
+			io.stdout.flush();
 			// TODO: Set return value or something?
 			_this.pc = undefined;
 		}
@@ -26502,6 +26680,7 @@ var Console = function (_React$Component) {
 
         // Bind it up
         _this.addLine = _this.addLine.bind(_this);
+        _this.submitLine = _this.submitLine.bind(_this);
         _this.focusInput = _this.focusInput.bind(_this);
         _this.write = _this.write.bind(_this);
         _this.flush = _this.flush.bind(_this);
@@ -26509,6 +26688,11 @@ var Console = function (_React$Component) {
         // Take over the stdio
         _this.props.io.stdout = _this;
         _this.props.io.stdin = _this;
+        _this.props.io.stderr = {
+            write: function write(value) {
+                return _this.error(value);
+            }
+        };
         return _this;
     }
 
@@ -26520,13 +26704,48 @@ var Console = function (_React$Component) {
     _createClass(Console, [{
         key: 'write',
         value: function write(value) {
-            console.log('In write. received ' + value);
             var lines = value.split('\n');
             for (var i = 0; i < lines.length - 1; i++) {
                 this.addLine(lines[i]);
             }
 
             this.buf = lines[lines.length - 1];
+        }
+
+        /**
+         * Write an error to the buffer, flush immediately and color it red
+         */
+
+    }, {
+        key: 'error',
+        value: function error(value) {
+            this.flush();
+            var lines = value.split('\n');
+
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = lines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var line = _step.value;
+
+                    this.addLine(line, '#f99');
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
         }
 
         /**
@@ -26554,14 +26773,28 @@ var Console = function (_React$Component) {
 
     }, {
         key: 'addLine',
-        value: function addLine(line) {
+        value: function addLine(text) {
+            var color = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "#fff";
+
             this.setState(function (_ref) {
                 var lines = _ref.lines;
 
                 var newLines = lines.slice();
-                newLines.push(line);
+                newLines.push({ text: text, color: color });
                 return { lines: newLines };
             });
+        }
+
+        /**
+         * Parse a line of text from the console, interpret it as a command
+         *
+         */
+
+    }, {
+        key: 'submitLine',
+        value: function submitLine(line) {
+            // TODO: Parse line and look for commands ??
+            addLine(line);
         }
 
         /**
@@ -26586,8 +26819,8 @@ var Console = function (_React$Component) {
                 this.state.lines.map(function (line, idx) {
                     return _react2.default.createElement(
                         'div',
-                        { className: 'console-line', key: idx },
-                        line
+                        { className: 'console-line', key: idx, style: { color: line.color } },
+                        line.text
                     );
                 }),
                 _react2.default.createElement(InputLine, {
@@ -26695,7 +26928,9 @@ var Console = function () {
 		value: function read() {}
 	}, {
 		key: "write",
-		value: function write(str) {}
+		value: function write(str) {
+			console.log(str);
+		}
 	}]);
 
 	return Console;
@@ -26719,6 +26954,24 @@ var Console = function () {
 
 
 exports.default = Console;
+
+/***/ }),
+/* 61 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+/**
+ *
+ */
+
+var crt0 = [['movq', '%rsp', '%rbp'], ['movq', '$0', '%rdi'], ['movq', '$0', '%rsi'], ['call', 'main'], ['movq', '%rax', '%rdi'], ['call', 'exit']];
+
+exports.default = crt0;
 
 /***/ })
 /******/ ]);
