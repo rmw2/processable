@@ -5,6 +5,8 @@
 
 import { FixedInt } from './FixedInt.js';
 
+import crt0 from './runtimes.js';
+
 // Hacky approximation of the average instruction length
 // Stretch goals would be to get actual instruction length but alas
 const INSTR_LEN = 2;
@@ -141,7 +143,7 @@ class Assembly {
 	 * @returns {Object} -- A representation of the program's binary image and
 	 * 						the labels it contains
 	 */
-	link(addr=0x08048000) {
+	link(addr=0x08048000, runtime=crt0) {
 		// TODO: include a version of crt0.S
 		// (_start function, get argv, call main)
 
@@ -150,7 +152,7 @@ class Assembly {
 
 		image.text = {
 			start: addr,
-			end: addr + INSTR_LEN * this.nInstructions,
+			end: addr + INSTR_LEN * (this.nInstructions + runtime.length),
 			contents: [],
 			addresses: []
 		};
@@ -172,6 +174,14 @@ class Assembly {
 			end: image.data.end + this.bssSz,
 			contents: new ArrayBuffer(this.bssSz),
 		};
+
+		// Write the runtime to the image
+		this.labels['_start'] = addr;
+		for (const inst of runtime) {
+			image.text.addresses.push(addr);
+			image.text.contents.push(inst);
+			addr += INSTR_LEN;
+		}
 
 		// Write text to image
 		for (const linenum in this.instructions) {
