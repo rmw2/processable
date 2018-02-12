@@ -43,6 +43,7 @@ export default class Console extends React.Component {
      * Write an error to the buffer, flush immediately and color it red
      */
     error(value) {
+        this.flush();
         const lines = value.split('\n');
 
         for (const line of lines)
