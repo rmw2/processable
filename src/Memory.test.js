@@ -8,7 +8,7 @@ let loAddr = 0x000;
 
 let Mem = new MemorySegment(hiAddr, memSize);
 
-describe('MemorySegment', () => {
+describe('Empty MemorySegment', () => {
 	test('has low address correctly computed', () => {
 		expect(Mem.loAddr).toBe(hiAddr - memSize);
 	});
@@ -17,7 +17,7 @@ describe('MemorySegment', () => {
 		for (let sz = 1; sz < 8; sz *= 2) {
 			for (let addr = loAddr; addr <= hiAddr - sz; addr++) {
 				Mem.write(addr, addr, sz);
-				expect(Mem.read(addr, sz)).toBe(addr);
+				expect(+Mem.read(addr, sz)).toEqual(addr);
 			}
 		}
 	});
@@ -29,10 +29,10 @@ describe('MemorySegment', () => {
 		Mem.write(val, loAddr, 4);
 
 		// Read back single byte in each position
-		expect(Mem.read(loAddr + 0, 1)).toBe(0x78);
-		expect(Mem.read(loAddr + 1, 1)).toBe(0x56);
-		expect(Mem.read(loAddr + 2, 1)).toBe(0x34);
-		expect(Mem.read(loAddr + 3, 1)).toBe(0x12);
+		expect(+Mem.read(loAddr + 0, 1)).toBe(0x78);
+		expect(+Mem.read(loAddr + 1, 1)).toBe(0x56);
+		expect(+Mem.read(loAddr + 2, 1)).toBe(0x34);
+		expect(+Mem.read(loAddr + 3, 1)).toBe(0x12);
 	});
 
 	test('throws error on invalid read/write lengths', () => {

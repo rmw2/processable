@@ -49,8 +49,9 @@ export class MemorySegment {
             this.size = this.buf.byteLength;
 
             // Copy over in reverse order
-            for (let i = 0; i < this.size; i++)
-                to[i] = from[this.size - i];
+            for (let i = 0; i < this.size; i++) {
+                to[i] = from[this.size - i - 1];
+            }
 		} else {
 			// Size of memory, in bytes
 			this.size = sizeOrData;
@@ -141,7 +142,10 @@ export class MemorySegment {
 	 * @param {FixedInt} value
 	 * @param {FixedInt|Number} addr
 	 */
-	write(value, addr) {
+	write(value, addr, size) {
+        if (!(value instanceof FixedInt))
+            value = new FixedInt(size, value);
+
 		let idx = this.addrToIdx(addr, value.size);
 		value.toBuffer(this.mem, idx, false);
 	}
@@ -276,6 +280,9 @@ export default class Memory {
     	return this.getSegment(addr).read(addr, size);
     }
 
+    /**
+     * Write the value
+     */
     write(value, addr) {
     	this.getSegment(addr).write(value, addr);
     }
