@@ -20,19 +20,22 @@ A Javascript process emulator and visual inspector/debugger.
       - (january note: Some of this moved into FixedInt module)
   - View:
     - [x] Implement component for viewing the stack 
-      - [ ] with toggle-able decoding options
+      - [x] with toggle-able decoding options
     - [x] Add flags to view
     - [x] Add breakpoint toggles and execution controls to view
 * January
   - Interpreter:
     - [x] Compose and test module for representing Fixed-width Integers and emulating ALU behavior
-    - [ ] Support external function calls for c standard library methods
+    - [x] Support external function calls for c standard library methods
     - [ ] Connect with compiler on server side to run compiled C code
+      - (february note: might want to stay serverless)
     - [ ] Add support for the heap / brk()
+      - (pushed to february/beyond)
   - View:
     - [x] Host alpha version and begin to solicit feedback
-    - [ ] Improve customizability of stack/text components
+    - [x] Improve customizability of stack/text components
     - [ ] Design Heap component
+      - (pushed to february/beyond)
   - Paper:
     - [ ] Begin writing research/related projects
     - [ ] Describe core functionality and implementation
