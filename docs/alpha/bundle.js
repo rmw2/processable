@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 27);
+/******/ 	return __webpack_require__(__webpack_require__.s = 25);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -261,9 +261,9 @@ process.umask = function() { return 0; };
 /* WEBPACK VAR INJECTION */(function(process) {
 
 if (process.env.NODE_ENV === 'production') {
-  module.exports = __webpack_require__(28);
+  module.exports = __webpack_require__(26);
 } else {
-  module.exports = __webpack_require__(29);
+  module.exports = __webpack_require__(27);
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
@@ -372,41 +372,6 @@ module.exports = invariant;
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process) {/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-if (process.env.NODE_ENV !== 'production') {
-  var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.element')) ||
-    0xeac7;
-
-  var isValidElement = function(object) {
-    return typeof object === 'object' &&
-      object !== null &&
-      object.$$typeof === REACT_ELEMENT_TYPE;
-  };
-
-  // By explicitly using `prop-types` you are opting into new development behavior.
-  // http://fb.me/prop-types-in-prod
-  var throwOnDirectAccess = true;
-  module.exports = __webpack_require__(41)(isValidElement, throwOnDirectAccess);
-} else {
-  // By explicitly using `prop-types` you are opting into new production behavior.
-  // http://fb.me/prop-types-in-prod
-  module.exports = __webpack_require__(42)();
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -727,11 +692,11 @@ var FixedInt = function () {
           break;
         case 8:
           if (littleEndian) {
-            view.setUint32(offset, this.lo, littleEndian);
-            view.setUint32(offset + 4, this.hi, littleEndian);
+            view.setUint32(offset, this.lo, true);
+            view.setUint32(offset + 4, this.hi, true);
           } else {
-            view.setUint32(offset, this.hi, !littleEndian);
-            view.setUint32(offset + 4, this.lo, !littleEndian);
+            view.setUint32(offset, this.hi, false);
+            view.setUint32(offset + 4, this.lo, false);
           }
           break;
       }
@@ -1226,6 +1191,41 @@ function pad(n, width) {
 module.exports = { FixedInt: FixedInt, ALU: ALU, SIGN_MASK: SIGN_MASK, VAL_MASK: VAL_MASK, MODULUS: MODULUS, MAX_SAFE_HI: MAX_SAFE_HI };
 
 /***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process) {/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+if (process.env.NODE_ENV !== 'production') {
+  var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.element')) ||
+    0xeac7;
+
+  var isValidElement = function(object) {
+    return typeof object === 'object' &&
+      object !== null &&
+      object.$$typeof === REACT_ELEMENT_TYPE;
+  };
+
+  // By explicitly using `prop-types` you are opting into new development behavior.
+  // http://fb.me/prop-types-in-prod
+  var throwOnDirectAccess = true;
+  module.exports = __webpack_require__(39)(isValidElement, throwOnDirectAccess);
+} else {
+  // By explicitly using `prop-types` you are opting into new production behavior.
+  // http://fb.me/prop-types-in-prod
+  module.exports = __webpack_require__(40)();
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1432,7 +1432,7 @@ exports.toPrintableCharacters = toPrintableCharacters;
 exports.escapeChar = escapeChar;
 exports.decodeFromBuffer = decodeFromBuffer;
 
-var _FixedInt = __webpack_require__(5);
+var _FixedInt = __webpack_require__(4);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1540,7 +1540,6 @@ function toPrintableCharacters(val) {
 function escapeChar(charCode) {
     if (charCode > UNPRINTABLE) return String.fromCharCode(charCode);
 
-    console.log(charCode);
     switch (charCode) {
         case 0x08:
             return '\\b';
@@ -1793,6 +1792,62 @@ module.exports = ExecutionEnvironment;
 
 /***/ }),
 /* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.nextEncoding = nextEncoding;
+/**
+ * A module of strange utility functions that don't belong anywhere else
+ * 
+ * Anything in here is likely to be some hacky glue for the front-end
+ * display, quarantined in here so that we don't pollute the code base
+ * with such grossness.
+ */
+
+var NAMES = ['hex', 'int', 'uint', 'char', 'bin'];
+
+/**
+ * Function to pass to setState to toggle encoding between the above options
+ */
+function nextEncoding(state) {
+  var nextIdx = (state.encIdx + 1) % NAMES.length;
+  return {
+    encoding: NAMES[nextIdx],
+    encIdx: nextIdx
+  };
+}
+
+// Common stles for each encoding
+var encStyle = exports.encStyle = {
+  // String mapping
+  hex: { backgroundColor: '#ffe3e3' },
+  int: { backgroundColor: '#ccfff6' },
+  uint: { backgroundColor: '#e0ffdc' },
+  char: { backgroundColor: '#fffdda' },
+  bin: { backgroundColor: '#deddff' },
+
+  // Super hack, repeat mapping by index
+  0: { backgroundColor: '#ffe3e3' },
+  1: { backgroundColor: '#ccfff6' },
+  2: { backgroundColor: '#e0ffdc' },
+  3: { backgroundColor: '#fffdda' },
+  4: { backgroundColor: '#deddff' }
+};
+
+var regStyle = exports.regStyle = {
+  1: { backgroundColor: '#c9a762' },
+  2: { backgroundColor: '#b48166' },
+  4: { backgroundColor: '#9a4456' },
+  8: { backgroundColor: '#742c3d' }
+};
+
+/***/ }),
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1848,7 +1903,7 @@ function deepForEach(children, callback) {
 }
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1929,7 +1984,7 @@ module.exports = EventListener;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2000,7 +2055,7 @@ function shallowEqual(objA, objB) {
 module.exports = shallowEqual;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2015,7 +2070,7 @@ module.exports = shallowEqual;
  * 
  */
 
-var isTextNode = __webpack_require__(32);
+var isTextNode = __webpack_require__(30);
 
 /*eslint-disable no-bitwise */
 
@@ -2043,7 +2098,7 @@ function containsNode(outerNode, innerNode) {
 module.exports = containsNode;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2073,7 +2128,7 @@ function focusNode(node) {
 module.exports = focusNode;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2115,93 +2170,14 @@ function getActiveElement(doc) /*?DOMElement*/{
 module.exports = getActiveElement;
 
 /***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.nextEncoding = nextEncoding;
-/**
- * A module of strange utility functions that don't belong anywhere else
- * 
- * Anything in here is likely to be some hacky glue for the front-end
- * display, quarantined in here so that we don't pollute the code base
- * with such grossness.
- */
-
-var NAMES = ['hex', 'int', 'uint', 'char', 'bin'];
-
-/**
- * Function to pass to setState to toggle encoding between the above options
- */
-function nextEncoding(state) {
-  var nextIdx = (state.encIdx + 1) % NAMES.length;
-  return {
-    encoding: NAMES[nextIdx],
-    encIdx: nextIdx
-  };
-}
-
-// Common stles for each encoding
-var encStyle = exports.encStyle = {
-  // String mapping
-  hex: { backgroundColor: '#ffe3e3' },
-  int: { backgroundColor: '#ccfff6' },
-  uint: { backgroundColor: '#e0ffdc' },
-  char: { backgroundColor: '#fffdda' },
-  bin: { backgroundColor: '#deddff' },
-
-  // Super hack, repeat mapping by index
-  0: { backgroundColor: '#ffe3e3' },
-  1: { backgroundColor: '#ccfff6' },
-  2: { backgroundColor: '#e0ffdc' },
-  3: { backgroundColor: '#fffdda' },
-  4: { backgroundColor: '#deddff' }
-};
-
-var regStyle = exports.regStyle = {
-  1: { backgroundColor: '#c9a762' },
-  2: { backgroundColor: '#b48166' },
-  4: { backgroundColor: '#9a4456' },
-  8: { backgroundColor: '#742c3d' }
-};
-
-/***/ }),
 /* 22 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_Tabs__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_TabList__ = __webpack_require__(50);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_Tab__ = __webpack_require__(51);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_TabPanel__ = __webpack_require__(52);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__helpers_uuid__ = __webpack_require__(24);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Tab", function() { return __WEBPACK_IMPORTED_MODULE_2__components_Tab__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "TabList", function() { return __WEBPACK_IMPORTED_MODULE_1__components_TabList__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "TabPanel", function() { return __WEBPACK_IMPORTED_MODULE_3__components_TabPanel__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Tabs", function() { return __WEBPACK_IMPORTED_MODULE_0__components_Tabs__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "resetIdCounter", function() { return __WEBPACK_IMPORTED_MODULE_4__helpers_uuid__["b"]; });
-
-
-
-
-
-
-
-/***/ }),
-/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = childrenPropType;
 /* harmony export (immutable) */ __webpack_exports__["b"] = onSelectPropType;
 /* harmony export (immutable) */ __webpack_exports__["c"] = selectedIndexPropType;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__helpers_childrenDeepMap__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__helpers_childrenDeepMap__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_elementTypes__ = __webpack_require__(10);
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -2274,7 +2250,7 @@ function selectedIndexPropType(props, propName, componentName, location, propFul
 }
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2290,13 +2266,13 @@ function reset() {
 }
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["b"] = getTabsCount;
 /* harmony export (immutable) */ __webpack_exports__["a"] = getPanelsCount;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__helpers_childrenDeepMap__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__helpers_childrenDeepMap__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__elementTypes__ = __webpack_require__(10);
 
 
@@ -2316,386 +2292,7 @@ function getPanelsCount(children) {
 }
 
 /***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/**
- * Module that defines a single-threaded processor
- * to execute instructions
- */
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _FixedInt = __webpack_require__(5);
-
-var _Memory = __webpack_require__(54);
-
-var _Registers = __webpack_require__(55);
-
-var _lib = __webpack_require__(56);
-
-var _IO = __webpack_require__(60);
-
-var _IO2 = _interopRequireDefault(_IO);
-
-var _x11 = __webpack_require__(57);
-
-var _x12 = _interopRequireDefault(_x11);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var AsmSyntaxError = function (_Error) {
-    _inherits(AsmSyntaxError, _Error);
-
-    function AsmSyntaxError(message) {
-        _classCallCheck(this, AsmSyntaxError);
-
-        var _this = _possibleConstructorReturn(this, (AsmSyntaxError.__proto__ || Object.getPrototypeOf(AsmSyntaxError)).call(this, message));
-
-        _this.name = 'AsmSyntaxError';
-        return _this;
-    }
-
-    return AsmSyntaxError;
-}(Error);
-
-var Process = function () {
-    function Process(image) {
-        var labels = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var arch = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _x12.default;
-        var verbose = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-
-        _classCallCheck(this, Process);
-
-        // Intitialize memory and registers
-        this.mem = new _Memory.Memory(image);
-        this.regs = new _Registers.RegisterSet(arch.registers);
-
-        // Initialize stack pointer and instruction pointer
-        this.pc = image.text.start;
-        this.stackOrigin = this.mem.segments.stack.hi;
-        this.regs.write('rsp', new _FixedInt.FixedInt(arch.WORD_SIZE, this.stackOrigin));
-
-        // Save the labels and reverse the label mapping
-        this.labels = labels;
-        this.labeled = {};
-        for (var label in this.labels) {
-            this.labeled[this.labels[label]] = label;
-        } // Object containing handlers indexed by instruction
-        this.chip = arch.chip.call(this);
-
-        // Bind the console
-        var cons = new _IO2.default();
-        this.io = {
-            stdout: cons,
-            stdin: cons,
-            stderr: cons
-        };
-
-        // Bind standard library to process
-        this.lib = _lib.Stdlib.call(this, this.io);
-
-        // Intialize breakpoint dictionary
-        this.breakpoints = {};
-    }
-
-    /**
-     * Read the value in memory at the location specified by the operand.
-     * The operand is a string defining a register, immediate, or memory
-     * address as the information source
-     */
-
-
-    _createClass(Process, [{
-        key: 'read',
-        value: function read(operand) {
-            var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
-
-            // Immediate Operand
-            if (operand.startsWith('$')) {
-                var val = void 0,
-                    label = void 0;
-                if (isNaN(val = parseInt(label = operand.slice(1)))) {
-                    val = this.labels[label];
-                    if (val !== undefined) {
-                        return new _FixedInt.FixedInt(size, val);
-                    } else {
-                        throw new AsmSyntaxError('Label ' + name + ' undefined');
-                    }
-                }
-
-                return new _FixedInt.FixedInt(size, val);
-            }
-
-            // Register operand
-            if (operand.startsWith('%')) {
-                return this.regs.read(operand.slice(1));
-            }
-
-            // Memory operand
-            var address = this.parseMemoryOperand(operand);
-            return this.mem.read(address, size);
-
-            // TODO: Allow read from labeled memory address
-        }
-
-        /**
-         * Write the value to the location in memory specified by the operand.
-         * Operand is a string that defines either a register destination or
-         * a memory address
-         */
-
-    }, {
-        key: 'write',
-        value: function write(operand, value, size) {
-            // Immediate Operand
-            if (operand.startsWith('$')) {
-                throw new AsmSyntaxError('Cannot write to an immediate operand: ' + operand);
-            }
-
-            // Register operand
-            if (operand.startsWith('%')) {
-                this.regs.write(operand.slice(1), value);
-                return;
-            }
-
-            // Label operand
-            if (this.labels[operand] !== undefined) {
-                var _address = this.labels[operand];
-                this.mem.write(_address, value);
-            }
-
-            // Memory operand
-            var address = this.parseMemoryOperand(operand);
-            this.mem.write(value, address, size);
-        }
-
-        /**
-         * Change the program counter to the value specified in the operand.
-         * Operand can be a string representing an indirect memory access,
-         * a label, or a literal address.
-         */
-
-    }, {
-        key: 'jump',
-        value: function jump(operand) {
-            // Indirect jump to address held in register
-            if (operand.startsWith('*')) {
-                this.pc = +this.read(operand.slice(1));
-            } else if (parseInt(+operand)) {
-                this.pc = parseInt(+operand);
-            } else {
-                if (operand in this.labels) this.pc = this.labels[operand];else if (operand in this.lib) {
-                    // Bridge for "standard library" calls
-                    this.lib[operand]();
-                }
-            }
-        }
-
-        /**
-         * Get the value of a memory expression written in base/displacement or
-         * scaled indexed form.
-         *
-         *      disp(reg1, reg2, scale) -> disp + reg1 + (scale * reg2)
-         */
-
-    }, {
-        key: 'parseMemoryOperand',
-        value: function parseMemoryOperand(operand) {
-            // GNARLY regular expression to match indirect memory accesses in all their forms
-            var offset = /((?:0x)?[0-9]+)?\(%([a-z1-9]+)(?:,%([a-z1-9]+))?(?:,((?:0x)?[1248]))?\)/;
-            var matches = operand.match(offset);
-
-            if (!matches) throw new AsmSyntaxError('Invalid address format: ' + operand);
-
-            // Parse the integers
-            var disp = matches[1] ? parseInt(matches[1]) : 0;
-            var base = matches[2] ? +this.regs.read(matches[2]) : 0;
-            var idx = matches[3] ? +this.regs.read(matches[3]) : 0;
-            var scale = matches[4] ? parseInt(matches[4]) : 1;
-
-            return disp + base + idx * scale;
-        }
-
-        /**
-         * Return the operand size implied by a given mnemonic
-         */
-
-    }, {
-        key: 'parseOperandSize',
-        value: function parseOperandSize(mnemonic) {
-            var SUFFIXES = ['b', 'w', 'l', 'q'];
-            var SIZES = [1, 2, 4, 8];
-
-            var idx = SUFFIXES.indexOf(mnemonic.slice(-1));
-            var size = SIZES[idx];
-            var prefix = mnemonic.slice(0, -1);
-
-            return { prefix: prefix, size: size };
-        }
-
-        /**
-         * Fetch the next instruction and execute
-         */
-
-    }, {
-        key: 'step',
-        value: function step() {
-            var verbose = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
-            if (this.pc !== undefined) {
-                var pc = this.pc;
-
-                // Fetch mnemonic and operands from Text section
-
-                var _mem$read = this.mem.read(this.pc),
-                    _mem$read2 = _toArray(_mem$read),
-                    mnemonic = _mem$read2[0],
-                    operands = _mem$read2.slice(1);
-
-                if (verbose) this.print(pc, true, true);
-
-                // Advance instruction pointer and execute
-                this.pc = this.mem.next(this.pc);
-                this.execute(mnemonic, operands);
-
-                if (verbose) {
-                    // Print stack pointer and operand values after operation
-                    console.log('\t-----');
-                    this.print(pc, false, true);
-                }
-            }
-
-            return this.pc;
-        }
-
-        /**
-         * Given a mnemonic and operands, transfer control to the proper instruction handler
-         */
-
-    }, {
-        key: 'execute',
-        value: function execute(mnemonic, operands) {
-            if (mnemonic in this.chip) {
-                this.chip[mnemonic](operands);
-            } else {
-                var _parseOperandSize = this.parseOperandSize(mnemonic),
-                    prefix = _parseOperandSize.prefix,
-                    size = _parseOperandSize.size;
-
-                if (size) {
-                    this.chip[prefix](operands, size);
-                } else {
-                    throw new AsmSyntaxError('Unknown mnemonic: ' + mnemonic);
-                }
-            }
-        }
-
-        /**
-         * Run the process one instruction at a time.
-         * Pause for delay ms between executing each.
-         */
-
-    }, {
-        key: 'run',
-        value: function run() {
-            var _this2 = this;
-
-            var delay = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-            var verbose = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-            if (delay) {
-                // Time-out execution
-                var interval = void 0;
-                interval = setInterval(function () {
-                    _this2.step(verbose);
-
-                    if (_this2.pc === undefined || _this2.breakpoints[_this2.pc]) {
-                        clearInterval(interval);
-                        return;
-                    }
-                }, delay);
-            } else {
-                // Continuous execution
-                do {
-                    this.step();
-                } while (this.pc !== undefined && !this.breakpoints[this.pc]);
-            }
-        }
-
-        /**
-         * Add or remove a breakpoint at the specified address or label
-         */
-
-    }, {
-        key: 'toggleBreakpoint',
-        value: function toggleBreakpoint(addressOrLabel) {
-            var address = void 0;
-            addressOrLabel += '';
-            if (this.labels[addressOrLabel] !== undefined) address = this.labels[addressOrLabel];else address = addressOrLabel;
-
-            // (undefined || false) -> true, true -> false
-            this.breakpoints[address] = !this.breakpoints[address];
-        }
-    }, {
-        key: 'print',
-
-        /**
-         * Dump current state
-         */
-        value: function print() {
-            var pc = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.pc;
-            var showPC = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-            var showStack = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-
-            var _mem$read3 = this.mem.read(pc),
-                _mem$read4 = _toArray(_mem$read3),
-                mnemonic = _mem$read4[0],
-                operands = _mem$read4.slice(1);
-
-            var _parseOperandSize2 = this.parseOperandSize(mnemonic),
-                prefix = _parseOperandSize2.prefix,
-                size = _parseOperandSize2.size;
-
-            // Output address and instruction to execute
-
-
-            if (showPC && this.pc !== undefined) console.log('0x' + pc.toString(16) + ': ' + mnemonic + '\t' + operands.join(', '));
-
-            // Output stack pointer and operand values before operation
-            if (showStack && operands.indexOf('%rsp') == -1) console.log('\t%rsp:\t0x' + this.regs.read('rsp').val().toString(16));
-
-            // Print operands and values
-            for (var i in operands) {
-                var op = operands[i];
-                if (op.startsWith('$')) continue;
-                try {
-                    console.log('\t' + op + ':\t' + this.read(op, size));
-                } catch (e) {
-                    // Hack in case we can't actually read this operand
-                    if (e.name !== 'AsmSyntaxError') throw e;
-                }
-            }
-        }
-    }]);
-
-    return Process;
-}();
-
-module.exports = { Process: Process };
-
-/***/ }),
-/* 27 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2705,88 +2302,128 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(30);
+var _reactDom = __webpack_require__(28);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _ProcessView = __webpack_require__(43);
+var _ProcessView = __webpack_require__(41);
 
 var _ProcessView2 = _interopRequireDefault(_ProcessView);
 
 var _Assembler = __webpack_require__(53);
 
-var _Process = __webpack_require__(26);
+var _Process = __webpack_require__(55);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var examples = __webpack_require__(58);
-var exnames = ['fibonacci', 'hello'];
+// Names of sample files
+var examples = ['euclid.s', 'hello.s', 'fibonacci.s'];
 
-// Loading example program(s)
-
-var _loop = function _loop(ex) {
-  document.getElementById(ex).onclick = function () {
-    var p = new _Process.Process(examples[ex].image, examples[ex].labels);
-
-    _reactDom2.default.render(_react2.default.createElement(_ProcessView2.default, { process: p }), document.getElementById('root'));
-  };
+/**
+ * The main application
+ */
+var App = function App(_ref) {
+  var examples = _ref.examples;
+  return _react2.default.createElement(
+    'div',
+    { className: 'modal' },
+    _react2.default.createElement(
+      'div',
+      { className: 'modal-content' },
+      _react2.default.createElement(
+        'div',
+        null,
+        'Select an x86-64 Assembly file to debug (in AT&T Syntax)'
+      ),
+      _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(
+          'label',
+          { className: 'file', htmlFor: 'upload' },
+          _react2.default.createElement('input', { id: 'upload',
+            className: 'file',
+            name: 'inputfile',
+            type: 'file',
+            onChange: uploadAndAssemble }),
+          ' upload file'
+        )
+      ),
+      _react2.default.createElement(
+        'div',
+        null,
+        'Or load an example:'
+      ),
+      _react2.default.createElement(
+        'div',
+        null,
+        examples.map(function (name) {
+          return _react2.default.createElement(
+            'button',
+            { key: name, onClick: function onClick() {
+                return fetchAndAssemble(name);
+              } },
+            name
+          );
+        })
+      )
+    )
+  );
 };
 
-var _iteratorNormalCompletion = true;
-var _didIteratorError = false;
-var _iteratorError = undefined;
+/**
+ *
+ */
+function loadText(text) {
+  var asm = new _Assembler.Assembly(text);
 
-try {
-  for (var _iterator = exnames[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-    var ex = _step.value;
+  var _asm$link = asm.link(),
+      image = _asm$link.image,
+      labels = _asm$link.labels;
 
-    _loop(ex);
-  }
+  var p = new _Process.Process(image, labels);
 
-  // Upload button
-} catch (err) {
-  _didIteratorError = true;
-  _iteratorError = err;
-} finally {
-  try {
-    if (!_iteratorNormalCompletion && _iterator.return) {
-      _iterator.return();
-    }
-  } finally {
-    if (_didIteratorError) {
-      throw _iteratorError;
-    }
-  }
+  _reactDom2.default.render(_react2.default.createElement(_ProcessView2.default, { process: p }), document.getElementById('root'));
 }
 
-document.getElementById('upload').onchange = function uploadAndAssemble() {
-  var input = event.target;
-  var reader = new FileReader();
+/**
+ *
+ */
+function fetchAndAssemble(name) {
+  var client = new XMLHttpRequest();
+  client.open('GET', 'samples/' + name);
 
-  reader.onload = function () {
-    // Assemble the text
-    var text = reader.result;
-
-    var asm = new _Assembler.Assembly(text);
-
-    var _asm$link = asm.link(),
-        image = _asm$link.image,
-        labels = _asm$link.labels;
-
-    // Start the process
-
-
-    var p = new _Process.Process(image, labels);
-
-    // Render it up
-    _reactDom2.default.render(_react2.default.createElement(_ProcessView2.default, { process: p }), document.getElementById('root'));
+  client.onreadystatechange = function () {
+    // Gotta wait for it to actually read, then unbind the handler
+    if (client.responseText) {
+      loadText(client.responseText);
+      client.onreadystatechange = null;
+    }
   };
 
+  client.send();
+}
+
+/**
+ * Upload a file, assemble it, and run
+ *
+ */
+function uploadAndAssemble(event) {
+  console.log('Uploading file');
+  var input = event.target;
+  var reader = new FileReader();
+  reader.onload = function () {
+    return loadText(reader.result);
+  };
   reader.readAsText(input.files[0]);
-};
+}
+
+// Render the chooser
+console.log('Rendering ze app');
+_reactDom2.default.render(_react2.default.createElement(App, { examples: examples }), document.getElementById('root'));
 
 /***/ }),
-/* 28 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2816,7 +2453,7 @@ module.exports={Children:{map:S.map,forEach:S.forEach,count:S.count,toArray:S.to
 
 
 /***/ }),
-/* 29 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4522,7 +4159,7 @@ module.exports = ReactEntry;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 30 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4560,15 +4197,15 @@ if (process.env.NODE_ENV === 'production') {
   // DCE check should happen before ReactDOM bundle executes so that
   // DevTools can report bad minification during injection.
   checkDCE();
-  module.exports = __webpack_require__(31);
+  module.exports = __webpack_require__(29);
 } else {
-  module.exports = __webpack_require__(34);
+  module.exports = __webpack_require__(32);
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 31 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4582,7 +4219,7 @@ if (process.env.NODE_ENV === 'production') {
  LICENSE file in the root directory of this source tree.
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(1);__webpack_require__(3);var l=__webpack_require__(14),n=__webpack_require__(6),ba=__webpack_require__(16),ca=__webpack_require__(2),da=__webpack_require__(7),ea=__webpack_require__(17),fa=__webpack_require__(18),ha=__webpack_require__(19),ia=__webpack_require__(20);
+var aa=__webpack_require__(1);__webpack_require__(3);var l=__webpack_require__(14),n=__webpack_require__(6),ba=__webpack_require__(17),ca=__webpack_require__(2),da=__webpack_require__(7),ea=__webpack_require__(18),fa=__webpack_require__(19),ha=__webpack_require__(20),ia=__webpack_require__(21);
 function w(a){for(var b=arguments.length-1,c="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)c+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(c+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}aa?void 0:w("227");
 function ja(a){switch(a){case "svg":return"http://www.w3.org/2000/svg";case "math":return"http://www.w3.org/1998/Math/MathML";default:return"http://www.w3.org/1999/xhtml"}}
 var ka={Namespaces:{html:"http://www.w3.org/1999/xhtml",mathml:"http://www.w3.org/1998/Math/MathML",svg:"http://www.w3.org/2000/svg"},getIntrinsicNamespace:ja,getChildNamespace:function(a,b){return null==a||"http://www.w3.org/1999/xhtml"===a?ja(b):"http://www.w3.org/2000/svg"===a&&"foreignObject"===b?"http://www.w3.org/1999/xhtml":a}},la=null,oa={};
@@ -4831,7 +4468,7 @@ unstable_deferredUpdates:Xj.deferredUpdates,flushSync:Xj.flushSync,__SECRET_INTE
 
 
 /***/ }),
-/* 32 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4846,7 +4483,7 @@ unstable_deferredUpdates:Xj.deferredUpdates,flushSync:Xj.flushSync,__SECRET_INTE
  * @typechecks
  */
 
-var isNode = __webpack_require__(33);
+var isNode = __webpack_require__(31);
 
 /**
  * @param {*} object The object to check.
@@ -4859,7 +4496,7 @@ function isTextNode(object) {
 module.exports = isTextNode;
 
 /***/ }),
-/* 33 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4887,7 +4524,7 @@ function isNode(object) {
 module.exports = isNode;
 
 /***/ }),
-/* 34 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4911,19 +4548,19 @@ var react = __webpack_require__(1);
 var invariant = __webpack_require__(3);
 var ExecutionEnvironment = __webpack_require__(14);
 var _assign = __webpack_require__(6);
-var EventListener = __webpack_require__(16);
+var EventListener = __webpack_require__(17);
 var require$$0 = __webpack_require__(8);
-var hyphenateStyleName = __webpack_require__(35);
+var hyphenateStyleName = __webpack_require__(33);
 var emptyFunction = __webpack_require__(2);
-var camelizeStyleName = __webpack_require__(37);
-var performanceNow = __webpack_require__(39);
-var propTypes = __webpack_require__(4);
+var camelizeStyleName = __webpack_require__(35);
+var performanceNow = __webpack_require__(37);
+var propTypes = __webpack_require__(5);
 var emptyObject = __webpack_require__(7);
 var checkPropTypes = __webpack_require__(12);
-var shallowEqual = __webpack_require__(17);
-var containsNode = __webpack_require__(18);
-var focusNode = __webpack_require__(19);
-var getActiveElement = __webpack_require__(20);
+var shallowEqual = __webpack_require__(18);
+var containsNode = __webpack_require__(19);
+var focusNode = __webpack_require__(20);
+var getActiveElement = __webpack_require__(21);
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -22116,7 +21753,7 @@ module.exports = ReactDOMFiberEntry;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 35 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22131,7 +21768,7 @@ module.exports = ReactDOMFiberEntry;
 
 
 
-var hyphenate = __webpack_require__(36);
+var hyphenate = __webpack_require__(34);
 
 var msPattern = /^ms-/;
 
@@ -22158,7 +21795,7 @@ function hyphenateStyleName(string) {
 module.exports = hyphenateStyleName;
 
 /***/ }),
-/* 36 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22194,7 +21831,7 @@ function hyphenate(string) {
 module.exports = hyphenate;
 
 /***/ }),
-/* 37 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22209,7 +21846,7 @@ module.exports = hyphenate;
 
 
 
-var camelize = __webpack_require__(38);
+var camelize = __webpack_require__(36);
 
 var msPattern = /^-ms-/;
 
@@ -22237,7 +21874,7 @@ function camelizeStyleName(string) {
 module.exports = camelizeStyleName;
 
 /***/ }),
-/* 38 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22272,7 +21909,7 @@ function camelize(string) {
 module.exports = camelize;
 
 /***/ }),
-/* 39 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22287,7 +21924,7 @@ module.exports = camelize;
  * @typechecks
  */
 
-var performance = __webpack_require__(40);
+var performance = __webpack_require__(38);
 
 var performanceNow;
 
@@ -22309,7 +21946,7 @@ if (performance.now) {
 module.exports = performanceNow;
 
 /***/ }),
-/* 40 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22335,7 +21972,7 @@ if (ExecutionEnvironment.canUseDOM) {
 module.exports = performance || {};
 
 /***/ }),
-/* 41 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22885,7 +22522,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 42 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22950,7 +22587,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 43 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22966,23 +22603,23 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _RegisterView = __webpack_require__(44);
+var _RegisterView = __webpack_require__(42);
 
 var _RegisterView2 = _interopRequireDefault(_RegisterView);
 
-var _TextView = __webpack_require__(45);
+var _TextView = __webpack_require__(43);
 
 var _TextView2 = _interopRequireDefault(_TextView);
 
-var _StackView = __webpack_require__(46);
+var _StackView = __webpack_require__(44);
 
 var _StackView2 = _interopRequireDefault(_StackView);
 
-var _StaticView = __webpack_require__(47);
+var _StaticView = __webpack_require__(45);
 
 var _StaticView2 = _interopRequireDefault(_StaticView);
 
-var _ConsoleView = __webpack_require__(59);
+var _ConsoleView = __webpack_require__(52);
 
 var _ConsoleView2 = _interopRequireDefault(_ConsoleView);
 
@@ -23065,6 +22702,8 @@ var ProcessContainer = function (_React$Component) {
     key: 'render',
     value: function render() {
       var p = this.props.process;
+      console.log('Rendering the process container for process:');
+      console.log(p);
 
       return _react2.default.createElement(
         'div',
@@ -23145,7 +22784,7 @@ var ProcessContainer = function (_React$Component) {
 exports.default = ProcessContainer;
 
 /***/ }),
-/* 44 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23161,7 +22800,7 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _util = __webpack_require__(21);
+var _util = __webpack_require__(15);
 
 var _decode = __webpack_require__(9);
 
@@ -23379,7 +23018,7 @@ var MultiSizeRegisterView = function (_React$Component3) {
 }(_react2.default.Component);
 
 /***/ }),
-/* 45 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23564,7 +23203,7 @@ var InstructionView = function (_React$Component2) {
 }(_react2.default.Component);
 
 /***/ }),
-/* 46 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23580,7 +23219,7 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _util = __webpack_require__(21);
+var _util = __webpack_require__(15);
 
 var _decode = __webpack_require__(9);
 
@@ -23833,7 +23472,7 @@ var ByteView = function (_React$Component3) {
 }(_react2.default.Component);
 
 /***/ }),
-/* 47 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23852,9 +23491,9 @@ var _react2 = _interopRequireDefault(_react);
 
 var _decode = __webpack_require__(9);
 
-var _util = __webpack_require__(21);
+var _util = __webpack_require__(15);
 
-var _reactTabs = __webpack_require__(22);
+var _reactTabs = __webpack_require__(46);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -24143,18 +23782,41 @@ var Byte = function Byte(_ref3) {
 exports.default = TabbedStaticContainer;
 
 /***/ }),
-/* 48 */
+/* 46 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_Tabs__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_TabList__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_Tab__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_TabPanel__ = __webpack_require__(51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__helpers_uuid__ = __webpack_require__(23);
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Tab", function() { return __WEBPACK_IMPORTED_MODULE_2__components_Tab__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "TabList", function() { return __WEBPACK_IMPORTED_MODULE_1__components_TabList__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "TabPanel", function() { return __WEBPACK_IMPORTED_MODULE_3__components_TabPanel__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Tabs", function() { return __WEBPACK_IMPORTED_MODULE_0__components_Tabs__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "resetIdCounter", function() { return __WEBPACK_IMPORTED_MODULE_4__helpers_uuid__["b"]; });
+
+
+
+
+
+
+
+/***/ }),
+/* 47 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Tabs; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_prop_types__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__helpers_propTypes__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__UncontrolledTabs__ = __webpack_require__(49);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__helpers_count__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__helpers_propTypes__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__UncontrolledTabs__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__helpers_count__ = __webpack_require__(24);
 function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -24289,21 +23951,21 @@ Tabs.tabsRole = 'Tabs';
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 49 */
+/* 48 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return UncontrolledTabs; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_prop_types__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_classnames__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_classnames___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_classnames__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__helpers_uuid__ = __webpack_require__(24);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__helpers_propTypes__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__helpers_count__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__helpers_childrenDeepMap__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__helpers_uuid__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__helpers_propTypes__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__helpers_count__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__helpers_childrenDeepMap__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__helpers_elementTypes__ = __webpack_require__(10);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -24618,12 +24280,12 @@ UncontrolledTabs.propTypes = process.env.NODE_ENV !== "production" ? {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 50 */
+/* 49 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return TabList; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_prop_types__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
@@ -24677,12 +24339,12 @@ TabList.tabsRole = 'TabList';
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 51 */
+/* 50 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Tab; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_prop_types__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
@@ -24792,12 +24454,12 @@ Tab.tabsRole = 'Tab';
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 52 */
+/* 51 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return TabPanel; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_prop_types__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
@@ -24871,6 +24533,296 @@ TabPanel.tabsRole = 'TabPanel';
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
+/* 52 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(1);
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Console = function (_React$Component) {
+  _inherits(Console, _React$Component);
+
+  function Console(props) {
+    _classCallCheck(this, Console);
+
+    var _this = _possibleConstructorReturn(this, (Console.__proto__ || Object.getPrototypeOf(Console)).call(this, props));
+
+    _this.state = {
+      lines: [],
+      prompt: '(pbl) '
+
+      // Buffers to maintain
+    };_this.outbuf = '';
+    _this.inbuf = '';
+
+    // Bind it up
+    _this.addLine = _this.addLine.bind(_this);
+    _this.submitLine = _this.submitLine.bind(_this);
+    _this.focusInput = _this.focusInput.bind(_this);
+    _this.write = _this.write.bind(_this);
+    _this.read = _this.read.bind(_this);
+    _this.flush = _this.flush.bind(_this);
+
+    // Take over the process' stdio
+    _this.props.io.stdout = _this;
+    _this.props.io.stdin = _this;
+    _this.props.io.stderr = {
+      write: function write(value) {
+        return _this.error(value);
+      }
+    };
+    return _this;
+  }
+
+  /**
+   * Write a value to the buffer, flush after every newline
+   */
+
+
+  _createClass(Console, [{
+    key: 'write',
+    value: function write(value) {
+      var lines = (this.outbuf + value).split('\n');
+
+      for (var i = 0; i < lines.length - 1; i++) {
+        this.addLine(lines[i]);
+      }
+
+      this.outbuf = lines[lines.length - 1];
+    }
+
+    /**
+     * Write an error to the buffer, flush immediately and color it red
+     */
+
+  }, {
+    key: 'error',
+    value: function error(value) {
+      this.flush();
+      var lines = value.split('\n');
+
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = lines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var line = _step.value;
+
+          this.addLine(line, '#f99');
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+
+    /**
+     * Read from the input buffer, n characters at a time, consuming them
+     * @param {Number} n -- the number of characters from the input buffer to read
+     */
+
+  }, {
+    key: 'read',
+    value: function read(n) {
+      if (this.inbuf == '') return null;
+
+      var read = this.inbuf.slice(0, n);
+      this.inbuf = this.inbuf.slice(n);
+
+      return read;
+    }
+
+    /**
+     * Peek at the next character in the input buffer, without consuming it
+     */
+
+  }, {
+    key: 'peek',
+    value: function peek() {
+      return this.inbuf.charAt(0);
+    }
+
+    /**
+     * Force the buffer to flush
+     */
+
+  }, {
+    key: 'flush',
+    value: function flush() {
+      this.addLine(this.outbuf);
+      this.outbuf = '';
+    }
+
+    /**
+     * Commit a line to the console history, making it uneditable
+     */
+
+  }, {
+    key: 'addLine',
+    value: function addLine(text) {
+      var color = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "#fff";
+
+      this.setState(function (_ref) {
+        var lines = _ref.lines;
+
+        var newLines = lines.slice();
+        newLines.push({ text: text, color: color });
+        return { lines: newLines };
+      });
+    }
+
+    /**
+     * Parse a line of text from the console, add it to the input buffer
+     *
+     */
+
+  }, {
+    key: 'submitLine',
+    value: function submitLine(line) {
+      this.inbuf += line + '\n';
+
+      this.signals.dispatch('SIGIO');
+      // TODO: Parse line and look for commands ??
+      addLine(line);
+    }
+
+    /**
+     * Super hacky way of making sure that any click in the
+     * console focuses in the input box
+     */
+
+  }, {
+    key: 'focusInput',
+    value: function focusInput() {
+      // Eek
+      this.refs.input.refs.input.focus();
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        { id: 'console',
+          className: 'container',
+          onClick: this.focusInput },
+        this.state.lines.map(function (line, idx) {
+          return _react2.default.createElement(
+            'div',
+            { className: 'console-line', key: idx, style: { color: line.color } },
+            line.text
+          );
+        }),
+        _react2.default.createElement(InputLine, {
+          ref: 'input',
+          submitLine: this.addLine,
+          prompt: this.state.prompt })
+      );
+    }
+  }]);
+
+  return Console;
+}(_react2.default.Component);
+
+exports.default = Console;
+
+var InputLine = function (_React$Component2) {
+  _inherits(InputLine, _React$Component2);
+
+  function InputLine(props) {
+    _classCallCheck(this, InputLine);
+
+    var _this2 = _possibleConstructorReturn(this, (InputLine.__proto__ || Object.getPrototypeOf(InputLine)).call(this, props));
+
+    _this2.state = {
+      value: ''
+    };
+
+    _this2.handleChange = _this2.handleChange.bind(_this2);
+    _this2.handleKey = _this2.handleKey.bind(_this2);
+    return _this2;
+  }
+
+  /**
+   * Component control: update this.state.value in response to changes
+   * in the value of the input element
+   */
+
+
+  _createClass(InputLine, [{
+    key: 'handleChange',
+    value: function handleChange(evt) {
+      var newValue = evt.target.value;
+      this.setState({ value: newValue });
+      evt.preventDefault();
+    }
+
+    /**
+     * Second component control method for listening to key presses
+     * which don't necessarily update the input value
+     */
+
+  }, {
+    key: 'handleKey',
+    value: function handleKey(evt) {
+      // Just handle the enter key
+      if (evt.key == 'Enter') {
+        this.props.submitLine(this.props.prompt + this.state.value);
+        this.setState({ value: '' });
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        { className: 'console-line' },
+        _react2.default.createElement(
+          'span',
+          { className: 'console-prompt' },
+          this.props.prompt
+        ),
+        _react2.default.createElement('input', { ref: 'input',
+          className: 'console-input',
+          onChange: this.handleChange,
+          onKeyUp: this.handleKey,
+          value: this.state.value })
+      );
+    }
+  }]);
+
+  return InputLine;
+}(_react2.default.Component);
+
+/***/ }),
 /* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -24882,9 +24834,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       * to objects understood by our debugger
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       */
 
-var _FixedInt = __webpack_require__(5);
+var _FixedInt = __webpack_require__(4);
 
-var _runtimes = __webpack_require__(61);
+var _runtimes = __webpack_require__(54);
 
 var _runtimes2 = _interopRequireDefault(_runtimes);
 
@@ -24993,7 +24945,6 @@ var Assembly = function () {
 					if (tokens[0] && tokens[0].endsWith(':')) {
 						// TODO: ignore compiler-generated labels
 						this.labelFor[this.linenum] = tokens.shift().slice(0, -1);
-						// console.log(`line: ${this.linenum}, label: ${this.labelFor[this.linenum]}`)
 					}
 
 					// Remove empty tokens
@@ -25069,9 +25020,6 @@ var Assembly = function () {
 			var addr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0x08048000;
 			var runtime = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _runtimes2.default;
 
-			// TODO: include a version of crt0.S
-			// (_start function, get argv, call main)
-
 			// Single image object to represent an ELF binary
 			var image = {};
 
@@ -25132,14 +25080,14 @@ var Assembly = function () {
 			}
 
 			for (var linenum in this.instructions) {
-				image.text.addresses.push(addr);
-				image.text.contents.push(this.instructions[linenum]);
-				addr += INSTR_LEN;
-
 				// Convert line number to label
 				if (linenum in this.labelFor) {
 					this.labels[this.labelFor[linenum]] = addr;
 				}
+
+				image.text.addresses.push(addr);
+				image.text.contents.push(this.instructions[linenum]);
+				addr += INSTR_LEN;
 			}
 
 			// Write each section to image
@@ -25232,14 +25180,16 @@ function alloc(tokens) {
 	switch (tokens[0]) {
 		case ".ascii":
 			// remove quotes
-			str = tokens[1].slice(1, -1);
+			str = unescapeWhitespace(tokens[1].slice(1, -1));
+
 			return {
 				type: '.ascii',
 				size: 1,
 				value: str
 			};
 		case ".asciz":
-			str = tokens[1].slice(1, -1);
+			str = unescapeWhitespace(tokens[1].slice(1, -1));
+
 			return {
 				type: '.asciz',
 				size: 1,
@@ -25316,6 +25266,10 @@ function alloc(tokens) {
 	}
 
 	return undefined;
+}
+
+function unescapeWhitespace(str) {
+	return str.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r').replace(/\\b/g, '\b');
 }
 
 /**
@@ -25404,6 +25358,411 @@ module.exports = { Assembly: Assembly };
 
 "use strict";
 
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+/**
+ *
+ */
+
+var crt0 = [['movq', '%rsp', '%rbp'], ['movq', '$0', '%rdi'], ['movq', '$0', '%rsi'], ['call', 'main'], ['movq', '%rax', '%rdi'], ['call', 'exit']];
+
+exports.default = crt0;
+
+/***/ }),
+/* 55 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * Module that defines a single-threaded processor
+ * to execute instructions
+ */
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _FixedInt = __webpack_require__(4);
+
+var _Memory = __webpack_require__(56);
+
+var _Registers = __webpack_require__(57);
+
+var _lib = __webpack_require__(58);
+
+var _Signals = __webpack_require__(59);
+
+var _Signals2 = _interopRequireDefault(_Signals);
+
+var _IO = __webpack_require__(60);
+
+var _IO2 = _interopRequireDefault(_IO);
+
+var _x11 = __webpack_require__(61);
+
+var _x12 = _interopRequireDefault(_x11);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var AsmSyntaxError = function (_Error) {
+    _inherits(AsmSyntaxError, _Error);
+
+    function AsmSyntaxError(message) {
+        _classCallCheck(this, AsmSyntaxError);
+
+        var _this = _possibleConstructorReturn(this, (AsmSyntaxError.__proto__ || Object.getPrototypeOf(AsmSyntaxError)).call(this, message));
+
+        _this.name = 'AsmSyntaxError';
+        return _this;
+    }
+
+    return AsmSyntaxError;
+}(Error);
+
+var Process = function () {
+    function Process(image) {
+        var labels = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var arch = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _x12.default;
+        var verbose = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+
+        _classCallCheck(this, Process);
+
+        console.log('INSTANTIATING NEW PROCESS');
+        // Intitialize memory and registers
+        this.mem = new _Memory.Memory(image);
+        this.regs = new _Registers.RegisterSet(arch.registers);
+
+        // Initialize stack pointer and instruction pointer
+        this.pc = image.text.start;
+        this.stackOrigin = this.mem.segments.stack.hi;
+        this.regs.write('rsp', new _FixedInt.FixedInt(arch.WORD_SIZE, this.stackOrigin));
+
+        // Save the labels and reverse the label mapping
+        this.labels = labels;
+        this.labeled = {};
+        for (var label in this.labels) {
+            this.labeled[this.labels[label]] = label;
+        } // Object containing handlers indexed by instruction
+        this.chip = arch.chip.call(this);
+
+        // Bind the console
+        var cons = new _IO2.default();
+        this.io = {
+            stdout: cons,
+            stdin: cons,
+            stderr: cons
+        };
+
+        // Bind standard library to process
+        this.lib = _lib.Stdlib.call(this, this.io);
+
+        // Intialize breakpoint dictionary
+        this.breakpoints = {};
+
+        // Initialize signal handlers
+        this.signals = new _Signals2.default();
+    }
+
+    /**
+     * Read the value in memory at the location specified by the operand.
+     * The operand is a string defining a register, immediate, or memory
+     * address as the information source
+     */
+
+
+    _createClass(Process, [{
+        key: 'read',
+        value: function read(operand) {
+            var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+
+            // Immediate Operand
+            if (operand.startsWith('$')) {
+                var val = void 0,
+                    label = void 0;
+                if (isNaN(val = parseInt(label = operand.slice(1)))) {
+                    val = this.labels[label];
+                    if (val !== undefined) {
+                        return new _FixedInt.FixedInt(size, val);
+                    } else {
+                        throw new AsmSyntaxError('Label ' + name + ' undefined');
+                    }
+                }
+
+                return new _FixedInt.FixedInt(size, val);
+            }
+
+            // Register operand
+            if (operand.startsWith('%')) {
+                return this.regs.read(operand.slice(1));
+            }
+
+            // Memory operand
+            var address = this.parseMemoryOperand(operand);
+            return this.mem.read(address, size);
+
+            // TODO: Allow read from labeled memory address
+        }
+
+        /**
+         * Write the value to the location in memory specified by the operand.
+         * Operand is a string that defines either a register destination or
+         * a memory address
+         */
+
+    }, {
+        key: 'write',
+        value: function write(operand, value, size) {
+            // Immediate Operand
+            if (operand.startsWith('$')) {
+                throw new AsmSyntaxError('Cannot write to an immediate operand: ' + operand);
+            }
+
+            // Register operand
+            if (operand.startsWith('%')) {
+                this.regs.write(operand.slice(1), value);
+                return;
+            }
+
+            // Label operand
+            if (this.labels[operand] !== undefined) {
+                var _address = this.labels[operand];
+                this.mem.write(_address, value);
+            }
+
+            // Memory operand
+            var address = this.parseMemoryOperand(operand);
+            this.mem.write(value, address, size);
+        }
+
+        /**
+         * Change the program counter to the value specified in the operand.
+         * Operand can be a string representing an indirect memory access,
+         * a label, or a literal address.
+         */
+
+    }, {
+        key: 'jump',
+        value: function jump(operand) {
+            // Indirect jump to address held in register
+            if (operand.toString().startsWith('*')) {
+                this.pc = +this.read(operand.slice(1));
+            } else if (parseInt(+operand)) {
+                this.pc = parseInt(+operand);
+            } else {
+                if (operand in this.labels) this.pc = this.labels[operand];else if (operand in this.lib) {
+                    // Bridge for "standard library" calls
+                    this.lib[operand]();
+                }
+            }
+        }
+
+        /**
+         * Get the value of a memory expression written in base/displacement or
+         * scaled indexed form.
+         *
+         *      disp(reg1, reg2, scale) -> disp + reg1 + (scale * reg2)
+         */
+
+    }, {
+        key: 'parseMemoryOperand',
+        value: function parseMemoryOperand(operand) {
+            // GNARLY regular expression to match indirect memory accesses in all their forms
+            var offset = /((?:0x)?[0-9]+)?\(%([a-z1-9]+)(?:,%([a-z1-9]+))?(?:,((?:0x)?[1248]))?\)/;
+            var matches = operand.match(offset);
+
+            if (!matches) throw new AsmSyntaxError('Invalid address format: ' + operand);
+
+            // Parse the integers
+            var disp = matches[1] ? parseInt(matches[1]) : 0;
+            var base = matches[2] ? +this.regs.read(matches[2]) : 0;
+            var idx = matches[3] ? +this.regs.read(matches[3]) : 0;
+            var scale = matches[4] ? parseInt(matches[4]) : 1;
+
+            return disp + base + idx * scale;
+        }
+
+        /**
+         * Return the operand size implied by a given mnemonic
+         */
+
+    }, {
+        key: 'parseOperandSize',
+        value: function parseOperandSize(mnemonic) {
+            var SUFFIXES = ['b', 'w', 'l', 'q'];
+            var SIZES = [1, 2, 4, 8];
+
+            var idx = SUFFIXES.indexOf(mnemonic.slice(-1));
+            var size = SIZES[idx];
+            var prefix = mnemonic.slice(0, -1);
+
+            return { prefix: prefix, size: size };
+        }
+
+        /**
+         * Fetch the next instruction and execute
+         */
+
+    }, {
+        key: 'step',
+        value: function step() {
+            var verbose = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+            if (this.pc !== undefined) {
+                var pc = this.pc;
+
+                // Fetch mnemonic and operands from Text section
+
+                var _mem$read = this.mem.read(this.pc),
+                    _mem$read2 = _toArray(_mem$read),
+                    mnemonic = _mem$read2[0],
+                    operands = _mem$read2.slice(1);
+
+                if (verbose) this.print(pc, true, true);
+
+                // Advance instruction pointer and execute
+                this.pc = this.mem.next(this.pc);
+                this.execute(mnemonic, operands);
+
+                if (verbose) {
+                    // Print stack pointer and operand values after operation
+                    console.log('\t-----');
+                    this.print(pc, false, true);
+                }
+            }
+
+            return this.pc;
+        }
+
+        /**
+         * Given a mnemonic and operands, transfer control to the proper instruction handler
+         */
+
+    }, {
+        key: 'execute',
+        value: function execute(mnemonic, operands) {
+            if (mnemonic in this.chip) {
+                this.chip[mnemonic](operands);
+            } else {
+                var _parseOperandSize = this.parseOperandSize(mnemonic),
+                    prefix = _parseOperandSize.prefix,
+                    size = _parseOperandSize.size;
+
+                if (size) {
+                    this.chip[prefix](operands, size);
+                } else {
+                    throw new AsmSyntaxError('Unknown mnemonic: ' + mnemonic);
+                }
+            }
+        }
+
+        /**
+         * Run the process one instruction at a time.
+         * Pause for delay ms between executing each.
+         */
+
+    }, {
+        key: 'run',
+        value: function run() {
+            var _this2 = this;
+
+            var delay = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+            var verbose = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            if (delay) {
+                // Time-out execution
+                var interval = void 0;
+                interval = setInterval(function () {
+                    _this2.step(verbose);
+
+                    if (_this2.pc === undefined || _this2.breakpoints[_this2.pc]) {
+                        clearInterval(interval);
+                        return;
+                    }
+                }, delay);
+            } else {
+                // Continuous execution
+                do {
+                    this.step();
+                } while (this.pc !== undefined && !this.breakpoints[this.pc]);
+            }
+        }
+
+        /**
+         * Add or remove a breakpoint at the specified address or label
+         */
+
+    }, {
+        key: 'toggleBreakpoint',
+        value: function toggleBreakpoint(addressOrLabel) {
+            var address = void 0;
+            addressOrLabel += '';
+            if (this.labels[addressOrLabel] !== undefined) address = this.labels[addressOrLabel];else address = addressOrLabel;
+
+            // (undefined || false) -> true, true -> false
+            this.breakpoints[address] = !this.breakpoints[address];
+        }
+    }, {
+        key: 'print',
+
+        /**
+         * Dump current state
+         */
+        value: function print() {
+            var pc = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.pc;
+            var showPC = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+            var showStack = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+            var _mem$read3 = this.mem.read(pc),
+                _mem$read4 = _toArray(_mem$read3),
+                mnemonic = _mem$read4[0],
+                operands = _mem$read4.slice(1);
+
+            var _parseOperandSize2 = this.parseOperandSize(mnemonic),
+                prefix = _parseOperandSize2.prefix,
+                size = _parseOperandSize2.size;
+
+            // Output address and instruction to execute
+
+
+            if (showPC && this.pc !== undefined) console.log('0x' + pc.toString(16) + ': ' + mnemonic + '\t' + operands.join(', '));
+
+            // Output stack pointer and operand values before operation
+            if (showStack && operands.indexOf('%rsp') == -1) console.log('\t%rsp:\t0x' + this.regs.read('rsp').val().toString(16));
+
+            // Print operands and values
+            for (var i in operands) {
+                var op = operands[i];
+                if (op.startsWith('$')) continue;
+                try {
+                    console.log('\t' + op + ':\t' + this.read(op, size));
+                } catch (e) {
+                    // Hack in case we can't actually read this operand
+                    if (e.name !== 'AsmSyntaxError') throw e;
+                }
+            }
+        }
+    }]);
+
+    return Process;
+}();
+
+module.exports = { Process: Process };
+
+/***/ }),
+/* 56 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 // Package for handling 64-bit data
 
 Object.defineProperty(exports, "__esModule", {
@@ -25413,7 +25772,7 @@ exports.TextSegment = exports.MemorySegment = exports.InvalidAccess = exports.Se
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _FixedInt = __webpack_require__(5);
+var _FixedInt = __webpack_require__(4);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -25637,6 +25996,7 @@ var TextSegment = exports.TextSegment = function () {
     }
 
     this.loAddr = addresses ? addresses[0] : 0;
+    this.hiAddr = addresses ? addresses[addresses.length - 1] : null;
   }
 
   /* Return the instruction at the specified address */
@@ -25664,8 +26024,8 @@ var TextSegment = exports.TextSegment = function () {
 
   }, {
     key: 'write',
-    value: function write() {
-      throw new SegFault(addr.toString(16), 0);
+    value: function write(addr) {
+      throw new SegFault(addr.toString(16), 'Attempting to write to read-only section ".text" [' + this.loAddr.toString(16) + ', ' + this.hiAddr.toString(16) + ']');
     }
   }]);
 
@@ -25790,7 +26150,7 @@ exports.default = Memory;
 module.exports = { Memory: Memory, MemorySegment: MemorySegment, TextSegment: TextSegment };
 
 /***/ }),
-/* 55 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25805,7 +26165,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _FixedInt = __webpack_require__(5);
+var _FixedInt = __webpack_require__(4);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -25957,7 +26317,7 @@ exports.default = RegisterSet;
 module.exports = { RegisterSet: RegisterSet };
 
 /***/ }),
-/* 56 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25972,6 +26332,10 @@ module.exports = { RegisterSet: RegisterSet };
  *
  * Libraries are implemented as Javascript objects whose members are
  * functions conforming to this API (ABI?)
+ *
+ * Some things in this library (e.g. scanf) are asynchronous, so we use
+ * custom Javascript events to handle them.  This means that the library
+ * will only run if the vm is in a browser context
  */
 
 
@@ -25980,97 +26344,102 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Stdlib = Stdlib;
 
-var _FixedInt = __webpack_require__(5);
+var _FixedInt = __webpack_require__(4);
 
 // Hack, will fix when the FFI and lib is built out a little more
 var WORD_SIZE = 8;
 
-/**
- * The glue for our Foreign funciton interface.  Function arguments must
- * be read from registers or the stack.
- * @param {Number} index -- the (zero-based) index of the argument to fetch
- * @param {Number} size  -- the byte length of the argument to be fetched
- * @this {Process}       -- the object making the foreign function call
- */
-function SysV_arg(idx) {
-	var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+var EOF = '\0';
 
-	switch (idx) {
-		case 0:
-			return this.regs.read('rdi');
-		case 1:
-			return this.regs.read('esi');
-		case 2:
-			return this.regs.read('edx');
-		case 3:
-			return this.regs.read('ecx');
-		case 4:
-			return this.regs.read('r8d');
-		case 5:
-			return this.regs.read('r9d');
-		default:
-			throw new Error('More than 6 arguments not yet implemented');
-	}
-}
+var SCAN = {
+	MATCH: 0
 
-/**
- * More glue for System V ABI: return value goes in RAX
- *
- * @param {FixedInt} -- the value to return
- */
-function SysV_ret(val) {
-	// Set rax to the given value
-	if (val !== undefined) {
-		this.regs.write('rax', val);
-	}
-
-	// Pop the return address
-	var rsp = this.regs.read('rsp');
-	this.regs.write('rsp', _FixedInt.ALU.add(rsp, WORD_SIZE));
-}
-
-/**
- * Read a zero-terminated string beginning from a memory address
- *
- * @param {Number} pointer
- * @this {Process} the process in which the string resides
- * @note Perhaps this could be "hardware accelerated" by giving
- * string reading methods to the memory object itself, saving a lot of
- * function calls and comparisons
- */
-function readString(pointer) {
-	var ch = void 0,
-	    str = '';
-
-	while ((ch = +this.mem.read(pointer++, 1)) != 0) {
-		str += String.fromCharCode(ch);
-	}
-
-	return str;
-}
-
-/**
- * The library of C functions
- *
- * NOTE/TODO: probably change the io {stdout, stdin, stderr} to
- * an array fd [] of "file descriptors", just for more extensibility
- */
-function Stdlib(io) {
+	/**
+  * The library of C functions
+  *
+  * NOTE/TODO: probably change the io {stdout, stdin, stderr} to
+  * an array fd [] of "file descriptors", just for more extensibility
+  */
+};function Stdlib(io) {
 	var _this = this;
 
-	// Bind helper functions
-	readString = readString.bind(this);
-	SysV_arg = SysV_arg.bind(this);
-	SysV_ret = SysV_ret.bind(this);
+	console.log('Binding standard library, io is:');
+	console.log(io);
+
+	/**
+  * The glue for our Foreign funciton interface.  Function arguments must
+  * be read from registers or the stack.
+  * @param {Number} index -- the (zero-based) index of the argument to fetch
+  * @param {Number} size  -- the byte length of the argument to be fetched
+  * @this {Process}       -- the object making the foreign function call
+  */
+	var SysV_arg = function SysV_arg(idx) {
+		switch (idx) {
+			case 0:
+				return _this.regs.read('rdi');
+			case 1:
+				return _this.regs.read('rsi');
+			case 2:
+				return _this.regs.read('rdx');
+			case 3:
+				return _this.regs.read('rcx');
+			case 4:
+				return _this.regs.read('r8d');
+			case 5:
+				return _this.regs.read('r9d');
+			default:
+				throw new Error('More than 6 arguments not yet implemented');
+		}
+	};
+
+	/**
+  * More glue for System V ABI: return value goes in RAX
+  *
+  * @param {FixedInt} -- the value to return
+  */
+	var SysV_ret = function SysV_ret(val) {
+		// Set rax to the given value
+		if (val !== undefined) {
+			_this.regs.write('rax', new _FixedInt.FixedInt(WORD_SIZE, val));
+		}
+
+		// Pop the return address
+		var rsp = _this.regs.read('rsp');
+		_this.regs.write('rsp', _FixedInt.ALU.add(rsp, WORD_SIZE));
+	};
+
+	/**
+  * Read a zero-terminated string beginning from a memory address
+  *
+  * @param {Number} pointer
+  * @this {Process} the process in which the string resides
+  * @note Perhaps this could be "hardware accelerated" by giving
+  * string reading methods to the memory object itself, saving a lot of
+  * function calls and comparisons
+  */
+	var readString = function readString(pointer) {
+		var ch = void 0,
+		    str = '';
+
+		while ((ch = +_this.mem.read(pointer++, 1)) != 0) {
+			str += String.fromCharCode(ch);
+		}
+
+		return str;
+	};
 
 	return {
+		/**
+   *
+   */
 		printf: function printf() {
 			// TODO expect that rax is zero
 			var outString = '';
 			var argIdx = 1;
 
 			// TODO: could do this manually ?
-			var addr = SysV_arg(0);
+			var addr = SysV_arg.call(_this, 0);
+
 			var fmtString = readString(addr);
 
 			for (var i = 0; i < fmtString.length; i++) {
@@ -26080,6 +26449,7 @@ function Stdlib(io) {
 					throw new Error('Formatting not yet implmented');
 					var val = SysV_arg(idx);
 					switch (fmtString.charAt(i + 1)) {
+						case 'i':
 						case 'd':
 							outString += val.toString();
 							i++; // Skip the format specifier
@@ -26096,24 +26466,165 @@ function Stdlib(io) {
 					outString += ch;
 				}
 			}
+			console.log('Inside printf, io is:');
+			console.log(io);
 
-			// TODO: replace with a write to stdout
+			// Write it to stdout
 			io.stdout.write(outString);
 
-			SysV_ret();
+			SysV_ret(0);
+		},
+
+		putchar: function putchar() {
+			// TODO
+		},
+
+		getchar: function getchar() {
+			// TODO
+		},
+
+		/**
+   *
+   */
+		scanf: function scanf() {
+			var fmtString = readString(SysV_arg(0));
+			var nRead = 0;
+
+			// Parse the format string and determine what to read
+			var sections = fmtString.split(/(%(?:[dics]))/g);
+			var iSection = 0;
+
+			// Define the actual handler asynchonously
+			var _scanf = function _scanf() {
+				var ch = void 0;
+
+				// Block process and setup event handler for input
+				_this.blocked = true;
+				_this.signals.register('SIGIO', _scanf);
+
+				// Keep reading stuff
+				while ((ch = io.stdin.read()) !== EOF) {
+					// Nothing in the buffer, wait for next interrupt
+					if (ch === null) return;
+				}
+
+				// Allow process to resume and unregister input handler
+				_this.blocked = false;
+				_this.signals.unregister('SIGIO');
+				SysV_ret(nRead);
+			};
+
+			// Call the asynchronous _scanf
+			_scanf();
 		},
 
 		exit: function exit() {
+			console.log('Inside exit, io is:');
+			console.log(io);
 			// flush any output
 			io.stdout.flush();
-			// TODO: Set return value or something?
+
+			// Get the return value
+			var val = SysV_arg(0);
+			io.stdout.write('[Process exited with status code ' + +val + ']');
+			io.stdout.flush();
+
+			// TODO: Set return value
 			_this.pc = undefined;
+
+			// Pop return address
+			SysV_ret();
 		}
 	};
 }
 
+function _isspace(ch) {
+	return ' \n\t\b\r'.indexOf(ch) >= 0;
+}
+
 /***/ }),
-/* 57 */
+/* 59 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Signal handling and stuff.  Using
+ */
+
+var SIGNALS = ['SIGSEGV', 'SIGIO', 'SIGQUIT', 'SIGTERM', 'SIGKILL', 'SIGALRM'];
+
+var Signals = function () {
+    function Signals() {
+        var signals = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : SIGNALS;
+
+        _classCallCheck(this, Signals);
+
+        this.signals = {};
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+            for (var _iterator = signals[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var name = _step.value;
+
+                this.signals[name] = function () {
+                    return null;
+                };
+            }
+        } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
+                }
+            } finally {
+                if (_didIteratorError) {
+                    throw _iteratorError;
+                }
+            }
+        }
+    }
+
+    _createClass(Signals, [{
+        key: 'register',
+        value: function register(name, callback) {
+            this.signals[name] = callback;
+        }
+    }, {
+        key: 'unregsiter',
+        value: function unregsiter(name) {
+            this.signals[name] = function () {
+                return null;
+            };
+        }
+    }, {
+        key: 'dispatch',
+        value: function dispatch(signal, args) {
+            // Call that signal handler yo
+            this.signals[signal](args);
+        }
+    }]);
+
+    return Signals;
+}();
+
+exports.default = Signals;
+
+/***/ }),
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26123,7 +26634,65 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _FixedInt = __webpack_require__(5);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * A module to represent io targets
+ * and abstractions like files and the console
+ */
+
+// BIG OL' TODO.  THIS SEEMS TRICKY
+var Console = function () {
+	function Console() {
+		_classCallCheck(this, Console);
+	}
+
+	_createClass(Console, [{
+		key: "read",
+		value: function read() {}
+	}, {
+		key: "write",
+		value: function write(str) {
+			console.log(str);
+		}
+	}]);
+
+	return Console;
+}();
+
+// Use cases...
+
+// call printf
+// -> get arguments
+// -> generate string to print
+// -> write string to fd 1 (console)
+// -> display string in console
+
+// call scanf
+// -> get arguments
+// -> read string from fd 0
+// -> request last string from console
+// -> parse string, write data to addresses
+
+//
+
+
+exports.default = Console;
+
+/***/ }),
+/* 61 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _FixedInt = __webpack_require__(4);
 
 var WORD_SIZE = 8;
 
@@ -26292,19 +26861,21 @@ var chip = function chip() {
    *****************************************************************/
 
 		call: function call(operands, size) {
-			var rsp = _this.read('%rsp');
+			var rsp = _FixedInt.ALU.sub(_this.read('%rsp'), WORD_SIZE);
+			var returnAddress = new _FixedInt.FixedInt(WORD_SIZE, _this.pc);
 
-			_this.regs.write('rsp', _FixedInt.ALU.sub(rsp, WORD_SIZE));
-			_this.write('(%rsp)', new _FixedInt.FixedInt(WORD_SIZE, _this.pc), WORD_SIZE);
+			_this.regs.write('rsp', rsp);
+			_this.mem.write(returnAddress, rsp, WORD_SIZE);
+
 			_this.jump(operands[0]);
 		},
 
 		ret: function ret(operands, size) {
-			// TODO: add optional immediate operand value to the stack 
+			// TODO: add optional immediate operand value to the stack
 			var ret = _this.read('(%rsp)', WORD_SIZE);
 			var rsp = _this.read('%rsp');
 			_this.write('%rsp', _FixedInt.ALU.add(rsp, WORD_SIZE));
-			_this.jump(ret);
+			_this.jump(+ret);
 		},
 
 		jmp: function jmp(operands, size) {
@@ -26584,394 +27155,6 @@ var x86 = { chip: chip, registers: registers, WORD_SIZE: WORD_SIZE };
 exports.default = x86;
 
 module.exports = x86;
-
-/***/ }),
-/* 58 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _require = __webpack_require__(26),
-    Process = _require.Process;
-
-var fibonacci = {
-	image: {
-		text: {
-			start: 0x8048000,
-			end: 0x8048016,
-			contents: [['pushl', '$1'], ['pushl', '$1'], ['movl', '$0', '%eax'], ['addl', '$1', '%eax'], ['movl', '4(%rsp)', '%ebx'], ['movl', '(%rsp)', '%ecx'], ['addl', '%ecx', '%ebx'], ['jb', 'end'], ['pushl', '%ebx'], ['jmp', 'loop'], ['hlt']],
-			addresses: [0x8048000, 0x8048002, 0x8048004, 0x8048006, 0x8048008, 0x804800a, 0x804800c, 0x804800e, 0x8048010, 0x8048012, 0x8048014]
-		},
-		rodata: {},
-		data: {},
-		bss: {}
-	},
-
-	labels: {
-		loop: 0x8048006,
-		end: 0x8048014
-	}
-};
-
-var hello = {
-	image: {
-		text: {
-			start: 134512640,
-			end: 134512660,
-			contents: [["pushl", "%ebp"], ["movl", "%esp", "%ebp"], ["movabsq", "$pcGreeting", "%rdi"], ["call", "printf"], ["movl", "$4", "%eax"], ["addl", "%eax", "%esp"], ["movl", "$0", "%eax"], ["movl", "%ebp", "%esp"], ["popl", "%ebp"], ["ret"]],
-			addresses: [134512640, 134512642, 134512644, 134512646, 134512648, 134512650, 134512652, 134512654, 134512656, 134512658]
-		},
-		rodata: {
-			start: 134512660,
-			end: 134512674,
-			contents: new Uint8Array('Hello World!\n\0'.split('').map(function (c) {
-				return c.charCodeAt(0);
-			})).buffer
-		},
-		bss: {},
-		data: {}
-	},
-	labels: {
-		pcGreeting: 134512660
-	}
-};
-
-module.exports = { fibonacci: fibonacci, hello: hello };
-
-/***/ }),
-/* 59 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(1);
-
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Console = function (_React$Component) {
-    _inherits(Console, _React$Component);
-
-    function Console(props) {
-        _classCallCheck(this, Console);
-
-        var _this = _possibleConstructorReturn(this, (Console.__proto__ || Object.getPrototypeOf(Console)).call(this, props));
-
-        _this.state = {
-            lines: []
-
-            // A string buffer to maintain
-        };_this.buf = '';
-
-        // Bind it up
-        _this.addLine = _this.addLine.bind(_this);
-        _this.submitLine = _this.submitLine.bind(_this);
-        _this.focusInput = _this.focusInput.bind(_this);
-        _this.write = _this.write.bind(_this);
-        _this.flush = _this.flush.bind(_this);
-
-        // Take over the stdio
-        _this.props.io.stdout = _this;
-        _this.props.io.stdin = _this;
-        _this.props.io.stderr = {
-            write: function write(value) {
-                return _this.error(value);
-            }
-        };
-        return _this;
-    }
-
-    /**
-     * Write a value to the buffer, flush if buffer contains newline
-     */
-
-
-    _createClass(Console, [{
-        key: 'write',
-        value: function write(value) {
-            var lines = value.split('\n');
-            for (var i = 0; i < lines.length - 1; i++) {
-                this.addLine(lines[i]);
-            }
-
-            this.buf = lines[lines.length - 1];
-        }
-
-        /**
-         * Write an error to the buffer, flush immediately and color it red
-         */
-
-    }, {
-        key: 'error',
-        value: function error(value) {
-            this.flush();
-            var lines = value.split('\n');
-
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = lines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var line = _step.value;
-
-                    this.addLine(line, '#f99');
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
-        }
-
-        /**
-         *
-         */
-
-    }, {
-        key: 'read',
-        value: function read() {}
-
-        /**
-         * Force the buffer to flush
-         */
-
-    }, {
-        key: 'flush',
-        value: function flush() {
-            this.addLine(this.buf);
-            this.buf = '';
-        }
-
-        /**
-         * Commit a line to the console history, making it uneditable
-         */
-
-    }, {
-        key: 'addLine',
-        value: function addLine(text) {
-            var color = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "#fff";
-
-            this.setState(function (_ref) {
-                var lines = _ref.lines;
-
-                var newLines = lines.slice();
-                newLines.push({ text: text, color: color });
-                return { lines: newLines };
-            });
-        }
-
-        /**
-         * Parse a line of text from the console, interpret it as a command
-         *
-         */
-
-    }, {
-        key: 'submitLine',
-        value: function submitLine(line) {
-            // TODO: Parse line and look for commands ??
-            addLine(line);
-        }
-
-        /**
-         * Super hacky way of making sure that any click in the
-         * console focuses in the input box
-         */
-
-    }, {
-        key: 'focusInput',
-        value: function focusInput() {
-            // Eek
-            this.refs.input.refs.input.focus();
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            return _react2.default.createElement(
-                'div',
-                { id: 'console',
-                    className: 'container',
-                    onClick: this.focusInput },
-                this.state.lines.map(function (line, idx) {
-                    return _react2.default.createElement(
-                        'div',
-                        { className: 'console-line', key: idx, style: { color: line.color } },
-                        line.text
-                    );
-                }),
-                _react2.default.createElement(InputLine, {
-                    ref: 'input',
-                    submitLine: this.addLine,
-                    prompt: '> ' })
-            );
-        }
-    }]);
-
-    return Console;
-}(_react2.default.Component);
-
-exports.default = Console;
-
-var InputLine = function (_React$Component2) {
-    _inherits(InputLine, _React$Component2);
-
-    function InputLine(props) {
-        _classCallCheck(this, InputLine);
-
-        var _this2 = _possibleConstructorReturn(this, (InputLine.__proto__ || Object.getPrototypeOf(InputLine)).call(this, props));
-
-        _this2.state = {
-            value: ''
-        };
-
-        _this2.handleChange = _this2.handleChange.bind(_this2);
-        _this2.handleKey = _this2.handleKey.bind(_this2);
-        return _this2;
-    }
-
-    /**
-     * Component controlling.  It's a little fancy
-     */
-
-
-    _createClass(InputLine, [{
-        key: 'handleChange',
-        value: function handleChange(evt) {
-            var newValue = evt.target.value;
-            this.setState({ value: newValue });
-            evt.preventDefault();
-        }
-    }, {
-        key: 'handleKey',
-        value: function handleKey(evt) {
-            // Just handle the enter key
-            if (evt.key == 'Enter') {
-                this.props.submitLine(this.props.prompt + this.state.value);
-                this.setState({ value: '' });
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            return _react2.default.createElement(
-                'div',
-                { className: 'console-line' },
-                _react2.default.createElement(
-                    'span',
-                    { className: 'console-prompt' },
-                    this.props.prompt
-                ),
-                _react2.default.createElement('input', { ref: 'input',
-                    className: 'console-input',
-                    onChange: this.handleChange,
-                    onKeyUp: this.handleKey,
-                    value: this.state.value })
-            );
-        }
-    }]);
-
-    return InputLine;
-}(_react2.default.Component);
-
-/***/ }),
-/* 60 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/**
- * A module to represent io targets
- * and abstractions like files and the console
- */
-
-// BIG OL' TODO.  THIS SEEMS TRICKY
-var Console = function () {
-	function Console() {
-		_classCallCheck(this, Console);
-	}
-
-	_createClass(Console, [{
-		key: "read",
-		value: function read() {}
-	}, {
-		key: "write",
-		value: function write(str) {
-			console.log(str);
-		}
-	}]);
-
-	return Console;
-}();
-
-// Use cases...
-
-// call printf
-// -> get arguments
-// -> generate string to print
-// -> write string to fd 1 (console)
-// -> display string in console
-
-// call scanf
-// -> get arguments
-// -> read string from fd 0
-// -> request last string from console
-// -> parse string, write data to addresses
-
-//
-
-
-exports.default = Console;
-
-/***/ }),
-/* 61 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-/**
- *
- */
-
-var crt0 = [['movq', '%rsp', '%rbp'], ['movq', '$0', '%rdi'], ['movq', '$0', '%rsi'], ['call', 'main'], ['movq', '%rax', '%rdi'], ['call', 'exit']];
-
-exports.default = crt0;
 
 /***/ })
 /******/ ]);
