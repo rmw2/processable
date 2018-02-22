@@ -5,13 +5,13 @@
         ## ============================================================
                                 .section ".rodata"
         ## ============================================================
-        
+
 pcGreeting: .asciz  "Hello World\n"
-        
+
         ## ============================================================
                                 .section ".bss"
         ## ============================================================
-        
+
         ## ============================================================
                                 .section ".text"
         ## ============================================================
@@ -28,20 +28,18 @@ pcGreeting: .asciz  "Hello World\n"
 
         .globl  main
 
-main:
-
-        pushl   %ebp
-        movl    %esp, %ebp
+main:   pushq   %rbp
+        movq    %rsp, %rbp
 
         ## printf("Hello\n");
-        movabsq $pcGreeting, %rdi 
+        movabsq $pcGreeting, %rdi
         call    printf
-        movl    $4, %eax 
-        addl    %eax, %esp 
-        
+        movabsq $4, %rax
+        addq    %rax, %rsp
+
         ## return 0;
         movl    $0, %eax
-        movl    %ebp, %esp
-        popl    %ebp
+        movq    %rbp, %rsp
+        popq    %rbp
         ret
 
