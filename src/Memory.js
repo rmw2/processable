@@ -181,6 +181,7 @@ export class TextSegment {
         }
 
         this.loAddr = addresses ? addresses[0] : 0;
+        this.hiAddr = addresses ? addresses[addresses.length - 1] : null;
     }
 
     /* Return the instruction at the specified address */
@@ -199,8 +200,9 @@ export class TextSegment {
     }
 
     /* Refuse writing to text section */
-    write() {
-        throw new SegFault(addr.toString(16), 0);
+    write(addr) {
+        throw new SegFault(addr.toString(16),
+            `Attempting to write to read-only section ".text" [${this.loAddr.toString(16)}, ${this.hiAddr.toString(16)}]`);
     }
 }
 
