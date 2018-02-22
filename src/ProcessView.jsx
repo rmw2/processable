@@ -5,7 +5,6 @@ import StackContainer from './StackView.jsx';
 import TabbedStaticContainer from './StaticView.jsx';
 import Console from './ConsoleView.jsx';
 
-
 export default class ProcessContainer extends React.Component {
   constructor(props) {
     super(props);
@@ -15,10 +14,19 @@ export default class ProcessContainer extends React.Component {
     this.toggleBreakpoint = this.props.process.toggleBreakpoint.bind(
       this.props.process);
 
+    this.commands = commands.call(this.props.process);
+
     // Do some preprocessing of labels and figure out which VM areas they live in
     // TODO
   }
 
+  componentDidMount() {
+    this.refs.stdout.write('Type "run [arg1 arg2 ...]" to begin\n');
+  }
+
+  /**
+   * Single step the process
+   */
   step() {
     try {
       this.props.process.step();
@@ -33,6 +41,10 @@ export default class ProcessContainer extends React.Component {
     this.forceUpdate();
   }
 
+  /**
+   * Run the process continuously as long as it is not blocked and has not hit
+   * a breakpoint
+   */
   run() {
     try {
       this.props.process.run();
@@ -40,9 +52,9 @@ export default class ProcessContainer extends React.Component {
       this.displayError(e);
     }
 
+    // Make sure we update the view
     this.forceUpdate();
   }
-
 
   /**
    * Error handling for internal/react errors
@@ -98,8 +110,17 @@ export default class ProcessContainer extends React.Component {
         <TabbedStaticContainer
           segments={p.mem.segments}
           labeled={p.labeled} />
-        <Console io={p.io} />
+        <Console
+          ref="stdout"
+          io={p.io}
+          commands={this.commands} />
       </div>
     );
   }
 }
+
+const commands = function () {
+  return {
+    run: (argv) => this.exec(argv)
+  }
+};
