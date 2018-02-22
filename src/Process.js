@@ -8,6 +8,8 @@ import { FixedInt } from './FixedInt.js';
 import { Memory } from './Memory.js';
 import { RegisterSet } from './Registers.js';
 import { Stdlib } from './lib.js';
+import { exec } from './runtime.js';
+import Signals from './Signals.js';
 import Console from './IO.js';
 import x86 from './x86.js';
 
@@ -48,9 +50,13 @@ class Process {
 
         // Bind standard library to process
         this.lib = Stdlib.call(this, this.io);
+        this.exec = exec.bind(this);
 
         // Intialize breakpoint dictionary
         this.breakpoints = {};
+
+        // Initialize signal handlers
+        this.signals = new Signals();
     }
 
     /**
@@ -121,7 +127,7 @@ class Process {
      */
     jump(operand) {
         // Indirect jump to address held in register
-        if (operand.startsWith('*')) {
+        if (operand.toString().startsWith('*')) {
             this.pc = +this.read(operand.slice(1));
         } else if (parseInt(+operand)) {
             this.pc = parseInt(+operand);
@@ -218,6 +224,9 @@ class Process {
     /**
      * Run the process one instruction at a time.
      * Pause for delay ms between executing each.
+     * @param {Number} delay
+     * @param {boolean} verbose
+     * @returns {FixedInt} -- the process' return value
      */
     run(delay=0, verbose=false) {
         if (delay) {
@@ -237,6 +246,8 @@ class Process {
                 this.step();
             } while (this.pc !== undefined && !this.breakpoints[this.pc])
         }
+
+        return this.regs.read('rax');
     }
 
     /**
