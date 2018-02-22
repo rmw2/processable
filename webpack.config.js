@@ -1,4 +1,6 @@
 const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 module.exports = {
   entry: './src/App.jsx',
   output: {
@@ -7,14 +9,25 @@ module.exports = {
   },
   module: {
     loaders: [
-      { 
-        test: /\.jsx?$/, 
-        loader: 'babel-loader', 
+      {
+        test: /\.jsx?$/,
+        loader: 'babel-loader',
         exclude: /node_modules/,
         query: {
           presets: ['env', 'react']
         }
       },
     ]
-  }
+  },
+  devServer: {
+    contentBase: path.join(__dirname, "docs/alpha"),
+    port: 9000
+  },
+  plugins: [
+    new CopyWebpackPlugin([
+        { from: 'samples', to: 'samples'}
+      ],
+      { debug: 'info' }
+    ),
+  ]
 }
