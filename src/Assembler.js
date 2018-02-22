@@ -5,7 +5,7 @@
 
 import { FixedInt } from './FixedInt.js';
 
-import crt0 from './runtimes.js';
+import crt0 from './runtime.js';
 
 // Hacky approximation of the average instruction length
 // Stretch goals would be to get actual instruction length but alas
@@ -85,7 +85,6 @@ class Assembly {
 			if (tokens[0] && tokens[0].endsWith(':')) {
 				// TODO: ignore compiler-generated labels
 				this.labelFor[this.linenum] = tokens.shift().slice(0,-1);
-				// console.log(`line: ${this.linenum}, label: ${this.labelFor[this.linenum]}`)
 			}
 
 			// Remove empty tokens
@@ -144,9 +143,6 @@ class Assembly {
 	 * 						the labels it contains
 	 */
 	link(addr=0x08048000, runtime=crt0) {
-		// TODO: include a version of crt0.S
-		// (_start function, get argv, call main)
-
 		// Single image object to represent an ELF binary
 		let image = {};
 
@@ -185,14 +181,14 @@ class Assembly {
 
 		// Write text to image
 		for (const linenum in this.instructions) {
-			image.text.addresses.push(addr);
-			image.text.contents.push(this.instructions[linenum]);
-			addr += INSTR_LEN;
-
 			// Convert line number to label
 			if (linenum in this.labelFor) {
 				this.labels[this.labelFor[linenum]] = addr;
 			}
+
+			image.text.addresses.push(addr);
+			image.text.contents.push(this.instructions[linenum]);
+			addr += INSTR_LEN;
 		}
 
 		// Write each section to image
@@ -255,14 +251,16 @@ function alloc(tokens) {
 	switch (tokens[0]) {
 		case ".ascii":
 			// remove quotes
-			str = tokens[1].slice(1, -1);
+			str = unescapeWhitespace(tokens[1].slice(1, -1));
+
 			return {
 				type:  '.ascii',
 				size:  1,
 				value: str
 			};
 		case ".asciz":
-			str = tokens[1].slice(1, -1);
+			str = unescapeWhitespace(tokens[1].slice(1, -1));
+
 			return {
 				type:  '.asciz',
 				size:  1,
@@ -323,6 +321,14 @@ function alloc(tokens) {
 	}
 
 	return undefined;
+}
+
+function unescapeWhitespace(str) {
+	return str
+		.replace(/\\n/g, '\n')
+		.replace(/\\t/g, '\t')
+		.replace(/\\r/g, '\r')
+		.replace(/\\b/g, '\b');
 }
 
 /**
