@@ -88,7 +88,6 @@ export function escapeChar(charCode) {
     if (charCode > UNPRINTABLE)
         return String.fromCharCode(charCode);
 
-    console.log(charCode);
     switch (charCode) {
         case 0x08:
             return '\\b';
