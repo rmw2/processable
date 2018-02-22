@@ -84,7 +84,7 @@ const chip = function () {
 		adc : (operands, size) => {
 			let src = this.read(operands[0]);
 			let dest = this.read(operands[1]);
-			let result = this.regs.getFlag('CF') 
+			let result = this.regs.getFlag('CF')
 				? ALU.add(ALU.add(src, dest), 1)
 				: ALU.add(src, dest);
 
@@ -143,7 +143,7 @@ const chip = function () {
 
 		dec : (operands, size) => {
 			let dest = this.read(operands[0]);
-			let result = ALU.sub(dest, 1);	
+			let result = ALU.sub(dest, 1);
 			// SET FLAGS
 			this.write(operands[0], result, size);
 		},
@@ -167,19 +167,21 @@ const chip = function () {
 		 *****************************************************************/
 
 		call : (operands, size) => {
-			let rsp = this.read('%rsp');
+			let rsp = ALU.sub(this.read('%rsp'), WORD_SIZE);
+			let returnAddress = new FixedInt(WORD_SIZE, this.pc);
 
-			this.regs.write('rsp', ALU.sub(rsp, WORD_SIZE));
-			this.write('(%rsp)', new FixedInt(WORD_SIZE, this.pc), WORD_SIZE);
+			this.regs.write('rsp', rsp);
+			this.mem.write(returnAddress, rsp, WORD_SIZE);
+
 			this.jump(operands[0]);
 		},
 
 		ret : (operands, size) => {
-			// TODO: add optional immediate operand value to the stack 
+			// TODO: add optional immediate operand value to the stack
 			let ret = this.read('(%rsp)', WORD_SIZE);
 			let rsp = this.read('%rsp');
 			this.write('%rsp', ALU.add(rsp, WORD_SIZE));
-			this.jump(ret);
+			this.jump(+ret);
 		},
 
 		jmp : (operands, size) => {
@@ -189,7 +191,7 @@ const chip = function () {
 		je : (operands, size) => {
 			if (!this.regs.getFlag('ZF'))
 				this.jump(operands[0]);
-		}, 
+		},
 
 		jne : (operands, size) => {
 			if (!this.regs.getFlag('ZF'))
@@ -199,7 +201,7 @@ const chip = function () {
 		jo : (operands, size) => {
 			if (!this.regs.getFlag('OF'))
 				this.jump(operands[0]);
-		}, 
+		},
 
 		jno : (operands, size) => {
 			if (!this.regs.getFlag('OF'))
@@ -214,7 +216,7 @@ const chip = function () {
 		jae : (operands, size) => {
 			if (!this.regs.getFlag('CF') || this.regs.getFlag('ZF'))
 				this.jump(operands[0]);
-		}, 
+		},
 
 		jb : (operands, size) => {
 			if (this.regs.getFlag('CF'))
@@ -224,7 +226,7 @@ const chip = function () {
 		jbe : (operands, size) => {
 			if (this.regs.getFlag('CF') || this.regs.getFlag('ZF'))
 				this.jump(operands[0]);
-		}, 
+		},
 
 		jg : (operands, size) => {
 			if (this.regs.getFlag('OF') === this.regs.getFlag('SF') && !this.regs.getFlag('ZF'))
@@ -234,7 +236,7 @@ const chip = function () {
 		jge : (operands, size) => {
 			if (this.regs.getFlag('OF') === this.regs.getFlag('SF'))
 				this.jump(operands[0]);
-		}, 
+		},
 
 		jl : (operands, size) => {
 			if (this.regs.getFlag('OF') !== this.regs.getFlags('SF') && !this.regs.getFlag('ZF'))
@@ -244,27 +246,27 @@ const chip = function () {
 		jle : (operands, size) => {
 			if (this.regs.getFlag('OF') !== this.regs.getFlags('SF'))
 				this.jump(operands[0]);
-		}, 
+		},
 
 		js : (operands, size) => {
 			if (this.regs.getFlag('SF'))
 				this.jump(operands[0]);
-		}, 
+		},
 
 		jns : (operands, size) => {
 			if (!this.regs.getFlag('SF'))
 				this.jump(operands[0]);
-		}, 
+		},
 
 		jcxz : (operands, size) => {
 			if (this.regs.read('cx') === 0)
 				this.jump(operands[0]);
-		}, 
+		},
 
 		jecxz : (operands, size) => {
 			if (this.regs.read('ecx') === 0)
 				this.jump(operands[0]);
-		}, 
+		},
 
 		/******************************************************************
 		 * Shifts
@@ -325,7 +327,7 @@ const chip = function () {
 
 		cmp : (operands, size) => {
 			// Set flags according to src - dest
-			ALU.sub(this.read(operands[0]), this.read(operands[1]));
+			ALU.sub(this.read(operands[0], size), this.read(operands[1], size));
 			// Update flags
 			this.regs.setFlag('CF', ALU.CF);
 			this.regs.setFlag('OF', ALU.OF);
