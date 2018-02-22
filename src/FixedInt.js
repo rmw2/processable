@@ -268,11 +268,11 @@ export default class FixedInt {
         break;
       case 8:
         if (littleEndian) {
-          view.setUint32(offset, this.lo, littleEndian);
-          view.setUint32(offset + 4, this.hi, littleEndian);
+          view.setUint32(offset, this.lo, true);
+          view.setUint32(offset + 4, this.hi, true);
         } else {
-          view.setUint32(offset, this.hi, !littleEndian);
-          view.setUint32(offset + 4, this.lo, !littleEndian);
+          view.setUint32(offset, this.hi, false);
+          view.setUint32(offset + 4, this.lo, false);
         }
         break;
     }
