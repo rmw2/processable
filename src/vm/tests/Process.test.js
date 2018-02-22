@@ -1,6 +1,5 @@
-const { Process } = require('./Process.js');
-const { Int64 } = require('./Int64.js');
-const x86 = require('./x86.js');
+const { Process } = require('../Process.js');
+const x86 = require('../x86.js');
 
 const STACK_TOP = 0xF000;
 

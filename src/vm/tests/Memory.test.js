@@ -1,6 +1,6 @@
 "use strict";
 
-let { MemorySegment, TextSegment } = require('./Memory.js');
+let { MemorySegment, TextSegment } = require('../Memory.js');
 
 let hiAddr = 0x0100;
 let memSize = 0x0100;

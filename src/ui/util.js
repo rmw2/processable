@@ -1,6 +1,6 @@
 /**
  * A module of strange utility functions that don't belong anywhere else
- * 
+ *
  * Anything in here is likely to be some hacky glue for the front-end
  * display, quarantined in here so that we don't pollute the code base
  * with such grossness.

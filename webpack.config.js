@@ -2,7 +2,7 @@ const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  entry: './src/App.jsx',
+  entry: './src/app/App.jsx',
   output: {
     path: path.resolve('docs/alpha'),
     filename: 'bundle.js'
@@ -26,8 +26,6 @@ module.exports = {
   plugins: [
     new CopyWebpackPlugin([
         { from: 'samples', to: 'samples'}
-      ],
-      { debug: 'info' }
-    ),
+    ]),
   ]
 }

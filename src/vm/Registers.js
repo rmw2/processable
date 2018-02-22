@@ -1,5 +1,5 @@
 "use strict";
-import {FixedInt, ALU} from './FixedInt.js';
+import {FixedInt, ALU} from '../FixedInt.js';
 /**
  * Indicates a failure to read from a hardware register
  */

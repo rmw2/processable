@@ -1,4 +1,4 @@
-const { Assembly } = require('./Assembler.js');
+const { Assembly } = require('../Assembler.js');
 
 // Node stuff for reading files
 const fs = require('fs');

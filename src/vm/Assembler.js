@@ -3,7 +3,7 @@
  * to objects understood by our debugger
  */
 
-import { FixedInt } from './FixedInt.js';
+import { FixedInt } from '../FixedInt.js';
 
 import crt0 from './runtime.js';
 

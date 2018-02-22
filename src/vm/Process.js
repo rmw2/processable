@@ -4,7 +4,7 @@
  * to execute instructions
  */
 
-import { FixedInt } from './FixedInt.js';
+import { FixedInt } from '../FixedInt.js';
 import { Memory } from './Memory.js';
 import { RegisterSet } from './Registers.js';
 import { Stdlib } from './lib.js';

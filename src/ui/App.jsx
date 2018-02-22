@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ProcessContainer from './ProcessView.jsx';
-import { Assembly } from './Assembler.js';
-import { Process } from './Process.js';
+import { Assembly } from '../vm/Assembler.js';
+import { Process } from '../vm/Process.js';
 
 // Names of sample files
 const examples = [

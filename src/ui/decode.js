@@ -1,7 +1,7 @@
 /**
  * A module for decoding
  */
-import {FixedInt, ALU} from './FixedInt.js';
+import {FixedInt, ALU} from '../FixedInt.js';
 
 // Lowest printable character code
 const UNPRINTABLE = 0x19;

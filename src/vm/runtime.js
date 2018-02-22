@@ -1,7 +1,7 @@
 /**
  *
  */
-import {FixedInt, ALU} from './FixedInt.js';
+import {FixedInt, ALU} from '../FixedInt.js';
 
 const QWORD = 8;
 const DWORD = 4;
