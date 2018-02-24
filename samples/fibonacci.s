@@ -1,13 +1,11 @@
-    .section ".text"
-
+    .text
     .globl fib
-    .type fib,@function
 fib:
     pushq   %rbp
     movq    %rsp, %rbp
     subq    $8, %rsp
-    cmpq    %rdi, $1
-    jae     .base
+    cmpq    $1, %rdi
+    jle     .base
 
 .recur:
     subq    $1, %rdi
@@ -26,12 +24,12 @@ fib:
     popq    %rbp
     ret
 
-    .globl main
-    .type main,@function
-main:
+    .globl _main
+_main:
     pushq   %rbp
     movq    %rsp, %rbp
 
     call    fib
+    movq    %rax, %rdi
     popq    %rbp
     ret
