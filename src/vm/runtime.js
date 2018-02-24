@@ -9,10 +9,11 @@ const WORD = 2;
 const BYTE = 1;
 
 const crt0 = [
-    ['movq', '%rsp', '%rbp'],
     ['movl', '0(%rsp)', '%edi'],
-    ['movq' ,'4(%rsp)', '%rsi'],
-    ['call','main'],
+    ['movq', '4(%rsp)', '%rsi'],
+    ['andb', '$0xF0', '%spl'],
+    ['movq', '%rsp', '%rbp'],
+    ['call', 'main'],
     ['movq' ,'%rax', '%rdi'],
     ['call' ,'exit']
 ];
@@ -42,12 +43,10 @@ const crt0 = [
  *
  */
 export function exec(argv) {
+
     // Count the args
     let argc = new FixedInt(4, argv.length);
     let arglengths = argv.map((arg) => arg.length + 1);
-
-    console.log(`argc: ${+argc}`);
-    console.log(`lengths: [${arglengths}]`);
 
     // Total length of argv array
     let bytes_argv = arglengths.reduce((total, next) => total + next);
@@ -61,14 +60,10 @@ export function exec(argv) {
     // Total size of the stack before the program begins
     let bytes_total = bytes_argv + bytes_pointers + bytes_args;
 
-    console.log(`args: ${bytes_args}, pointers: ${bytes_pointers}, argv: ${bytes_argv}`);
-
     // Get the stack origin and calculate new stack top
     let stackorigin = this.regs.read('rsp');
     let stacktop = ALU.sub(stackorigin, bytes_total);
 
-    console.log(`ORIGIN: ${stackorigin.toString(16)}`);
-    console.log(`TOP: ${stacktop.toString(16)}`);
 
     // Write it all to memory
     this.mem.write(argc, stacktop, DWORD);
@@ -76,8 +71,6 @@ export function exec(argv) {
 
     let offset = bytes_args + bytes_pointers;
     for (let i = 0; i < argv.length; i++) {
-        console.log(`&arg[${i}]: ${(stacktop + bytes_args + QWORD*i).toString(16)}`);
-        console.log(`arg[${i}]: ${(stacktop + offset).toString(16)}`);
 
         // Write the pointer argv[i]
         this.mem.write(ALU.add(stacktop, offset), stacktop + bytes_args + QWORD*i, QWORD);
@@ -86,9 +79,9 @@ export function exec(argv) {
         offset += arglengths[i];
     }
 
-    // Finally correct the stack pointer
+    // Finally correct the stack pointer and unblock the process
     this.regs.write('rsp', stacktop);
-    console.log('Finished with exec.  Stack *should* be set up');
+    this.blocked = false;
 }
 
 /**
@@ -97,7 +90,6 @@ export function exec(argv) {
  */
 function writeString(mem, addr, str) {
     for (let i = 0; i < str.length; i++) {
-        console.log((addr+i).toString(16));
         mem.write(new FixedInt(BYTE, str.charCodeAt(i)), addr + i, BYTE);
     }
 

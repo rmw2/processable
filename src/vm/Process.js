@@ -57,6 +57,9 @@ class Process {
 
         // Initialize signal handlers
         this.signals = new Signals();
+
+        // Start the process blocked
+        this.blocked = true;
     }
 
     /**
@@ -181,7 +184,7 @@ class Process {
      * Fetch the next instruction and execute
      */
     step(verbose=false) {
-        if (this.pc !== undefined) {
+        if (this.pc !== undefined && !this.blocked) {
             let pc = this.pc;
 
             // Fetch mnemonic and operands from Text section
