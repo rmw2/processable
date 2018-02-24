@@ -63,8 +63,8 @@ const chip = function () {
 		},
 
 		imul : (operands, size) => {
-			let src = this.read(operands[0]);
-			let dest = this.read(operands[1]);
+			let src = this.read(operands[0], size);
+			let dest = this.read(operands[1], size);
 			let result = ALU.mul(dest, src);
 			// updateFlags.call(this, result, size);
 			this.write(operands[1], result, size);
@@ -74,7 +74,7 @@ const chip = function () {
 			throw new NotImplementedError('division not yet implemented!!!');
 
 			// This is funky for x86 // TODO
-			let src = this.read(operands[0]);
+			let src = this.read(operands[0], size);
 			let dest = this.read('%eax');
 			let result = ALU.div(dest, src);
 			// updateFlags.call(this, result, size);
@@ -82,8 +82,8 @@ const chip = function () {
 		},
 
 		adc : (operands, size) => {
-			let src = this.read(operands[0]);
-			let dest = this.read(operands[1]);
+			let src = this.read(operands[0], size);
+			let dest = this.read(operands[1], size);
 			let result = this.regs.getFlag('CF')
 				? ALU.add(ALU.add(src, dest), 1)
 				: ALU.add(src, dest);
@@ -107,24 +107,24 @@ const chip = function () {
 		 *****************************************************************/
 
 		xor : (operands, size) => {
-			let src = this.read(operands[0]);
-			let dest = this.read(operands[1]);
+			let src = this.read(operands[0], size);
+			let dest = this.read(operands[1], size);
 			let result = ALU.xor(src, dest);
 			// TODO: Set flags
 			this.write(operands[1], result, size);
 		},
 
 		or : (operands, size) => {
-			let src = this.read(operands[0]);
-			let dest = this.read(operands[1]);
+			let src = this.read(operands[0], size);
+			let dest = this.read(operands[1], size);
 			let result = ALU.or(src, dest);
 			// TODO: Set flags
 			this.write(operands[1], result, size);
 		},
 
 		and : (operands, size) => {
-			let src = this.read(operands[0]);
-			let dest = this.read(operands[1]);
+			let src = this.read(operands[0], size);
+			let dest = this.read(operands[1], size);
 			let result = ALU.and(src, dest);
 			// TODO: Set flags
 			this.write(operands[1], result, size);
@@ -135,28 +135,28 @@ const chip = function () {
 		 *****************************************************************/
 
 		inc : (operands, size) => {
-			let dest = this.read(operands[0]);
+			let dest = this.read(operands[0], size);
 			let result = ALU.add(dest, 1);
 			// SET FLAGS
 			this.write(operands[0], result, size);
 		},
 
 		dec : (operands, size) => {
-			let dest = this.read(operands[0]);
+			let dest = this.read(operands[0], size);
 			let result = ALU.sub(dest, 1);
 			// SET FLAGS
 			this.write(operands[0], result, size);
 		},
 
 		not : (operands, size) => {
-			let dest = this.read(operands[0]);
+			let dest = this.read(operands[0], size);
 			let result = ALU.not(dest);
 			// TODO: Set flags
 			this.write(operands[0], result, size);
 		},
 
 		neg : (operands, size) => {
-			let dest = this.read(operands[0]);
+			let dest = this.read(operands[0], size);
 			let result = ALU.neg(dest);
 			// TODO: Set flags
 			this.write(operands[0], result, size)
