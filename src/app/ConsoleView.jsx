@@ -122,14 +122,12 @@ export default class Console extends React.Component {
     tokens.shift();
     let command = tokens[0];
 
-    console.log('In runCommand');
-    console.log(tokens);
-    console.log(this.props.commands);
-
-    if (command in this.props.commands)
+    if (command in this.props.commands) {
       this.props.commands[command](tokens.slice(1));
-
-    this.addLine(line, Color.HELP);
+      this.addLine(line, Color.HELP);
+    } else {
+      this.addLine(line);
+    }
   }
 
   /**

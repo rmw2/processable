@@ -14,7 +14,7 @@ export default class ProcessContainer extends React.Component {
     this.toggleBreakpoint = this.props.process.toggleBreakpoint.bind(
       this.props.process);
 
-    this.commands = commands.call(this.props.process);
+    this.commands = commands.call(this.props.process, this);
 
     // Do some preprocessing of labels and figure out which VM areas they live in
     // TODO
@@ -82,7 +82,7 @@ export default class ProcessContainer extends React.Component {
         <div id="controls" className="container">
           <div className="button-box">
             <div className="button-caption">restart</div>
-            <button id="restart" className="control-button" onClick={() => null}>&#8634;</button>
+            <button id="restart" className="control-button" onClick={this.props.restart}>&#8634;</button>
           </div>
           <div className="button-box">
             <div className="button-caption">step</div>
@@ -119,8 +119,15 @@ export default class ProcessContainer extends React.Component {
   }
 }
 
-const commands = function () {
+const commands = function (view) {
   return {
-    run: (argv) => this.exec(argv)
-  }
+    run: (argv) => {
+      this.exec(argv);
+      view.forceUpdate();
+    },
+    restart: () => {
+      view.props.restart();
+      view.forceUpdate();
+    }
+  };
 };

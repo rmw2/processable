@@ -46,7 +46,10 @@ function loadText(text) {
   let p = new Process(image, labels);
 
   ReactDOM.render(
-    React.createElement(ProcessContainer, {process: p}),
+    React.createElement(ProcessContainer, {
+      process: p,
+      restart: () => loadText(text)
+    }),
     document.getElementById('root')
   );
 }
