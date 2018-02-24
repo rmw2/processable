@@ -56,6 +56,8 @@ class Assembly {
 		// Remove multiline comments
 		// NOT a good solution actually
 		asm.replace(/\/\*[^]*?\*\//g, '\n');
+
+		// Also note EQU directives
 		return asm;
 	}
 
@@ -258,6 +260,7 @@ function alloc(tokens) {
 				size:  1,
 				value: str
 			};
+		case ".string":
 		case ".asciz":
 			str = unescapeWhitespace(tokens[1].slice(1, -1));
 
