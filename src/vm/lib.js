@@ -107,8 +107,7 @@ export function Stdlib(io) {
 			let argIdx = 1;
 
 			// TODO: could do this manually ?
-			let addr = SysV_arg.call(this, 0);
-
+			let addr = SysV_arg(0);
 			let fmtString = readString(addr);
 
 			for (let i = 0; i < fmtString.length; i++) {
@@ -123,7 +122,13 @@ export function Stdlib(io) {
 							outString += val.toString();
 							i++; // Skip the format specifier
 							break;
+						case 'x':
+							outString += val.toString(16);
+							i++;
+							break;
 						case 'f':
+						case 'g':
+							throw new Error('Double precision conversion specifiers not supported');
 							break;
 						case '%':
 							// Literal %
@@ -143,27 +148,40 @@ export function Stdlib(io) {
 		},
 
 		putchar: () => {
-			// TODO
+			let arg = SysV_arg(0);
+			let char = String.fromCharCode(+arg);
+			io.stdout.write(char);
+			SysV_ret(arg);
 		},
 
 		getchar: () => {
 			// TODO
 		},
 
+		scanf: () => {
+
+		},
+
 		/**
 		 *
 		 */
-		scanf: () => {
+		scanf_real: () => {
+			throw new Error('not implemented');
+
 			let fmtString = readString(SysV_arg(0));
-			let nRead = 0;
 
 			// Parse the format string and determine what to read
 			let sections = fmtString.split(/(%(?:[dics]))/g);
+
+			// State of the parser, which segment are we reading
 			let iSection = 0;
+			let iChar = 0;
+			let nRead = 0;
 
 			// Define the actual handler asynchonously
 			const _scanf = () => {
 				let ch;
+				let s = sections[iSection];
 
 				// Block process and setup event handler for input
 				this.blocked = true;
@@ -175,7 +193,10 @@ export function Stdlib(io) {
 					if (ch === null)
 						return;
 
+					// Handle beginning of next section
+					if (iChar == null) {
 
+					}
 				}
 
 				// Allow process to resume and unregister input handler
