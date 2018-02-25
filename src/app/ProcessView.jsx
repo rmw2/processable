@@ -1,27 +1,70 @@
 import React from 'react';
+
 import RegisterContainer from './RegisterView.jsx';
 import TextContainer from './TextView.jsx';
 import StackContainer from './StackView.jsx';
 import TabbedStaticContainer from './StaticView.jsx';
 import Console from './ConsoleView.jsx';
 
+import './layout.css';
+import './nav.css';
+
+/**
+ * Commands that the console should respond to
+ * @param {React.Component} view -- the top-level component which will
+ * respond to the commands
+ *
+ * @this should be the process object being monitored by the component
+ */
+const commands = function (view) {
+  return {
+    run: (argv) => {
+      this.exec(argv);
+      view.forceUpdate();
+    },
+    restart: () => {
+      view.props.restart();
+      view.forceUpdate();
+    }
+  };
+};
+
+/**
+ * @classdesc
+ * The main component class for the debugger. Holds an inferior process
+ * and renders visual components that display the state of the inferior.
+ *
+ * Implements an error boundary that catches javascript errors and prints
+ * them to the inferior's stderr stream
+ */
 export default class ProcessContainer extends React.Component {
   constructor(props) {
     super(props);
 
     this.step = this.step.bind(this);
     this.run = this.run.bind(this);
-    this.toggleBreakpoint = this.props.process.toggleBreakpoint.bind(
-      this.props.process);
 
-    this.commands = commands.call(this.props.process, this);
+    this.bindToProcess(this.props.process);
 
-    // Do some preprocessing of labels and figure out which VM areas they live in
-    // TODO
+
   }
 
-  componentDidMount() {
-    this.refs.stdout.write('Type "run [arg1 arg2 ...]" to begin\n');
+  componentWillReceiveProps(props) {
+    this.bindToProcess(props.process);
+    this.refs.console.clear();
+  }
+
+  /**
+   * Do any administration and binding between the process
+   * and the react component.  Specifically make sure that
+   * the controls and breakpoint ui elements will interact with the
+   * correct methods on the process object
+   */
+  bindToProcess(p) {
+    this.toggleBreakpoint = p.toggleBreakpoint.bind(p);
+    this.commands = commands.call(p, this);
+    // Do some preprocessing of labels and figure out which VM areas they live in
+    // TODO
   }
 
   /**
@@ -77,57 +120,70 @@ export default class ProcessContainer extends React.Component {
   render() {
     let p = this.props.process;
 
+    let controls = {
+      step: this.step,
+      run: this.run,
+      restart: this.props.restart,
+      blocked: p.blocked,
+    };
+
     return (
-      <div className="process-container">
-        <div id="controls" className="container">
-          <div className="button-box">
-            <div className="button-caption">restart</div>
-            <button id="restart" className="control-button" onClick={this.props.restart}>&#8634;</button>
-          </div>
-          <div className="button-box">
-            <div className="button-caption">step</div>
-            <button id="step" className="control-button" onClick={this.step}>&#8677;</button>
-          </div>
-          <div className="button-box">
-            <div className="button-caption">continue</div>
-            <button id="continue" className="control-button" onClick={this.run}>&#10142;</button>
-          </div>
-        </div>
-        <TextContainer
-          pc={p.pc}
-          text={p.mem.segments.text.data}
-          labels={p.labeled}
-          breakpoints={p.breakpoints}
-          toggleBreakpoint={this.toggleBreakpoint} />
-        <RegisterContainer
-          regs={p.regs}
-          flags={p.regs.flags} />
-        <StackContainer
-          mem={p.mem.segments.stack.data}
-          origin={p.stackOrigin}
-          rsp={+p.regs.read('rsp')}
-          rbp={+p.regs.read('rbp')} />
-        <TabbedStaticContainer
-          segments={p.mem.segments}
-          labeled={p.labeled} />
-        <Console
-          ref="stdout"
-          io={p.io}
-          commands={this.commands} />
+      <div id="wrapper">
+        <ProcessNav {...controls} />
+        <main>
+          <TextContainer
+            pc={p.pc}
+            text={p.mem.segments.text.data}
+            labels={p.labeled}
+            breakpoints={p.breakpoints}
+            toggleBreakpoint={this.toggleBreakpoint} />
+          <RegisterContainer
+            regs={p.regs}
+            flags={p.regs.flags} />
+          <TabbedStaticContainer
+            segments={p.mem.segments}
+            labeled={p.labeled} />
+          <Console
+            ref="console"
+            io={p.io}
+            commands={this.commands} />
+          <StackContainer
+            mem={p.mem.segments.stack.data}
+            origin={p.stackOrigin}
+            rsp={+p.regs.read('rsp')}
+            rbp={+p.regs.read('rbp')} />
+        </main>
       </div>
     );
   }
 }
 
-const commands = function (view) {
-  return {
-    run: (argv) => {
-      this.exec(argv);
-      view.forceUpdate();
-    },
-    restart: () => {
-      view.props.restart();
-      view.forceUpdate();
-    }
-  };
-};
+/**
+ * The navbar for the app.  Put the
+ */
+const ProcessNav = ({restart, step, run, blocked}) => {
+  return (
+    <nav className="process-nav">
+      <div id="controls">
+        <div className="button-box">
+          {/*<div className="button-caption">restart</div>*/}
+          <button id="restart" className="control-button" onClick={restart}>&#8634;</button>
+        </div>
+        <div className="button-box">
+          {/*<div className="button-caption">step</div>*/}
+          <button id="step" className="control-button" disabled={blocked} onClick={step}>&#8677;</button>
+        </div>
+        <div className="button-box">
+          {/*<div className="button-caption">continue</div>*/}
+          <button id="continue" className="control-button" disabled={blocked} onClick={run}>&#10142;</button>
+        </div>
+      </div>
+      <div id="navigation">
+        <div className="nav-box">help</div>
+        <div className="nav-box">about</div>
+        <div className="nav-box"
+          onClick={() => window.location.href = 'http://github.com/rmw2/processable'}>github</div>
+      </div>
+    </nav>
+  );
+}
