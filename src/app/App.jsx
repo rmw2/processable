@@ -1,8 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+
 import ProcessContainer from './ProcessView.jsx';
 import { Assembly } from '../vm/Assembler.js';
 import { Process } from '../vm/Process.js';
+
+import './style.css';
+import './reset.css';
 
 // Names of sample files
 const examples = [

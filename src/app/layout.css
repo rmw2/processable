@@ -1,0 +1,85 @@
+/* Nav bar, lives above everything and is fixed */
+nav.process-nav {
+    position: fixed;
+    width:  100%;
+    top: 0;
+    height: 3em;
+    background-color: #dfd;
+
+    border-bottom: 1px solid #aaa;
+    box-shadow: 1px 1px 1px #aaa;
+    z-index: 10;
+}
+
+/************************************************/
+
+main {
+    margin-top: 3em;
+    height: calc(100% - 3em);
+
+    display: grid;
+    grid-template-columns: 1fr 485px 1fr;
+    grid-template-rows: 50% 50%;
+    justify-items: stretch;
+    align-items: stretch;
+
+    z-index:  1;
+}
+
+#registers {
+    grid-row: 2 / 3;
+    grid-column: 2 / 2;
+}
+
+#text {
+    grid-row: 1 / 1;
+    grid-column: 1 / 1;
+}
+
+#stack {
+    grid-row: 1 / 3;
+    grid-column: 3 / 3;
+}
+
+#static {
+    grid-row: 2 / 2;
+    grid-column: 1 / 1;
+
+    padding-top: 0;
+}
+
+#console {
+    grid-row: 1 / 2;
+    grid-column: 2 / 2;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    padding: 1em;
+    border: 1px solid #aaa;
+    /*border-radius: 1em;*/
+
+    font-family: courier;
+}
+
+.container-title {
+    font-weight: bold;
+    height: 1em;
+    display: inline-block;
+    padding: 0 0.5em;
+}
+
+.content {
+    overflow-y: scroll;
+
+    height: calc(100% - 1.75em);
+    margin-top: 0.75em;
+}
+
+.react-tabs {
+    overflow-y: scroll;
+    height: 100%;
+}

@@ -1,0 +1,55 @@
+/* Controls */
+#controls {
+    padding: 0.5em;
+    margin: 0 5%;
+}
+
+.control-button {
+    height: 1.5em;
+    border-radius: 0.25em;
+    border: 1px solid #000;
+    cursor: pointer;
+    font-size: 16pt;
+    outline: none;
+}
+
+.control-button:disabled {
+    cursor: default;
+}
+
+.control-button:active {
+    color: #000;
+    background-color: #aaa;
+}
+
+.button-box {
+    display: inline-block;
+    vertical-align: top;
+    margin: 0 0.5em;
+}
+
+.button-caption {
+    font-size: 0.5em;
+    transform: translateY(-0.5em);
+}
+
+#navigation {
+    position: absolute;
+    right: 1em;
+    top: 0;
+    height: 100%;
+}
+
+.nav-box {
+    display: inline-block;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+
+    height: 100%;
+    padding: 1em;
+    border-left: 1px solid #aaa;
+}
+
+.nav-box:hover {
+    background-color: #9da;
+}

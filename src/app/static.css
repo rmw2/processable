@@ -1,0 +1,60 @@
+.static-byte > span {
+    display: inline-block;
+}
+
+.static-byte > .byte-value {
+    height: 1.2em;
+}
+
+.static-byte:hover .byte-address {
+    visibility: visible;
+}
+
+/* Static stuff */
+.static-value, .static-label {
+    position: absolute;
+}
+
+.static-value {
+    right: 0;
+    top: 1.5em;
+}
+
+.static-label {
+    left: 0;
+
+    color: #999;
+}
+
+.static-decoded {
+    text-align: center;
+    border: 1px solid #000;
+    padding: 0.1em 0;
+}
+
+.static-byte-value {
+    background-color: #aaa;
+    border: 1px solid #000;
+    padding: 0 0.1em;
+}
+
+/* Parent container for byte group */
+.static-byte-group {
+    width: 100%;
+    min-height: 5em;
+
+    position: relative;
+}
+
+.tab {
+    height: 2em;
+    padding: 0.5em;
+    cursor: pointer;
+}
+
+.tab-selected {
+    font-weight: bold;
+    border: 1px solid #aaa;
+    border-top: none;
+    border-radius: 0 0  0.5em 0.5em;
+}

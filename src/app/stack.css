@@ -1,0 +1,81 @@
+/* Stack and static stuff */
+#stack-content {
+    border-top: 1px solid #000;
+    position: relative;
+}
+
+#stack-bytes-raw, #stack-bytes-decoded {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#stack-bytes-decoded {
+    width: 35%;
+}
+
+.stack-pointer {
+    width: 5em;
+    padding-right: 0.5em;
+    text-align: right;
+
+    font-weight: bold;
+    overflow-x: visible;
+    color: #d00;
+}
+
+.stack-pointer, .byte-address {
+    transform: translate(0, 0.6em);
+    background-color: #fff;
+    font-size: 0.75em;
+}
+
+.stack-decode {
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.stack-decode-content {
+    display: block;
+    width: 100%;
+    text-align: center;
+
+    /* prevent weird text selection */
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                      supported by Chrome and Opera */
+}
+
+.stack-byte > span {
+    display: inline-block;
+}
+
+.byte-value {
+    background-color: #aaa;
+    border-top: 1px solid #000;
+    padding: 0 0.5em;
+    height: 100%;
+}
+
+.byte-address {
+    visibility: hidden;
+    padding: 0 0.5em;
+}
+
+.current {
+    visibility: visible;
+}
+
+.button-group {
+    position: absolute;
+    right: 10%;
+}

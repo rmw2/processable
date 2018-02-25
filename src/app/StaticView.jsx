@@ -6,6 +6,8 @@ import {Tabs, Tab, TabList, TabPanel} from 'react-tabs';
 
 const PRINTABLE = 33;
 
+import './static.css';
+
 /**
  * The main thingio
  */

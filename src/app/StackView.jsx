@@ -8,6 +8,7 @@ import { Encodings, decode, pad } from './decode.js';
 
 const BYTE_HEIGHT = 1.2; // em
 
+import './stack.css';
 
 /**
  * A component to display view
@@ -29,14 +30,14 @@ export default class StackContainer extends React.Component {
 		// This is pretty inefficient
 		let bytes = [], decoded = [];
 		for (let addr = this.props.origin - 1; addr >= this.props.rsp; addr--) {
-			let pointer = (addr == this.props.rsp) ? '%rsp' : 
+			let pointer = (addr == this.props.rsp) ? '%rsp' :
 				(addr == this.props.rbp) ? '%rbp' : null;
 
 			bytes.push(
-				<ByteView 
-					key={addr} 
-					value={this.props.mem.read(addr, 1)} 
-					address={addr} 
+				<ByteView
+					key={addr}
+					value={this.props.mem.read(addr, 1)}
+					address={addr}
 					alignment={this.state.alignment}
 					pointer={pointer} />
 			);
@@ -55,11 +56,11 @@ export default class StackContainer extends React.Component {
 				<div className="container-title">stack</div>
 				<div className="button-group">
 					<div className="desc">alignment</div>
-					{[1,2,4,8].map((val) => 
-						<button 
+					{[1,2,4,8].map((val) =>
+						<button
 							key={val}
-							className="toggle" 
-							style={{backgroundColor: val == this.state.alignment ? '#eee' : '#aaa'}} 
+							className="toggle"
+							style={{backgroundColor: val == this.state.alignment ? '#eee' : '#aaa'}}
 							onClick={() => this.setAlignment(val)}>
 							{val}
 						</button>
@@ -76,7 +77,7 @@ export default class StackContainer extends React.Component {
 
 /**
  * @classdesc
- * A component to show a decoded view of a particular group of 
+ * A component to show a decoded view of a particular group of
  * bytes on the stack, toggleable between string, signed/unsigned decimal int,
  * and hex or binary digits.
  */
@@ -118,8 +119,8 @@ class DecodeView extends React.Component {
 		Object.assign(style, encStyle[encoding]);
 
 		return (
-			<div style={style} 
-				className="stack-decode" 
+			<div style={style}
+				className="stack-decode"
 				onClick={this.toggleDecoding} >
 				<span className="stack-decode-content"
 					dangerouslySetInnerHTML={{__html: decode(this.props.value, encoding)}} />
@@ -136,7 +137,7 @@ class ByteView extends React.Component {
 		super(props);
 	}
 
-	/** 
+	/**
 	 * Ensure that items newly pushed to the stack are scrolled into view
 	 */
 	componentDidMount() {
@@ -158,7 +159,7 @@ class ByteView extends React.Component {
 		return (
 			<div ref="thisbyte" className={'stack-byte' + aligned} style={{height: `${BYTE_HEIGHT}em`}}>
 				{pointer}
-				<span style={{visibility: (this.props.pointer || aligned) ? 'visible' : 'hidden'}} 
+				<span style={{visibility: (this.props.pointer || aligned) ? 'visible' : 'hidden'}}
 					className="byte-address">
 					{this.props.address.toString(16)}
 				</span>
