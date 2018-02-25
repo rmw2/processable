@@ -8,7 +8,7 @@ module.exports = {
   entry: './src/app/App.jsx',
   output: {
     path: path.resolve('docs/alpha'),
-    filename: 'bundle.js'
+    filename: 'bundle-[hash].js'
   },
   module: {
     loaders: [

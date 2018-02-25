@@ -1,19 +1,35 @@
+    .text
+    .globl fib
+fib:
+    pushq   %rbp
+    movq    %rsp, %rbp
+    subq    $8, %rsp
+    cmpq    $1, %rdi
+    jle     .base
 
-    .section ".text"
+.recur:
+    subq    $1, %rdi
+    call    fib
+    movq    %rax, -8(%rbp)
+    subq    $1, %rdi
+    call    fib
+    addq    -8(%rbp), %rax
+    addq    $8, %rsp
+    popq    %rbp
+    ret
+
+.base:
+    movq    %rdi, %rax
+    addq    $8, %rsp
+    popq    %rbp
+    ret
+
     .globl main
-    .type main,@function
 main:
-    pushl  $1
-    pushl  $1
-loop:
-    movl   $0,      %eax
-    addl   $1,      %eax
-    movl   4(%rsp), %ebx
-    movl   (%rsp),  %ecx
-    addl   %ecx,    %ebx
-    jb     end
-    pushl  %ebx
-    jmp    loop
- end:
-    popl   %eax
+    pushq   %rbp
+    movq    %rsp, %rbp
+
+    call    fib
+    movq    %rax, %rdi
+    popq    %rbp
     ret

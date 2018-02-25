@@ -1,0 +1,631 @@
+/* Stack and static stuff */
+#stack-content {
+    border-top: 1px solid #000;
+    position: relative;
+}
+
+#stack-bytes-raw, #stack-bytes-decoded {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#stack-bytes-decoded {
+    width: 35%;
+}
+
+.stack-pointer {
+    width: 5em;
+    padding-right: 0.5em;
+    text-align: right;
+
+    font-weight: bold;
+    overflow-x: visible;
+    color: #d00;
+}
+
+.stack-pointer, .byte-address {
+    transform: translate(0, 0.6em);
+    background-color: #fff;
+    font-size: 0.75em;
+}
+
+.stack-decode {
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.stack-decode-content {
+    display: block;
+    width: 100%;
+    text-align: center;
+
+    /* prevent weird text selection */
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                      supported by Chrome and Opera */
+}
+
+.stack-byte > span {
+    display: inline-block;
+}
+
+.byte-value {
+    background-color: #aaa;
+    border-top: 1px solid #000;
+    padding: 0 0.5em;
+    height: 100%;
+}
+
+.byte-address {
+    visibility: hidden;
+    padding: 0 0.5em;
+}
+
+.current {
+    visibility: visible;
+}
+
+.button-group {
+    position: absolute;
+    right: 10%;
+}
+.static-byte > span {
+    display: inline-block;
+}
+
+.static-byte > .byte-value {
+    height: 1.2em;
+}
+
+.static-byte:hover .byte-address {
+    visibility: visible;
+}
+
+/* Static stuff */
+.static-value, .static-label {
+    position: absolute;
+}
+
+.static-value {
+    right: 0;
+    top: 1.5em;
+}
+
+.static-label {
+    left: 0;
+
+    color: #999;
+}
+
+.static-decoded {
+    text-align: center;
+    border: 1px solid #000;
+    padding: 0.1em 0;
+}
+
+.static-byte-value {
+    background-color: #aaa;
+    border: 1px solid #000;
+    padding: 0 0.1em;
+}
+
+/* Parent container for byte group */
+.static-byte-group {
+    width: 100%;
+    min-height: 5em;
+
+    position: relative;
+}
+
+.tab {
+    height: 2em;
+    padding: 0.5em;
+    cursor: pointer;
+}
+
+.tab-selected {
+    font-weight: bold;
+    border: 1px solid #aaa;
+    border-top: none;
+    border-radius: 0 0  0.5em 0.5em;
+}/* Nav bar, lives above everything and is fixed */
+nav {
+    position: fixed;
+    width:  100%;
+    top: 0;
+    height: 3em;
+    background-color: #dfd;
+
+    border-bottom: 1px solid #aaa;
+    box-shadow: 1px 1px 1px #aaa;
+    z-index: 10;
+}
+
+/************************************************/
+
+main.process {
+    display: grid;
+    grid-template-columns: 1fr 485px 1fr;
+    grid-template-rows: 50% 50%;
+    justify-items: stretch;
+    align-items: stretch;
+
+    z-index:  1;
+}
+
+#registers {
+    grid-row: 2 / 3;
+    grid-column: 2 / 2;
+}
+
+#text {
+    grid-row: 1 / 1;
+    grid-column: 1 / 1;
+}
+
+#stack {
+    grid-row: 1 / 3;
+    grid-column: 3 / 3;
+}
+
+#static {
+    grid-row: 2 / 2;
+    grid-column: 1 / 1;
+
+    padding-top: 0;
+}
+
+#console {
+    grid-row: 1 / 2;
+    grid-column: 2 / 2;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    padding: 1em;
+    border: 1px solid #aaa;
+    /*border-radius: 1em;*/
+
+    font-family: courier;
+}
+
+.container-title {
+    font-weight: bold;
+    height: 1em;
+    display: inline-block;
+    padding: 0 0.5em;
+}
+
+.content {
+    overflow-y: scroll;
+
+    height: calc(100% - 1.75em);
+    margin-top: 0.75em;
+}
+
+.react-tabs {
+    overflow-y: scroll;
+    height: 100%;
+}/* General navbar styles */
+h1.nav-name {
+    height: 100%;
+    margin-left: 5%;
+    padding: 0.5em;
+    font-size: 1.5em;
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+h1.nav-name, #nav-children, #nav-children > * {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#navigation {
+    position: absolute;
+    right: 1em;
+    top: 0;
+    height: 100%;
+}
+
+.nav-box {
+    display: inline-block;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+
+    height: 100%;
+    padding: 1em;
+    border-left: 1px solid #aaa;
+}
+
+.nav-box:hover {
+    background-color: #9da;
+}
+
+/* Controls */
+#controls {
+    padding: 0.5em;
+    margin: 0 1em;
+}
+
+.control-button {
+    height: 1.5em;
+    border-radius: 0.25em;
+    border: 1px solid #000;
+    cursor: pointer;
+    font-size: 16pt;
+    outline: none;
+}
+
+.control-button:disabled {
+    cursor: default;
+}
+
+.control-button:active {
+    color: #000;
+    background-color: #aaa;
+}
+
+.button-box {
+    display: inline-block;
+    vertical-align: top;
+    margin: 0 0.5em;
+}
+
+.button-caption {
+    font-size: 0.5em;
+    transform: translateY(-0.5em);
+}
+
+/* Filename box */
+div.filename {
+    font-family: 'Josefin Sans', sans-serif;
+    padding: 0.25em;
+    margin: 0.75em;
+    border-radius: 0.25em;
+    /* border: 1px solid #000; */
+
+    background-color: #000;
+    color: #fff;
+}* {
+	box-sizing: border-box;
+}
+
+/* Nav bar, lives above everything and is fixed */
+nav {
+    position: fixed;
+    width:  100%;
+    top: 0;
+    height: 3em;
+    background-color: #dfd;
+
+    border-bottom: 1px solid #aaa;
+    box-shadow: 1px 1px 1px #aaa;
+    z-index: 10;
+}
+
+main {
+    margin-top: 3em;
+    height: calc(100% - 3em);
+}
+
+@media screen and (max-width: 800px) {
+	.container {
+		width: calc(100% - 4em);
+	}
+}
+
+/* Neat hack to hide my email address but display it aight */
+span.at:after {
+	content: '@';
+}
+
+a.nostyle, a.nostyle:visited, a.nostyle:hover {
+	text-decoration: none;
+	color: inherit;
+}
+
+/* Console */
+#console {
+	background-color: #000;
+	color: #fff;
+
+	overflow-y: scroll;
+}
+
+.console-input {
+	display: inline-block;
+	width: 80%;
+
+	resize: none;
+	border: none;
+
+	background-color: #000;
+	font-family: Courier;
+	color: #fff;
+	margin: 0;
+}
+
+.console-input:active, .console-input:focus {
+	border: none;
+	outline: none;
+}
+
+.console-line, .console-input {
+	font-size: 12pt;
+	margin: 0;
+	min-height: 1.5em;
+}
+
+/* Register stuff */
+.register {
+	float: left;
+	width: calc(100% - 2em);
+	padding: 0.1em 0.5em;
+	margin: 0.1em 0.5em;
+
+	background-color: #eee;
+	border-radius: 0.25em;
+	position: relative;
+	min-height: 1em;
+
+	clear: both;
+}
+
+.register-value {
+	float: right;
+	margin-right: 3em;
+	text-align: right;
+	word-wrap: break-word;
+}
+
+#register-flags {
+	position: absolute;
+	top: 1em;
+	right: 2em;
+}
+
+.register-flag {
+	padding: 0.25em;
+	margin: 0 0.25em;
+
+	border: 1px solid #000;
+	border-radius: 0.25em;
+}
+
+/* Instruction stuff */
+.pc {
+	position: absolute;
+	right: 1em;
+	top: 1em;
+}
+
+.instruction {
+	padding: 0.1em 0;
+	border-radius: 0.25em;
+	font-size: 10pt;
+}
+
+.instruction-label,
+.instruction-operand,
+.instruction-mnemonic,
+.instruction-address {
+	display: inline-block;
+}
+
+.instruction-label {
+	font-style: italic;
+	font-size: 0.8em;
+	text-align: right;
+	padding-right: 0.5em;
+	width: 15%;
+}
+
+.instruction-address {
+	color: #999;
+	margin: 0 0.5em;
+	padding: 0 0.25em;
+	cursor: pointer;
+	border: 1px solid #fff;
+    border-radius: 0.25em;
+}
+
+.instruction-mnemonic {
+	width: 20%;
+}
+
+.instruction-operand {
+	width: 60%;
+}
+
+.current {
+	background: #ddd;
+	font-weight: bold;
+}
+
+.toggle {
+	border: 1px solid #000;
+	border-radius: 0.25em;
+	cursor: pointer;
+	padding: 0 0.25em;
+}
+
+.toggle-register {
+	font-weight: bold;
+	color: #fff;
+	position: absolute;
+	top: 0;
+}
+
+.toggle-encoding {
+	right: 1em;
+	position: absolute;
+	top: 0;
+}
+
+/*
+.stack-byte:hover .byte-address,*/
+
+.aligned {
+	box-shadow: 0px 1px 0px rgba(0,0,0,0.2);
+}
+
+.button-group > .desc {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	font-size: 0.5em;
+	font-family: 'Josefin Sans', sans-serif;
+	transform: translateY(-1em);
+}
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1;
+}
+ol, ul {
+    list-style: none;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}/* LAYOUT */
+main.home {
+    display: grid;
+    grid-template-rows: 20% 1fr;
+    grid-template-columns: 1fr 1fr;
+    padding: 2em;
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+section#welcome {
+    grid-column: 1 / 3;
+    grid-row: 1 / 2;
+}
+
+section#option-upload {
+    text-align:  center;
+    grid-column:  1 / 2;
+    grid-row: 2 / 3;
+}
+
+section#option-example {
+    text-align: center;
+    grid-column:  2 / 3;
+    grid-row: 2 / 3;
+}
+
+div.load-buttons {
+    display: flex;
+    margin:  1em;
+    justify-content: center;
+}
+
+div.feature-text {
+    width: 60%;
+    margin: auto;
+    padding: 1em;
+    border: 1px solid #aaa;
+    border-radius: 0.25em;
+    box-shadow: 1px 1px 1px #aaa;
+}
+
+input.file {
+    /* hide this element */
+    height: 1px;
+    width: 1px;
+    z-index: -1;
+    opacity: 0;
+    overflow: hidden;
+}
+
+label.file, button.example {
+    /* show this element instead */
+    border-radius: 0.5em;
+    background-color: #EEE;
+    border: 1px solid #000;
+
+    padding: 0.5em;
+    margin: 0 0.5em;
+
+    font-size: 1em;
+    text-align: center;
+    cursor: pointer;
+}
+
+.file:active, button.example:active {
+    background-color: #999;
+}
+
+
+/* Modal window on load */
+.modal {
+    position: fixed;
+
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    z-index: 100;
+    padding: 10% 25%;
+
+    font-family: courier;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    padding: 2em;
+    background-color: #fff;
+    border-radius: 0.25em;
+    box-shadow: 1px 1px 2px #eee;
+    height: 20em;
+}
+
+.modal-content > div {
+    text-align: center;
+    margin: 2em 0;
+}
