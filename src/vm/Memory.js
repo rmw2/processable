@@ -1,5 +1,5 @@
 "use strict";
-// Package for handling 64-bit data
+// Package for handling 8,16,32, & 64-bit data
 import {FixedInt, ALU} from '../FixedInt.js';
 
 /**
@@ -259,6 +259,9 @@ export default class Memory {
     		lo: brk - HEAP_SIZE,
     		data: new MemorySegment(brk, HEAP_SIZE, 'heap')
     	};
+
+        // Initialize a dictionary of watchpoints
+        this.watchpoints = {};
     }
 
     /**
@@ -279,6 +282,11 @@ export default class Memory {
     }
 
     read(addr, size) {
+        for (let i = 0; i < size; i++)
+            if ((addr + i) in this.watchpoints) {
+                // TODO
+            }
+
     	return this.getSegment(addr).read(addr, size);
     }
 
@@ -286,6 +294,11 @@ export default class Memory {
      * Write the value
      */
     write(value, addr) {
+        for (let i = 0; i < value.size; i++)
+            if ((addr + i) in this.watchpoints) {
+                // TODO
+            }
+
     	this.getSegment(addr).write(value, addr);
     }
 
