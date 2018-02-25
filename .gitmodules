@@ -2,3 +2,6 @@
 	path = src/react-split-pane
 	url = http://github.com/tomkp/react-split-pane.git
 	branch = v2
+[submodule "src/fixed-int"]
+	path = src/fixed-int
+	url = http://github.com/rmw2/fixed-int.git
