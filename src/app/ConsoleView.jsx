@@ -13,7 +13,8 @@ export default class Console extends React.Component {
     this.state = {
       lines: [],
       prompt: '(pbl) ',
-      interactive: true
+      interactive: true,
+      placeholder: 'run arg1 arg2 ...'
     }
 
     // Buffers to maintain
@@ -97,7 +98,7 @@ export default class Console extends React.Component {
     this.setState(({lines}) => {
       let newLines = lines.slice();
       newLines.push({text, color});
-      return {lines: newLines};
+      return {lines: newLines, placeholder: ''};
     });
   }
 
@@ -139,6 +140,21 @@ export default class Console extends React.Component {
     this.refs.input.refs.input.focus();
   }
 
+  /**
+   * Completely clear the output of the console, including it's buffers
+   */
+  clear() {
+    this.setState({
+      lines: [],
+      prompt: '(pbl) ',
+      interactive: true,
+      placeholder: 'run arg1 arg2 ...'
+    });
+
+    this.inbuf = '';
+    this.outbuf = '';
+  }
+
   render() {
     return (
       <div id="console"
@@ -152,7 +168,8 @@ export default class Console extends React.Component {
         <InputLine
           ref="input"
           submitLine={this.state.interactive ? this.runCommand : this.submitLine}
-          prompt={this.state.prompt} />
+          prompt={this.state.prompt}
+          placeholder={this.state.placeholder} />
       </div>
     );
   }
@@ -200,7 +217,8 @@ class InputLine extends React.Component {
           className="console-input"
           onChange={this.handleChange}
           onKeyUp={this.handleKey}
-          value={this.state.value} />
+          value={this.state.value}
+          placeholder={this.props.placeholder} />
       </div>
     );
   }
