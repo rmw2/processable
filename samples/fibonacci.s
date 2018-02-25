@@ -24,8 +24,8 @@ fib:
     popq    %rbp
     ret
 
-    .globl _main
-_main:
+    .globl main
+main:
     pushq   %rbp
     movq    %rsp, %rbp
 
