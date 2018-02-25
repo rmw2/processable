@@ -1,5 +1,6 @@
 import React from 'react';
 
+import NavBar from './NavBar.jsx';
 import RegisterContainer from './RegisterView.jsx';
 import TextContainer from './TextView.jsx';
 import StackContainer from './StackView.jsx';
@@ -17,8 +18,12 @@ import './nav.css';
  * @this should be the process object being monitored by the component
  */
 const commands = function (view) {
+  // Get executable name excluding .s
+  const name = view.props.filename.slice(0,-2);
+
   return {
     run: (argv) => {
+      argv.unshift(name);
       this.exec(argv);
       view.forceUpdate();
     },
@@ -128,9 +133,12 @@ export default class ProcessContainer extends React.Component {
     };
 
     return (
-      <div id="wrapper">
-        <ProcessNav {...controls} />
-        <main>
+      <div id="app">
+        <NavBar >
+          <ProcessControls {...controls} />
+          {/*<div className="filename">{this.props.filename}</div>*/}
+        </NavBar>
+        <main className="process">
           <TextContainer
             pc={p.pc}
             text={p.mem.segments.text.data}
@@ -159,31 +167,23 @@ export default class ProcessContainer extends React.Component {
 }
 
 /**
- * The navbar for the app.  Put the
+ * The Controls for a process.
  */
-const ProcessNav = ({restart, step, run, blocked}) => {
+const ProcessControls = ({restart, step, run, blocked}) => {
   return (
-    <nav className="process-nav">
-      <div id="controls">
-        <div className="button-box">
-          {/*<div className="button-caption">restart</div>*/}
-          <button id="restart" className="control-button" onClick={restart}>&#8634;</button>
-        </div>
-        <div className="button-box">
-          {/*<div className="button-caption">step</div>*/}
-          <button id="step" className="control-button" disabled={blocked} onClick={step}>&#8677;</button>
-        </div>
-        <div className="button-box">
-          {/*<div className="button-caption">continue</div>*/}
-          <button id="continue" className="control-button" disabled={blocked} onClick={run}>&#10142;</button>
-        </div>
+    <div id="controls">
+      <div className="button-box">
+        {/*<div className="button-caption">restart</div>*/}
+        <button id="restart" className="control-button" onClick={restart}>&#8634;</button>
       </div>
-      <div id="navigation">
-        <div className="nav-box">help</div>
-        <div className="nav-box">about</div>
-        <div className="nav-box"
-          onClick={() => window.location.href = 'http://github.com/rmw2/processable'}>github</div>
+      <div className="button-box">
+        {/*<div className="button-caption">step</div>*/}
+        <button id="step" className="control-button" disabled={blocked} onClick={step}>&#8677;</button>
       </div>
-    </nav>
+      <div className="button-box">
+        {/*<div className="button-caption">continue</div>*/}
+        <button id="continue" className="control-button" disabled={blocked} onClick={run}>&#10142;</button>
+      </div>
+    </div>
   );
-}
+};

@@ -1,7 +1,42 @@
+/* General navbar styles */
+h1.nav-name {
+    height: 100%;
+    margin-left: 5%;
+    padding: 0.5em;
+    font-size: 1.5em;
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+h1.nav-name, #nav-children, #nav-children > * {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#navigation {
+    position: absolute;
+    right: 1em;
+    top: 0;
+    height: 100%;
+}
+
+.nav-box {
+    display: inline-block;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+
+    height: 100%;
+    padding: 1em;
+    border-left: 1px solid #aaa;
+}
+
+.nav-box:hover {
+    background-color: #9da;
+}
+
 /* Controls */
 #controls {
     padding: 0.5em;
-    margin: 0 5%;
+    margin: 0 1em;
 }
 
 .control-button {
@@ -33,23 +68,14 @@
     transform: translateY(-0.5em);
 }
 
-#navigation {
-    position: absolute;
-    right: 1em;
-    top: 0;
-    height: 100%;
-}
-
-.nav-box {
-    display: inline-block;
+/* Filename box */
+div.filename {
     font-family: 'Josefin Sans', sans-serif;
-    cursor: pointer;
+    padding: 0.25em;
+    margin: 0.75em;
+    border-radius: 0.25em;
+    /* border: 1px solid #000; */
 
-    height: 100%;
-    padding: 1em;
-    border-left: 1px solid #aaa;
-}
-
-.nav-box:hover {
-    background-color: #9da;
+    background-color: #000;
+    color: #fff;
 }

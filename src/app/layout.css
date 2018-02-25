@@ -1,5 +1,5 @@
 /* Nav bar, lives above everything and is fixed */
-nav.process-nav {
+nav {
     position: fixed;
     width:  100%;
     top: 0;
@@ -13,10 +13,7 @@ nav.process-nav {
 
 /************************************************/
 
-main {
-    margin-top: 3em;
-    height: calc(100% - 3em);
-
+main.process {
     display: grid;
     grid-template-columns: 1fr 485px 1fr;
     grid-template-rows: 50% 50%;

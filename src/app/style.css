@@ -2,82 +2,38 @@
 	box-sizing: border-box;
 }
 
-/* Modal window on load */
-.modal {
-	position: fixed;
+/* Nav bar, lives above everything and is fixed */
+nav {
+    position: fixed;
+    width:  100%;
+    top: 0;
+    height: 3em;
+    background-color: #dfd;
 
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-
-	z-index: 100;
-	padding: 10% 25%;
-
-	font-family: courier;
-	background-color: rgba(0,0,0,0.4);
+    border-bottom: 1px solid #aaa;
+    box-shadow: 1px 1px 1px #aaa;
+    z-index: 10;
 }
 
-.modal-content {
-	padding: 2em;
-	background-color: #fff;
-	border-radius: 0.25em;
-	box-shadow: 1px 1px 2px #eee;
-	height: 20em;
+main {
+    margin-top: 3em;
+    height: calc(100% - 3em);
 }
-
-.modal-content > div {
-	text-align: center;
-	margin: 2em 0;
-}
-
-input.file {
-	/* hide this element */
-	height: 1px;
-	width: 1px;
-	z-index: -1;
-	opacity: 0;
-	overflow: hidden;
-}
-
-label.file {
-	/* show this element instead */
-	border-radius: 0.5em;
-	background-color: #EEE;
-	border: 1px solid #000;
-
-	padding: 0.5em;
-
-	text-align: center;
-	cursor: pointer;
-}
-
-.file:active {
-	background-color: #999;
-}
-
-.modal-content button {
-	background-color: #aaf;
-	border: 1px solid #aaf;
-
-	border-radius: 0.5em;
-	cursor: pointer;
-	padding: 0.5em;
-}
-
-.modal-content button:hover {
-	border-color: #000;
-}
-
-.modal-content button:active {
-	background-color: #999;
-}
-
 
 @media screen and (max-width: 800px) {
 	.container {
 		width: calc(100% - 4em);
 	}
+}
+
+/* Neat hack to hide my email address but display it aight */
+span.at:after {
+	content: '@';
+}
+
+a.nostyle, a.nostyle:visited, a.nostyle:hover {
+	text-decoration: none;
+	color: inherit;
 }
 
 /* Console */
