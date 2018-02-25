@@ -43,7 +43,6 @@ const crt0 = [
  *
  */
 export function exec(argv) {
-
     // Count the args
     let argc = new FixedInt(4, argv.length);
     let arglengths = argv.map((arg) => arg.length + 1);
@@ -63,7 +62,6 @@ export function exec(argv) {
     // Get the stack origin and calculate new stack top
     let stackorigin = this.regs.read('rsp');
     let stacktop = ALU.sub(stackorigin, bytes_total);
-
 
     // Write it all to memory
     this.mem.write(argc, stacktop, DWORD);
