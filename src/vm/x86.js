@@ -239,12 +239,12 @@ const chip = function () {
 		},
 
 		jl : (operands, size) => {
-			if (this.regs.getFlag('OF') !== this.regs.getFlags('SF') && !this.regs.getFlag('ZF'))
+			if (this.regs.getFlag('OF') !== this.regs.getFlag('SF') && !this.regs.getFlag('ZF'))
 				this.jump(operands[0]);
 		},
 
 		jle : (operands, size) => {
-			if (this.regs.getFlag('OF') !== this.regs.getFlags('SF'))
+			if (this.regs.getFlag('OF') !== this.regs.getFlag('SF'))
 				this.jump(operands[0]);
 		},
 
