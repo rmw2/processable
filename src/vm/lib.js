@@ -16,7 +16,7 @@
  */
 "use strict";
 
-import {FixedInt, ALU} from '../FixedInt.js';
+import {FixedInt, ALU} from '../fixed-int/FixedInt.js';
 
 // Hack, will fix when the FFI and lib is built out a little more
 const WORD_SIZE = 8;

@@ -1,6 +1,6 @@
 "use strict";
 // Package for handling 8,16,32, & 64-bit data
-import {FixedInt, ALU} from '../FixedInt.js';
+import {FixedInt, ALU} from '../fixed-int/FixedInt.js';
 
 /**
  * An error to throw for a segmentation fault in our virtual memory scheme

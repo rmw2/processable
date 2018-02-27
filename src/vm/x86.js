@@ -1,4 +1,4 @@
-import {FixedInt, ALU} from '../FixedInt.js';
+import {FixedInt, ALU} from '../fixed-int/FixedInt.js';
 
 const WORD_SIZE = 8;
 
