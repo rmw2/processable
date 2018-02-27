@@ -40,21 +40,24 @@ h1.nav-name, #nav-children, #nav-children > * {
 }
 
 .control-button {
+    background-color: #fff;
+
     height: 1.5em;
     border-radius: 0.25em;
     border: 1px solid #000;
-    cursor: pointer;
     font-size: 16pt;
+
+    cursor: pointer;
     outline: none;
 }
 
-.control-button:disabled {
-    cursor: default;
+.control-button:active {
+    background-color: #fa2;
 }
 
-.control-button:active {
-    color: #000;
-    background-color: #aaa;
+.control-button:disabled, .control-button:disabled:active {
+    cursor: default;
+    background-color: #ddd;
 }
 
 .button-box {
