@@ -3,6 +3,7 @@ const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const WebpackCleanupPlugin = require('webpack-cleanup-plugin');
 
 module.exports = {
   entry: './src/app/App.jsx',
@@ -43,5 +44,6 @@ module.exports = {
     new ExtractTextPlugin({
       filename: '[name]-[hash].css'
     }),
+    new WebpackCleanupPlugin(),
   ]
 }
