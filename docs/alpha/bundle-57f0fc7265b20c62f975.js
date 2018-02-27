@@ -726,6 +726,7 @@ var ALU = exports.ALU = function () {
     }
 
     /**
+     * Perform subtraction as a + (-b), with the opposite carry flag
      * @param {FixedInt} a
      * @param {FixedInt|Number} b
      * @returns {FixedInt}
@@ -735,7 +736,11 @@ var ALU = exports.ALU = function () {
     key: 'sub',
     value: function sub(a, b) {
       if (!(b instanceof FixedInt)) b = new FixedInt(a.size, b);
-      return this.add(a, ALU.neg(b));
+
+      var result = this.add(a, ALU.neg(b));
+      _CF = !_CF; // Only difference between A - B and A + (-B)
+
+      return result;
     }
 
     /**
@@ -1513,7 +1518,7 @@ function decode(val, encoding) {
         case Encodings.BIN:
             return pad(val.toString(2), 8 * val.size).replace(/(.{8})/g, "$1<wbr>");
         case Encodings.CHAR:
-            return val.size === 8 ? '\'' + toPrintableCharacters(val.hi, 4) + toPrintableCharacters(val.lo, 4) + '\'' : '\'' + toPrintableCharacters(val.lo, val.size) + '\'';
+            return val.size === 8 ? '' + toPrintableCharacters(val.hi, 4, '<br/>') + toPrintableCharacters(val.lo, 4, '<br/>') : '' + toPrintableCharacters(val.lo, val.size, '<br/>');
     }
 }
 
@@ -1523,15 +1528,17 @@ function decode(val, encoding) {
  *
  * @param {Number} val -- the number to convert
  * @param {Number} [n] -- the number of characters to decode (1-4)
+ * @param {String} [insert] -- string to insert between each character
  * @returns {String}   -- the ASCII
  */
 function toPrintableCharacters(val) {
     var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+    var insert = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
     var str = '';
-    for (var i = 0; i < n; i++) {
+    for (var i = n - 1; i >= 0; i--) {
         var charCode = val >> i * BITS_PER_BYTE & BYTE_MASK;
-        str += escapeChar(charCode);
+        str += escapeChar(charCode) + insert;
     }
 
     return str;
@@ -2656,7 +2663,8 @@ function uploadAndAssemble(event) {
   reader.onload = function () {
     return loadText(reader.result);
   };
-  reader.readAsText(input.files[0]);
+  reader.readAsText(event.target.files[0]);
+  console.log(event.target.value);
 }
 
 // Render the chooser
@@ -20808,7 +20816,7 @@ var DecodeView = function (_React$Component2) {
 		var _this3 = _possibleConstructorReturn(this, (DecodeView.__proto__ || Object.getPrototypeOf(DecodeView)).call(this, props));
 
 		_this3.state = {
-			encoding: _decode.Encodings.INT
+			encoding: _this3.props.encoding || _decode.Encodings.HEX
 		};
 
 		_this3.toggleDecoding = _this3.toggleDecoding.bind(_this3);
@@ -20829,17 +20837,14 @@ var DecodeView = function (_React$Component2) {
 		value: function render() {
 			var encoding = this.state.encoding;
 
+			var val = (0, _decode.decode)(this.props.value, encoding);
+
 			// HACK
 			// TODO: make this more elegant
-
 			var size = this.props.value.size;
 
 			// Hackily set the position of the box
 			var style = {
-				// VERY STRANGE WORLD.  For some reason (maybe rounding EM to px?) the 8-byte object is
-				// 1px smaller than the 8 bytes to its left.  We correct that with a calc().
-				// Maybe we can figure out why this happens at some point ?? Probably hard to avoid
-				// seeing as we're trying to line up two columns that don't actually share any positioning
 				height: size * BYTE_HEIGHT + 'em'
 			};
 
@@ -20852,7 +20857,7 @@ var DecodeView = function (_React$Component2) {
 					className: 'stack-decode',
 					onClick: this.toggleDecoding },
 				_react2.default.createElement('span', { className: 'stack-decode-content',
-					dangerouslySetInnerHTML: { __html: (0, _decode.decode)(this.props.value, encoding) } })
+					dangerouslySetInnerHTML: { __html: val } })
 			);
 		}
 	}]);
