@@ -1,7 +1,7 @@
 /**
  * A module for decoding
  */
-import {FixedInt, ALU} from '../FixedInt.js';
+import {FixedInt, ALU} from '../fixed-int/FixedInt.js';
 
 // Lowest printable character code
 const UNPRINTABLE = 0x19;
@@ -61,8 +61,8 @@ export function decode(val, encoding) {
             return pad(val.toString(2), 8*val.size).replace(/(.{8})/g, "$1<wbr>");
         case Encodings.CHAR:
             return (val.size === 8)
-                ? `'${toPrintableCharacters(val.hi, 4)}${toPrintableCharacters(val.lo, 4)}'`
-                : `'${toPrintableCharacters(val.lo, val.size)}'`;
+                ? `${toPrintableCharacters(val.hi, 4, '<br/>')}${toPrintableCharacters(val.lo, 4, '<br/>')}`
+                : `${toPrintableCharacters(val.lo, val.size, '<br/>')}`;
     }
 }
 
@@ -72,13 +72,14 @@ export function decode(val, encoding) {
  *
  * @param {Number} val -- the number to convert
  * @param {Number} [n] -- the number of characters to decode (1-4)
+ * @param {String} [insert] -- string to insert between each character
  * @returns {String}   -- the ASCII
  */
-export function toPrintableCharacters(val, n=4) {
+export function toPrintableCharacters(val, n=4, insert='') {
     let str = '';
-    for (let i = 0; i < n; i++) {
+    for (let i = n-1; i >= 0; i--) {
         let charCode = (val >> (i*BITS_PER_BYTE)) & BYTE_MASK;
-        str += escapeChar(charCode);
+        str += escapeChar(charCode) + insert;
     }
 
     return str;

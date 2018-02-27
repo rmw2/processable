@@ -86,7 +86,7 @@ class DecodeView extends React.Component {
 		super(props);
 
 		this.state = {
-			encoding: Encodings.INT,
+			encoding: this.props.encoding || Encodings.HEX,
 		};
 
 		this.toggleDecoding = this.toggleDecoding.bind(this);
@@ -100,18 +100,14 @@ class DecodeView extends React.Component {
 
 	render() {
 		let {encoding} = this.state;
+		const val = decode(this.props.value, encoding);
 
 		// HACK
 		// TODO: make this more elegant
 		let size = this.props.value.size;
 
-
 		// Hackily set the position of the box
 		let style = {
-			// VERY STRANGE WORLD.  For some reason (maybe rounding EM to px?) the 8-byte object is
-			// 1px smaller than the 8 bytes to its left.  We correct that with a calc().
-			// Maybe we can figure out why this happens at some point ?? Probably hard to avoid
-			// seeing as we're trying to line up two columns that don't actually share any positioning
 			height: `${size * BYTE_HEIGHT}em`,
 		};
 
@@ -123,7 +119,7 @@ class DecodeView extends React.Component {
 				className="stack-decode"
 				onClick={this.toggleDecoding} >
 				<span className="stack-decode-content"
-					dangerouslySetInnerHTML={{__html: decode(this.props.value, encoding)}} />
+					dangerouslySetInnerHTML={{__html: val}} />
 			</div>
 		);
 	}
