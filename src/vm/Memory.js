@@ -196,7 +196,7 @@ export class TextSegment {
     /* Return the address of the next instruction after the specified instruction */
     next(addr) {
     	addr = +addr;
-    	return this.idxToAddr[this.addrToIdx[addr] + 1];
+    	return this.idxToAddr[this.addrToIdx[addr] + 1] || null;
     }
 
     /* Refuse writing to text section */
