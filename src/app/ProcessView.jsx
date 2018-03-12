@@ -26,11 +26,19 @@ const commands = function (view) {
       argv.unshift(name);
       this.exec(argv);
       view.forceUpdate();
+
+      return `Starting program: ${argv.join(' ')}\n  in _start() @0x${this.pc.toString(16)}`;
+    },
+    step: () => {
+      view.step();
+    },
+    continue: () => {
+      view.run();
     },
     restart: () => {
       view.props.restart();
       view.forceUpdate();
-    }
+    },
   };
 };
 
@@ -50,8 +58,6 @@ export default class ProcessContainer extends React.Component {
     this.run = this.run.bind(this);
 
     this.bindToProcess(this.props.process);
-
-
   }
 
   componentWillReceiveProps(props) {
@@ -68,6 +74,9 @@ export default class ProcessContainer extends React.Component {
   bindToProcess(p) {
     this.toggleBreakpoint = p.toggleBreakpoint.bind(p);
     this.commands = commands.call(p, this);
+    this.commands.help = () =>
+      `Available commands:\n ${Object.keys(this.commands).join('\n ')}`;
+
     // Do some preprocessing of labels and figure out which VM areas they live in
     // TODO
   }
@@ -76,6 +85,11 @@ export default class ProcessContainer extends React.Component {
    * Single step the process
    */
   step() {
+    if (!this.props.process.pc) {
+      this.props.process.io.stderr.write('process not running');
+      return;
+    }
+
     try {
       this.props.process.step();
     } catch (e) {
@@ -94,6 +108,11 @@ export default class ProcessContainer extends React.Component {
    * a breakpoint
    */
   run() {
+    if (!this.props.process.pc) {
+      this.props.process.io.stderr.write('process not running');
+      return;
+    }
+
     try {
       this.props.process.run();
     } catch (e) {
@@ -119,6 +138,8 @@ export default class ProcessContainer extends React.Component {
   displayError(e) {
     // Write it to the console....
     this.props.process.io.stderr.write(`${e}`);
+    this.props.process.lib.exit(1);
+    this.forceUpdate();
     throw e;
   }
 
@@ -153,7 +174,9 @@ export default class ProcessContainer extends React.Component {
             labeled={p.labeled} />
           <Console
             ref="console"
+            forceUpdate={this.forceUpdate.bind(this)}
             io={p.io}
+            signals={p.signals}
             commands={this.commands} />
           <StackContainer
             mem={p.mem.segments.stack.data}
