@@ -80,6 +80,7 @@ export function exec(argv) {
     // Finally correct the stack pointer and unblock the process
     this.regs.write('rsp', stacktop);
     this.blocked = false;
+    this.pc = this.mem.segments.text.lo;
 }
 
 /**
