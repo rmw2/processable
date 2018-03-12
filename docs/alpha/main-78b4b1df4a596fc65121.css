@@ -31,6 +31,7 @@
 
 .stack-decode {
     cursor: pointer;
+    position: relative;
 
     display: flex;
     flex-direction: row;
@@ -44,7 +45,18 @@
     display: block;
     width: 100%;
     text-align: center;
+}
 
+.stack-decode-encoding {
+    top: 0.25em;
+    right: 0.25em;
+    color: #aaa;
+    position: absolute;
+    font-size: 0.5rem;
+    font-family: sans-serif;
+}
+
+.stack-decode-content, .stack-decode-encoding {
     /* prevent weird text selection */
     -webkit-touch-callout: none; /* iOS Safari */
       -webkit-user-select: none; /* Safari */
@@ -80,7 +92,7 @@
     right: 10%;
 }
 .static-byte > span {
-    display: inline-block;
+    display: flex;
 }
 
 .static-byte > .byte-value {
@@ -92,19 +104,36 @@
 }
 
 /* Static stuff */
-.static-value, .static-label {
-    position: absolute;
+.static-label, .static-address, .toggle-encoding-static {
+    display: inline-block;
+    margin-right: 0.25em;
 }
 
 .static-value {
-    right: 0;
-    top: 1.5em;
+    margin-top: 0.25em;
+    position: absolute;
+}
+
+.static-bytes {
+    display: flex;
 }
 
 .static-label {
-    left: 0;
+    font-style: italic;
+}
 
-    color: #999;
+.static-address {
+    padding: 0 0.1em;
+}
+
+.toggle-encoding-static {
+    margin-top: 0.1em;
+}
+
+.static-address {
+    color: #aaa;
+/*  border: 1px solid #aaa;
+    border-radius: 0.25em; */
 }
 
 .static-decoded {
@@ -138,7 +167,60 @@
     border: 1px solid #aaa;
     border-top: none;
     border-radius: 0 0  0.5em 0.5em;
-}/* Nav bar, lives above everything and is fixed */
+}/**
+ * <div id="console">
+ *   <div class="console-line"/>
+ *   <div class="console-line"/>
+ *   ...
+ *   <div class="console-line">
+ *      <span class="console-prompt"/>
+ *      <input class="console-input"/>
+ *   </div>
+ * </div>
+ */
+
+/* Console */
+#console {
+    background-color: #000;
+    color: #fff;
+
+    overflow-y: scroll;
+}
+
+.console-line {
+    display: flex;
+    flex-direction: row;
+}
+
+.console-input {
+    display: inline-block;
+    flex-grow: 1;
+    resize: none;
+    border: none;
+
+    background-color: #000;
+    font-family: Courier;
+    color: #fff;
+
+    /* Hack town for aligning the input and prompt */
+    margin: -0.5rem 0 0 calc(0.5rem + 0.5px);
+}
+
+.console-input:active, .console-input:focus {
+    border: none;
+    outline: none;
+}
+
+.console-line, .console-input, .console-prompt {
+    font-size: 12pt;
+    min-height: 1.5em;
+}
+
+.console-input, .console-prompt {
+    display: inline-block;
+}
+
+/* Nav bar, lives above everything and is fixed */
 nav {
     position: fixed;
     width:  100%;
@@ -151,43 +233,72 @@ nav {
     z-index: 10;
 }
 
+@media screen and (max-width: 600px) {
+    height: 4em;
+}
+
 /************************************************/
 
 main.process {
     display: grid;
-    grid-template-columns: 1fr 485px 1fr;
-    grid-template-rows: 50% 50%;
     justify-items: stretch;
     align-items: stretch;
+
+    grid-template-columns: auto;
+    grid-template-columns: 1fr 485px 1fr;
+    grid-template-rows: 50% 50%;
+
+    grid-template-areas:
+        "text console stack"
+        "static registers stack";
 
     z-index:  1;
 }
 
+@media screen and (max-width: 600px) {
+    main.process {
+        grid-template-columns: 100%;
+        grid-template-rows: 3em 1fr 1fr 1fr 1fr;
+
+        grid-template-areas:
+            "console"
+            "text"
+            "static"
+            "registers"
+            "stack";
+    }
+}
+
 #registers {
-    grid-row: 2 / 3;
-    grid-column: 2 / 2;
+    grid-area: registers;
+/*     grid-row: 2 / 3;
+    grid-column: 2 / 2; */
 }
 
 #text {
-    grid-row: 1 / 1;
-    grid-column: 1 / 1;
+    grid-area: text;
+/*     grid-row: 1 / 1;
+    grid-column: 1 / 1; */
 }
 
 #stack {
-    grid-row: 1 / 3;
-    grid-column: 3 / 3;
+    grid-area: stack;
+/*     grid-row: 1 / 3;
+    grid-column: 3 / 3; */
 }
 
 #static {
-    grid-row: 2 / 2;
-    grid-column: 1 / 1;
+    grid-area: static;
+/*     grid-row: 2 / 2;
+    grid-column: 1 / 1; */
 
     padding-top: 0;
 }
 
 #console {
-    grid-row: 1 / 2;
-    grid-column: 2 / 2;
+    grid-area: console;
+/*     grid-row: 1 / 2;
+    grid-column: 2 / 2; */
 }
 
 .container {
@@ -252,6 +363,38 @@ h1.nav-name, #nav-children, #nav-children > * {
 
 .nav-box:hover {
     background-color: #9da;
+}
+
+/** Mobile nav-box */
+@media screen and (max-width: 600px) {
+    #navigation {
+        right: 0;
+        top: 0;
+        padding: 1em 0 1em 0.5em;
+        background-color: inherit;
+    }
+
+    #navigation::before {
+        font-family: 'Josefin Sans', sans-serif;
+        content: "menu";
+    }
+
+    .nav-box {
+        display: block;
+        visibility: hidden;
+        height: 2em;
+        border: none;
+    }
+
+    #navigation:hover {
+        height: 8em;
+        box-shadow: 1px 1px 2px #aaa;
+        border: 1px solid #aaa;
+    }
+
+    #navigation:hover .nav-box {
+        visibility: visible;
+    }
 }
 
 /* Controls */
@@ -340,37 +483,6 @@ a.nostyle, a.nostyle:visited, a.nostyle:hover {
 	color: inherit;
 }
 
-/* Console */
-#console {
-	background-color: #000;
-	color: #fff;
-
-	overflow-y: scroll;
-}
-
-.console-input {
-	display: inline-block;
-	width: 80%;
-
-	resize: none;
-	border: none;
-
-	background-color: #000;
-	font-family: Courier;
-	color: #fff;
-	margin: 0;
-}
-
-.console-input:active, .console-input:focus {
-	border: none;
-	outline: none;
-}
-
-.console-line, .console-input {
-	font-size: 12pt;
-	margin: 0;
-	min-height: 1.5em;
-}
 
 /* Register stuff */
 .register {

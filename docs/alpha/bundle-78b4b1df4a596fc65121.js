@@ -537,6 +537,12 @@ var FixedInt = function () {
   }, {
     key: 'valueOf',
     value: function valueOf() {
+      var signed = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+      if (signed && this.isNegative()) {
+        return -ALU.neg(this);
+      }
+
       return this.size == 8 ? MODULUS[4] * this.hi + this.lo : this.lo;
     }
 
@@ -553,14 +559,50 @@ var FixedInt = function () {
 
     /**
      * Return a new FixedInt with the same value as this with the
-     * specified size, truncating if necessary
+     * specified size, truncating if necessary.  If size is larger
+     * than this.size, the value is sign extended or zero extendend
+     * according to the boolean signExtend
+     * @param {Int} size          -- the new size
+     * @param {Bool} [signExtend] -- whether the result should preserve sign
      * @returns {FixedInt}
      */
 
   }, {
     key: 'toSize',
     value: function toSize(size) {
-      return new FixedInt(size, this.lo, this.hi);
+      var signExtend = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (signExtend && size > this.size && this.isNegative())
+        // Sign Extend the result
+        return new FixedInt(size, (this.lo | ~VAL_MASK[this.size]) >>> 0, VAL_MASK[4]);else
+        // Zero-extend or shrink
+        return new FixedInt(size, this.lo, this.hi);
+    }
+
+    /**
+     * Split this into two new FixedInts with half the current size
+     * (This can come in handy for multiplication/division)
+     * @returns {{hi: FixedInt, lo: FixedInt}}
+     */
+
+  }, {
+    key: 'split',
+    value: function split() {
+      switch (this.size) {
+        case 8:
+          return {
+            lo: new FixedInt(4, this.lo),
+            hi: new FixedInt(4, this.hi)
+          };
+        case 4:
+        case 2:
+          return {
+            lo: new FixedInt(1, this.lo),
+            hi: new FixedInt(1, this.lo >>> 4 * this.size)
+          };
+        case 1:
+          throw new FixedIntError('Cannot split a 1-byte value');
+      }
     }
 
     /**
@@ -744,6 +786,7 @@ var ALU = exports.ALU = function () {
     }
 
     /**
+     * Unsigned multiplication
      * @param {FixedInt} a
      * @param {FixedInt|Number} b
      * @returns {FixedInt}
@@ -753,29 +796,54 @@ var ALU = exports.ALU = function () {
     key: 'mul',
     value: function mul(a, b) {
 
-      // Double the size if we can fit it
-      // if (a.size < 8) {
-      //   a = a.toSize(2*a.size);
-      //   b = b.toSize(2*a.size);
-      // }
-
-      // Base case
+      //Double the size if we can fit it
       var _validateOperands2 = validateOperands(a, b);
 
       a = _validateOperands2.a;
       b = _validateOperands2.b;
+      if (a.size < 8) {
+        a = a.toSize(2 * a.size);
+        b = b.toSize(2 * b.size);
+      } else {
+        throw new FixedIntError('64-bit multiplication not yet implemented');
+      }
+
+      // Base case
       if (b == 0) return new FixedInt(a.size);
 
-      // Recursive definition of multiplication
-      var product = this.shl(this.mul(a, this.sar(b, 1)), 1);
-      if (b.isOdd()) {
-        product = this.add(product, a);
-      }
+      var product = _mul(_abs(a), _abs(b));
+
+      if (a.isNegative() ^ b.isNegative()) product = ALU.neg(product);
 
       return product;
     }
 
+    // /**
+    //  * Signed multiplication
+    //  * @param {FixedInt} a
+    //  * @param {FixedInt|Number} b
+    //  * @returns {FixedInt}
+    //  */
+    // static imul(a, b) {
+    //   ({a, b} = validateOperands(a, b));
+
+    //   //Double the size if we can fit it
+    //   if (a.size < 8) {
+    //     a = a.toSize(2*a.size, true);
+    //     b = b.toSize(2*a.size, true);
+    //   } else {
+    //     throw new FixedInterror('64-bit multiplication not yet implemented')
+    //   }
+
+    //   // Base case
+    //   if (+b == 0) return new FixedInt(a.size);
+
+
+    //   return product;
+    // }
+
     /**
+     * Unsigned division
      * @param {FixedInt} a
      * @param {FixedInt|Number} b
      * @returns {FixedInt}
@@ -784,29 +852,65 @@ var ALU = exports.ALU = function () {
   }, {
     key: 'div',
     value: function div(a, b) {
-      var _validateOperands3 = validateOperands(a, b);
+      var _validateDivision = validateDivision(a, b);
 
-      a = _validateOperands3.a;
-      b = _validateOperands3.b;
+      a = _validateDivision.a;
+      b = _validateDivision.b;
 
 
       if (+b === 0) throw new FixedIntError('Division by zero');
 
       // Use recursive helper for division
 
-      var _divmod = divmod(a, b),
-          _divmod2 = _slicedToArray(_divmod, 2),
-          result = _divmod2[0],
-          mod = _divmod2[1];
+      var _divmod2 = _divmod(a, b.toSize(a.size)),
+          _divmod3 = _slicedToArray(_divmod2, 2),
+          result = _divmod3[0],
+          mod = _divmod3[1];
 
       // Store modulus in aux
 
+
+      _aux = mod.toSize(b.size);
+      return result;
+    }
+
+    /**
+     * Signed division
+     * @param {FixedInt} a
+     * @param {FixedInt|Number} b
+     * @returns {FixedInt}
+     */
+
+  }, {
+    key: 'idiv',
+    value: function idiv(a, b) {
+      var _validateDivision2 = validateDivision(a, b);
+
+      a = _validateDivision2.a;
+      b = _validateDivision2.b;
+
+
+      if (+b === 0) throw new FixedIntError('Division by zero');
+
+      // Use recursive helper on absolute values of operands
+
+      var _divmod4 = _divmod(_abs(a), _abs(b.toSize(a.size))),
+          _divmod5 = _slicedToArray(_divmod4, 2),
+          result = _divmod5[0],
+          mod = _divmod5[1];
+
+      // Correct result for operand signs
+
+
+      if (a.isNegative() ^ b.isNegative()) result = ALU.neg(result);
+      if (a.isNegative()) mod = ALU.neg(mod);
 
       _aux = mod;
       return result;
     }
 
     /**
+     * Logical/arithmetic left shift
      * @param {FixedInt} a
      * @param {FixedInt|Number} b
      * @returns {FixedInt}
@@ -841,6 +945,7 @@ var ALU = exports.ALU = function () {
     }
 
     /**
+     * Arithmetic right shift
      * @param {FixedInt} a
      * @param {FixedInt|Number} b
      * @returns {FixedInt}
@@ -882,6 +987,7 @@ var ALU = exports.ALU = function () {
     }
 
     /**
+     * Logical Right shift
      * @param {FixedInt} a
      * @param {FixedInt|Number} b
      * @returns {FixedInt}
@@ -925,10 +1031,10 @@ var ALU = exports.ALU = function () {
   }, {
     key: 'and',
     value: function and(a, b) {
-      var _validateOperands4 = validateOperands(a, b);
+      var _validateOperands3 = validateOperands(a, b);
 
-      a = _validateOperands4.a;
-      b = _validateOperands4.b;
+      a = _validateOperands3.a;
+      b = _validateOperands3.b;
 
       var lo = a.lo & b.lo;
       var hi = a.hi & b.hi;
@@ -947,10 +1053,10 @@ var ALU = exports.ALU = function () {
   }, {
     key: 'or',
     value: function or(a, b) {
-      var _validateOperands5 = validateOperands(a, b);
+      var _validateOperands4 = validateOperands(a, b);
 
-      a = _validateOperands5.a;
-      b = _validateOperands5.b;
+      a = _validateOperands4.a;
+      b = _validateOperands4.b;
 
       var lo = a.lo | b.lo;
       var hi = a.hi | b.hi;
@@ -969,10 +1075,10 @@ var ALU = exports.ALU = function () {
   }, {
     key: 'xor',
     value: function xor(a, b) {
-      var _validateOperands6 = validateOperands(a, b);
+      var _validateOperands5 = validateOperands(a, b);
 
-      a = _validateOperands6.a;
-      b = _validateOperands6.b;
+      a = _validateOperands5.a;
+      b = _validateOperands5.b;
 
       var lo = a.lo ^ b.lo;
       var hi = a.hi ^ b.hi;
@@ -1072,27 +1178,55 @@ var ALU = exports.ALU = function () {
  */
 
 
-function divmod(dividend, divisor) {
+function _divmod(dividend, divisor) {
   // Base case
-  if (dividend.isLessThan(divisor)) {
+  if (dividend.isLessThan(divisor) || +divisor == 0) {
     return [new FixedInt(divisor.size, 0), dividend];
   }
 
   // Recursively divide by divisor * 2
 
-  var _divmod3 = divmod(dividend, ALU.shl(divisor, 1)),
-      _divmod4 = _slicedToArray(_divmod3, 2),
-      quotient = _divmod4[0],
-      remainder = _divmod4[1];
+  var _divmod6 = _divmod(dividend, ALU.shl(divisor, 1)),
+      _divmod7 = _slicedToArray(_divmod6, 2),
+      quotient = _divmod7[0],
+      remainder = _divmod7[1];
 
   quotient = ALU.shl(quotient, 1);
 
-  if (divisor.isLessThan(remainder)) {
+  if (divisor.isLessThan(remainder) || divisor.equals(remainder)) {
     quotient = ALU.add(quotient, 1);
     remainder = ALU.sub(remainder, divisor);
   }
 
   return [quotient, remainder];
+}
+
+/**
+ * Recursive helper function to perform multiplication
+ * @param {FixedInt} multiplicand
+ * @param {FixedInt} multiplier
+ */
+function _mul(multiplicand, multiplier) {
+  // Base case
+  if (+multiplier == 0) return new FixedInt(multiplicand.size);
+
+  // Recursive definition of multiplication
+  var product = ALU.shl(_mul(multiplicand, ALU.sar(multiplier, 1)), 1);
+
+  if (multiplier.isOdd()) {
+    product = ALU.add(product, multiplicand);
+  }
+
+  return product;
+}
+
+/**
+ * Helper function for getting the absolute value of a FixedInt
+ * when interpreted as signed.
+ * @param {FixedInt} val
+ */
+function _abs(val) {
+  if (val.isNegative()) return ALU.neg(val);else return val;
 }
 
 /**
@@ -1111,6 +1245,26 @@ function validateOperands(a, b) {
     if (b.size !== a.size) throw new FixedIntError('FixedInt operands must be the same size.  a: ' + a.size + ' b: ' + b.size);
   } else {
     b = new FixedInt(a.size, b);
+  }
+
+  return { a: a, b: b };
+}
+
+/**
+ * Ensure that the operands are valid sizes for division, and coerce both to FixedInt
+ * @param {FixedInt} a
+ * @param {FixedInt|Number} b
+ * @returns {{a: FixedInt, b: FixedInt}}
+ * @throws {FixedIntError} if a is not twice the size of b, a is not FixedInt, or a.size == 1
+ */
+function validateDivision(a, b) {
+  // Validate type
+  if (!(a instanceof FixedInt) || a.size == 1) throw new FixedIntError('First operand must be instance of FixedInt with size > 1');
+
+  if (b instanceof FixedInt) {
+    if (2 * b.size !== a.size) throw new FixedIntError('Dividend must be double the size of divisor. a: ' + a.size + ' b: ' + b.size);
+  } else {
+    b = new FixedInt(a.size / 2, b);
   }
 
   return { a: a, b: b };
@@ -1430,7 +1584,7 @@ module.exports = warning;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.Encodings = undefined;
+exports.ENC_NAMES = exports.Encodings = undefined;
 exports.pad = pad;
 exports.decode = decode;
 exports.toPrintableCharacters = toPrintableCharacters;
@@ -1503,6 +1657,8 @@ var Encodings = exports.Encodings = {
     BIN: 4,
     length: 5
 };
+
+var ENC_NAMES = exports.ENC_NAMES = ['hex', 'int', 'uint', 'char', 'bin'];
 
 /**
  * Decode a FixedInt object according to the specified decoding index
@@ -2455,6 +2611,7 @@ function exec(argv) {
     // Finally correct the stack pointer and unblock the process
     this.regs.write('rsp', stacktop);
     this.blocked = false;
+    this.pc = this.mem.segments.text.lo;
 }
 
 /**
@@ -2494,15 +2651,15 @@ var _NavBar = __webpack_require__(22);
 
 var _NavBar2 = _interopRequireDefault(_NavBar);
 
-var _Assembler = __webpack_require__(57);
+var _Assembler = __webpack_require__(58);
 
-var _Process = __webpack_require__(58);
-
-__webpack_require__(65);
+var _Process = __webpack_require__(59);
 
 __webpack_require__(66);
 
 __webpack_require__(67);
+
+__webpack_require__(68);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2593,11 +2750,10 @@ var App = function App(_ref) {
           examples.map(function (name, idx) {
             return _react2.default.createElement(
               'span',
-              null,
+              { key: name },
               _react2.default.createElement(
                 'button',
-                { key: name,
-                  className: 'example',
+                { className: 'example',
                   onClick: function onClick() {
                     return fetchAndAssemble(name);
                   } },
@@ -20000,9 +20156,9 @@ var _ConsoleView = __webpack_require__(54);
 
 var _ConsoleView2 = _interopRequireDefault(_ConsoleView);
 
-__webpack_require__(55);
-
 __webpack_require__(56);
+
+__webpack_require__(57);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -20030,6 +20186,14 @@ var commands = function commands(view) {
       argv.unshift(name);
       _this.exec(argv);
       view.forceUpdate();
+
+      return 'Starting program: ' + argv.join(' ') + '\n  in _start() @0x' + _this.pc.toString(16);
+    },
+    step: function step() {
+      view.step();
+    },
+    continue: function _continue() {
+      view.run();
     },
     restart: function restart() {
       view.props.restart();
@@ -20059,7 +20223,6 @@ var ProcessContainer = function (_React$Component) {
     _this2.run = _this2.run.bind(_this2);
 
     _this2.bindToProcess(_this2.props.process);
-
     return _this2;
   }
 
@@ -20080,8 +20243,14 @@ var ProcessContainer = function (_React$Component) {
   }, {
     key: 'bindToProcess',
     value: function bindToProcess(p) {
+      var _this3 = this;
+
       this.toggleBreakpoint = p.toggleBreakpoint.bind(p);
       this.commands = commands.call(p, this);
+      this.commands.help = function () {
+        return 'Available commands:\n ' + Object.keys(_this3.commands).join('\n ');
+      };
+
       // Do some preprocessing of labels and figure out which VM areas they live in
       // TODO
     }
@@ -20093,6 +20262,11 @@ var ProcessContainer = function (_React$Component) {
   }, {
     key: 'step',
     value: function step() {
+      if (!this.props.process.pc) {
+        this.props.process.io.stderr.write('process not running');
+        return;
+      }
+
       try {
         this.props.process.step();
       } catch (e) {
@@ -20114,6 +20288,11 @@ var ProcessContainer = function (_React$Component) {
   }, {
     key: 'run',
     value: function run() {
+      if (!this.props.process.pc) {
+        this.props.process.io.stderr.write('process not running');
+        return;
+      }
+
       try {
         this.props.process.run();
       } catch (e) {
@@ -20145,6 +20324,8 @@ var ProcessContainer = function (_React$Component) {
     value: function displayError(e) {
       // Write it to the console....
       this.props.process.io.stderr.write('' + e);
+      this.props.process.lib.exit(1);
+      this.forceUpdate();
       throw e;
     }
   }, {
@@ -20184,7 +20365,9 @@ var ProcessContainer = function (_React$Component) {
             labeled: p.labeled }),
           _react2.default.createElement(_ConsoleView2.default, {
             ref: 'console',
+            forceUpdate: this.forceUpdate.bind(this),
             io: p.io,
+            signals: p.signals,
             commands: this.commands }),
           _react2.default.createElement(_StackView2.default, {
             mem: p.mem.segments.stack.data,
@@ -20548,7 +20731,7 @@ var TextContainer = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            var pc = this.props.pc !== undefined ? 'PC: 0x' + this.props.pc.toString(16) : '[process terminated]';
+            var pc = this.props.pc ? 'PC: 0x' + this.props.pc.toString(16) : this.props.pc == undefined ? '[process not started]' : '[process terminated]';
 
             return _react2.default.createElement(
                 'div',
@@ -20604,7 +20787,6 @@ var InstructionView = function (_React$Component2) {
     }, {
         key: 'renderOperands',
         value: function renderOperands() {
-
             return this.props.operands.length ? this.props.operands.map(function (op, idx) {
                 return _react2.default.createElement(
                     'span',
@@ -20614,6 +20796,11 @@ var InstructionView = function (_React$Component2) {
             }).reduce(function (prev, curr) {
                 return [prev, ', ', curr];
             }) : null;
+        }
+    }, {
+        key: 'componentDidUpdate',
+        value: function componentDidUpdate() {
+            if (this.props.isCurrent) this.refs.thisinst.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'smooth' });
         }
     }, {
         key: 'render',
@@ -20633,7 +20820,7 @@ var InstructionView = function (_React$Component2) {
 
             return _react2.default.createElement(
                 'div',
-                { style: highlightStyle, className: 'instruction' },
+                { ref: 'thisinst', style: highlightStyle, className: 'instruction' },
                 _react2.default.createElement(
                     'span',
                     { className: 'instruction-label' },
@@ -20856,6 +21043,11 @@ var DecodeView = function (_React$Component2) {
 				{ style: style,
 					className: 'stack-decode',
 					onClick: this.toggleDecoding },
+				_react2.default.createElement(
+					'span',
+					{ className: 'stack-decode-encoding' },
+					_decode.ENC_NAMES[encoding]
+				),
 				_react2.default.createElement('span', { className: 'stack-decode-content',
 					dangerouslySetInnerHTML: { __html: val } })
 			);
@@ -21015,7 +21207,8 @@ var TabbedStaticContainer = function TabbedStaticContainer(_ref) {
           mem: rodata.data,
           hi: rodata.hi,
           lo: rodata.lo,
-          labelFor: labeled })
+          labelFor: labeled,
+          defaultEncoding: _decode.Encodings.CHAR })
       ),
       _react2.default.createElement(
         _reactTabs.TabPanel,
@@ -21053,15 +21246,16 @@ var StaticContainer = exports.StaticContainer = function (_React$Component) {
   _createClass(StaticContainer, [{
     key: 'render',
     value: function render() {
+      var _this2 = this;
+
       // This is pretty inefficient
       var bytes = void 0;
       var groups = [];
       var labels = [];
-
       for (var addr = this.props.lo; addr < this.props.hi; addr++) {
         if (addr in this.props.labelFor) {
           // Push label
-          labels.push(this.props.labelFor[addr]);
+          labels.push({ addr: addr, label: this.props.labelFor[addr] });
 
           // Push byte group for previous label
           if (bytes !== undefined) groups.push(bytes);
@@ -21072,10 +21266,7 @@ var StaticContainer = exports.StaticContainer = function (_React$Component) {
         if (bytes === undefined) bytes = [];
 
         // Add the byte to the current labeled group
-        bytes.push({
-          addr: addr,
-          value: this.props.mem.read(addr, 1)
-        });
+        bytes.push(this.props.mem.read(addr, 1));
       }
 
       // Add the last group
@@ -21090,8 +21281,10 @@ var StaticContainer = exports.StaticContainer = function (_React$Component) {
           groups[0] && groups.map(function (bytes, idx) {
             return _react2.default.createElement(LabeledByteGroup, {
               key: idx,
-              bytes: bytes,
-              label: labels[idx] });
+              bytes: new Uint8Array(bytes),
+              label: labels[idx].label,
+              addr: labels[idx].addr,
+              encoding: _this2.props.defaultEncoding });
           })
         )
       );
@@ -21101,24 +21294,57 @@ var StaticContainer = exports.StaticContainer = function (_React$Component) {
   return StaticContainer;
 }(_react2.default.Component);
 
+/**
+ *
+ */
+
+
+var Byte = function Byte(_ref2) {
+  var addr = _ref2.addr,
+      value = _ref2.value;
+
+  console.log(value, value.toString(16));
+  return _react2.default.createElement(
+    'span',
+    { className: 'static-byte-value' },
+    (0, _decode.pad)(value.toString(16), 2)
+  );
+};
+
 var LabeledByteGroup = function (_React$Component2) {
   _inherits(LabeledByteGroup, _React$Component2);
 
   function LabeledByteGroup(props) {
     _classCallCheck(this, LabeledByteGroup);
 
-    return _possibleConstructorReturn(this, (LabeledByteGroup.__proto__ || Object.getPrototypeOf(LabeledByteGroup)).call(this, props));
+    var _this3 = _possibleConstructorReturn(this, (LabeledByteGroup.__proto__ || Object.getPrototypeOf(LabeledByteGroup)).call(this, props));
+
+    _this3.state = {
+      encoding: _this3.props.encoding || _decode.Encodings.HEX
+    };
+
+    _this3.toggleDecoding = _this3.toggleDecoding.bind(_this3);
+    return _this3;
   }
 
   _createClass(LabeledByteGroup, [{
     key: 'toggleDecoding',
-    value: function toggleDecoding() {}
+    value: function toggleDecoding() {
+      this.setState(function (_ref3) {
+        var encoding = _ref3.encoding;
+        return {
+          encoding: ++encoding % _decode.Encodings.length
+        };
+      });
+    }
   }, {
     key: 'render',
     value: function render() {
       var _props = this.props,
           label = _props.label,
-          bytes = _props.bytes;
+          bytes = _props.bytes,
+          addr = _props.addr;
+      var encoding = this.state.encoding;
 
       // Decoding
 
@@ -21131,7 +21357,7 @@ var LabeledByteGroup = function (_React$Component2) {
         for (var _iterator = bytes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var b = _step.value;
 
-          str += (0, _decode.escapeChar)(+b.value);
+          str += (0, _decode.escapeChar)(+b);
         }
       } catch (err) {
         _didIteratorError = true;
@@ -21153,9 +21379,25 @@ var LabeledByteGroup = function (_React$Component2) {
         { className: 'static-byte-group' },
         _react2.default.createElement(
           'div',
-          { className: 'static-label' },
-          label,
-          ':'
+          { className: 'static-info' },
+          _react2.default.createElement(
+            'button',
+            { className: 'toggle toggle-encoding-static',
+              style: _util.encStyle[encoding],
+              onClick: this.toggleDecoding },
+            _decode.ENC_NAMES[encoding]
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'static-label' },
+            label,
+            ':'
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'static-address' },
+            addr.toString(16)
+          )
         ),
         _react2.default.createElement(
           'div',
@@ -21163,17 +21405,17 @@ var LabeledByteGroup = function (_React$Component2) {
           _react2.default.createElement(
             'div',
             { className: 'static-bytes' },
-            bytes && bytes.map(function (_ref2, idx) {
-              var addr = _ref2.addr,
-                  value = _ref2.value;
-              return _react2.default.createElement(Byte, { key: addr,
-                addr: addr,
-                value: +value });
+            Array.from(bytes).map(function (value, idx) {
+              return _react2.default.createElement(
+                'span',
+                { key: addr + idx, className: 'static-byte-value' },
+                (0, _decode.pad)(value.toString(16), 2)
+              );
             })
           ),
           _react2.default.createElement(
             'div',
-            { className: 'static-decoded', style: _util.encStyle['char'] },
+            { className: 'static-decoded', style: _util.encStyle[encoding] },
             str
           )
         )
@@ -21183,22 +21425,6 @@ var LabeledByteGroup = function (_React$Component2) {
 
   return LabeledByteGroup;
 }(_react2.default.Component);
-
-/**
- *
- */
-
-
-var Byte = function Byte(_ref3) {
-  var addr = _ref3.addr,
-      value = _ref3.value;
-
-  return _react2.default.createElement(
-    'span',
-    { className: 'static-byte-value' },
-    (0, _decode.pad)(value.toString(16), 2)
-  );
-};
 
 // /**
 //  * @classdesc
@@ -22636,6 +22862,8 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
+__webpack_require__(55);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -22644,10 +22872,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Color = {
-  NORMAL: '#fff',
-  ERROR: '#f99',
-  HELP: '#99f'
+var Style = {
+  NORMAL: { color: '#fff' },
+  ERROR: { color: '#f22' },
+  HELP: { color: '#abf', fontStyle: 'italic' }
 };
 
 var Console = function (_React$Component) {
@@ -22685,6 +22913,9 @@ var Console = function (_React$Component) {
         return _this.error(value);
       }
     };
+
+    // Attach to the process' signal router
+    _this.signals = _this.props.signals;
     return _this;
   }
 
@@ -22723,7 +22954,7 @@ var Console = function (_React$Component) {
         for (var _iterator = lines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var line = _step.value;
 
-          this.addLine(line, Color.ERROR);
+          if (line !== '') this.addLine(line, Style.ERROR);
         }
       } catch (err) {
         _didIteratorError = true;
@@ -22748,11 +22979,20 @@ var Console = function (_React$Component) {
 
   }, {
     key: 'read',
-    value: function read(n) {
-      if (this.inbuf == '') return null;
+    value: function read() {
+      var n = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
       var read = this.inbuf.slice(0, n);
-      this.inbuf = this.inbuf.slice(n);
+
+      if (this.inbuf.length >= n) {
+        this.inbuf = this.inbuf.slice(n);
+      } else {
+        this.infbuf = '';
+
+        // Prompt for user input
+        this.setState({ interactive: false });
+        this.focusInput();
+      }
 
       return read;
     }
@@ -22774,8 +23014,10 @@ var Console = function (_React$Component) {
   }, {
     key: 'flush',
     value: function flush() {
-      this.addLine(this.outbuf);
-      this.outbuf = '';
+      if (this.outbuf) {
+        this.addLine(this.outbuf);
+        this.outbuf = '';
+      }
     }
 
     /**
@@ -22785,20 +23027,20 @@ var Console = function (_React$Component) {
   }, {
     key: 'addLine',
     value: function addLine(text) {
-      var color = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Color.NORMAL;
+      var style = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Style.NORMAL;
 
       this.setState(function (_ref) {
         var lines = _ref.lines;
 
         var newLines = lines.slice();
-        newLines.push({ text: text, color: color });
+        newLines.push({ text: text, style: style });
         return { lines: newLines, placeholder: '' };
       });
     }
 
     /**
      * Parse a line of text from the console, add it to the input buffer
-     *
+     * This corresponds to reading a line into the process' stdin
      */
 
   }, {
@@ -22807,8 +23049,13 @@ var Console = function (_React$Component) {
       this.inbuf += line + '\n';
 
       this.signals.dispatch('SIGIO');
-      // TODO: Parse line and look for commands ??
-      addLine(line);
+      this.setState({ interactive: true });
+
+      this.addLine(this.outbuf + line);
+      this.outbuf = '';
+
+      // Hack to make everything update mid-step
+      this.props.forceUpdate();
     }
 
     /**
@@ -22818,22 +23065,28 @@ var Console = function (_React$Component) {
   }, {
     key: 'runCommand',
     value: function runCommand(line) {
+      var _this2 = this;
+
       var tokens = line.match(/[^\s"]+|"([^"]*)"/g);
       // Remove the prompt
       tokens.shift();
       var command = tokens[0];
 
       if (command in this.props.commands) {
-        this.props.commands[command](tokens.slice(1));
-        this.addLine(line, Color.HELP);
+        this.addLine(line, Style.NORMAL);
+        var dialog = this.props.commands[command](tokens.slice(1));
+        // Print the command text, if any
+        dialog.split('\n').map(function (line) {
+          return _this2.addLine(line, Style.HELP);
+        });
       } else {
         this.addLine(line);
+        this.addLine('Undefined command: "' + command + '". Try "help"', Style.ERROR);
       }
     }
 
     /**
-     * Super hacky way of making sure that any click in the
-     * console focuses in the input box
+     * Force the input box of the console to focus
      */
 
   }, {
@@ -22841,6 +23094,16 @@ var Console = function (_React$Component) {
     value: function focusInput() {
       // Eek
       this.refs.input.refs.input.focus();
+    }
+
+    /**
+     * Focus on the console on initial mount
+     */
+
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      this.focusInput();
     }
 
     /**
@@ -22870,15 +23133,16 @@ var Console = function (_React$Component) {
           onClick: this.focusInput },
         this.state.lines.map(function (line, idx) {
           return _react2.default.createElement(
-            'div',
-            { className: 'console-line', key: idx, style: { color: line.color } },
+            'pre',
+            { className: 'console-line', key: idx, style: line.style },
             line.text
           );
         }),
         _react2.default.createElement(InputLine, {
           ref: 'input',
+          includePrompt: this.state.interactive,
           submitLine: this.state.interactive ? this.runCommand : this.submitLine,
-          prompt: this.state.prompt,
+          prompt: this.state.interactive ? this.state.prompt : this.outbuf,
           placeholder: this.state.placeholder })
       );
     }
@@ -22895,15 +23159,15 @@ var InputLine = function (_React$Component2) {
   function InputLine(props) {
     _classCallCheck(this, InputLine);
 
-    var _this2 = _possibleConstructorReturn(this, (InputLine.__proto__ || Object.getPrototypeOf(InputLine)).call(this, props));
+    var _this3 = _possibleConstructorReturn(this, (InputLine.__proto__ || Object.getPrototypeOf(InputLine)).call(this, props));
 
-    _this2.state = {
+    _this3.state = {
       value: ''
     };
 
-    _this2.handleChange = _this2.handleChange.bind(_this2);
-    _this2.handleKey = _this2.handleKey.bind(_this2);
-    return _this2;
+    _this3.handleChange = _this3.handleChange.bind(_this3);
+    _this3.handleKey = _this3.handleKey.bind(_this3);
+    return _this3;
   }
 
   /**
@@ -22930,8 +23194,8 @@ var InputLine = function (_React$Component2) {
     value: function handleKey(evt) {
       // Just handle the enter key
       if (evt.key == 'Enter') {
-        this.props.submitLine(this.props.prompt + this.state.value);
         this.setState({ value: '' });
+        this.props.submitLine((this.props.includePrompt ? this.props.prompt : '') + this.state.value);
       }
     }
   }, {
@@ -22972,6 +23236,12 @@ var InputLine = function (_React$Component2) {
 
 /***/ }),
 /* 57 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23504,7 +23774,7 @@ module.exports = { Assembly: Assembly };
 // }
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23518,23 +23788,23 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _FixedInt = __webpack_require__(3);
 
-var _Memory = __webpack_require__(59);
+var _Memory = __webpack_require__(60);
 
-var _Registers = __webpack_require__(60);
+var _Registers = __webpack_require__(61);
 
-var _lib = __webpack_require__(61);
+var _lib = __webpack_require__(62);
 
 var _runtime = __webpack_require__(26);
 
-var _Signals = __webpack_require__(62);
+var _Signals = __webpack_require__(63);
 
 var _Signals2 = _interopRequireDefault(_Signals);
 
-var _IO = __webpack_require__(63);
+var _IO = __webpack_require__(64);
 
 var _IO2 = _interopRequireDefault(_IO);
 
-var _x11 = __webpack_require__(64);
+var _x11 = __webpack_require__(65);
 
 var _x12 = _interopRequireDefault(_x11);
 
@@ -23576,7 +23846,7 @@ var Process = function () {
         this.regs = new _Registers.RegisterSet(arch.registers);
 
         // Initialize stack pointer and instruction pointer
-        this.pc = image.text.start;
+        this.pc = undefined;
         this.stackOrigin = this.mem.segments.stack.hi;
         this.regs.write('rsp', new _FixedInt.FixedInt(arch.WORD_SIZE, this.stackOrigin));
 
@@ -23699,6 +23969,8 @@ var Process = function () {
                 if (operand in this.labels) this.pc = this.labels[operand];else if (operand in this.lib) {
                     // Bridge for "standard library" calls
                     this.lib[operand]();
+                } else {
+                    throw new AsmSyntaxError('Unknown label "' + operand + '"');
                 }
             }
         }
@@ -23714,7 +23986,7 @@ var Process = function () {
         key: 'parseMemoryOperand',
         value: function parseMemoryOperand(operand) {
             // GNARLY regular expression to match indirect memory accesses in all their forms
-            var offset = /((?:0x)?[0-9]+)?\(%([a-z1-9]+)(?:,%([a-z1-9]+))?(?:,((?:0x)?[1248]))?\)/;
+            var offset = /((?:0x)?-?[0-9]+)?\(%([a-z1-9]+)(?:,%([a-z1-9]+))?(?:,((?:0x)?[1248]))?\)/;
             var matches = operand.match(offset);
 
             if (!matches) throw new AsmSyntaxError('Invalid address format: ' + operand);
@@ -23754,7 +24026,7 @@ var Process = function () {
         value: function step() {
             var verbose = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
-            if (this.pc !== undefined && !this.blocked) {
+            if (this.pc && !this.blocked) {
                 var pc = this.pc;
 
                 // Fetch mnemonic and operands from Text section
@@ -23824,7 +24096,7 @@ var Process = function () {
                 interval = setInterval(function () {
                     _this2.step(verbose);
 
-                    if (_this2.pc === undefined || _this2.breakpoints[_this2.pc]) {
+                    if (!_this2.pc || _this2.breakpoints[_this2.pc]) {
                         clearInterval(interval);
                         return;
                     }
@@ -23833,7 +24105,7 @@ var Process = function () {
                 // Continuous execution
                 do {
                     this.step();
-                } while (this.pc !== undefined && !this.breakpoints[this.pc]);
+                } while (this.pc && !this.breakpoints[this.pc] && !this.blocked);
             }
 
             return this.regs.read('rax');
@@ -23901,7 +24173,7 @@ var Process = function () {
 module.exports = { Process: Process };
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24160,7 +24432,7 @@ var TextSegment = exports.TextSegment = function () {
         key: 'next',
         value: function next(addr) {
             addr = +addr;
-            return this.idxToAddr[this.addrToIdx[addr] + 1];
+            return this.idxToAddr[this.addrToIdx[addr] + 1] || null;
         }
 
         /* Refuse writing to text section */
@@ -24304,7 +24576,7 @@ exports.default = Memory;
 module.exports = { Memory: Memory, MemorySegment: MemorySegment, TextSegment: TextSegment };
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24471,7 +24743,7 @@ exports.default = RegisterSet;
 module.exports = { RegisterSet: RegisterSet };
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24503,7 +24775,7 @@ var _FixedInt = __webpack_require__(3);
 // Hack, will fix when the FFI and lib is built out a little more
 var WORD_SIZE = 8;
 
-var EOF = '\0';
+var EOF = '';
 
 var SCAN = {
 	MATCH: 0
@@ -24640,7 +24912,114 @@ var SCAN = {
 			// TODO
 		},
 
-		scanf: function scanf() {},
+		/**
+   *
+   */
+		labs: function labs() {
+			var val = SysV_arg(0);
+
+			if (val.isNegative()) SysV_ret(_FixedInt.ALU.neg(val));else SysV_ret(val);
+		},
+
+		/**
+   * Slightly simplified scanf that assumes buffer will match format
+   */
+		scanf: function scanf() {
+			var fmtString = readString(SysV_arg(0));
+
+			// Parse the format string and determine what to read
+			var sections = fmtString.split(/(%(?:[dics]))/g);
+			var nRead = 0;
+			var idx = 0;
+			var arg = 1;
+
+			var _scanf = function _scanf() {
+				// Block process and setup event handler for input
+				_this.blocked = true;
+				_this.signals.register('SIGIO', _scanf);
+
+				var match = void 0;
+				while (match = sections[idx]) {
+					if (match == '%d') {
+						// Read the next value
+						var val = _readInt(_this.io.stdin);
+
+						if (val == '') return; // empty buffer, wait.
+						if (val == null) break; // invalid input, break
+
+						// Write the read value to the given address
+						var addr = SysV_arg(arg++);
+						_this.mem.write(addr, new _FixedInt.FixedInt(4, parseInt(val)), 4);
+
+						nRead++;
+						idx++;
+					} else if (match == '%ld') {
+						// Read the next value
+						var _val = _readInt(_this.io.stdin);
+
+						if (_val == '') return; // empty buffer, wait.
+						if (_val == null) break; // invalid input, break
+
+						// Write the read value to the given address
+						var _addr = SysV_arg(arg++);
+						console.log('Destination address: ' + _addr);
+						console.log(new _FixedInt.FixedInt(8, parseInt(_val)));
+						_this.mem.write(new _FixedInt.FixedInt(8, parseInt(_val)), _addr, 8);
+
+						nRead++;
+						idx++;
+					} else {
+						// Match each character
+						var cancel = false;
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
+
+						try {
+							for (var _iterator = match[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var ch = _step.value;
+
+								var next = io.stdin.peek();
+								if (next == ch) {
+									// Need a solution in case this doesn't complete
+									io.stdin.read();
+								} else if (next == '') {
+									// Empty buffer, wait.
+									return;
+								} else {
+									// Mismatch, return early
+									cancel = true;
+									break;
+								}
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator.return) {
+									_iterator.return();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
+
+						if (cancel) break;
+						idx++;
+					}
+				}
+
+				// Allow process to resume and unregister input handler
+				_this.blocked = false;
+				_this.signals.unregister('SIGIO');
+				SysV_ret(nRead);
+			};
+
+			_scanf();
+		},
 
 		/**
    *
@@ -24686,12 +25065,12 @@ var SCAN = {
 			_scanf();
 		},
 
-		exit: function exit() {
+		exit: function exit(override) {
 			// flush any output
 			io.stdout.flush();
 
 			// Get the return value
-			var val = SysV_arg(0);
+			var val = override || SysV_arg(0);
 			io.stdout.write('[Process exited with status code ' + +val + ']');
 			io.stdout.flush();
 
@@ -24704,12 +25083,29 @@ var SCAN = {
 	};
 }
 
+function _readInt(stdin) {
+	// Keep reading stuff
+	var str = '';
+
+	// Gobble whitespace
+	while (stdin.peek().match(/\s/)) {
+		stdin.read();
+	}while (stdin.peek().match(/[0-9]/)) {
+		str += stdin.read();
+	}
+
+	// Hack to force console to block
+	if (str == '') stdin.read();
+
+	return str;
+}
+
 function _isspace(ch) {
 	return ' \n\t\b\r'.indexOf(ch) >= 0;
 }
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24777,8 +25173,8 @@ var Signals = function () {
             this.signals[name] = callback;
         }
     }, {
-        key: 'unregsiter',
-        value: function unregsiter(name) {
+        key: 'unregister',
+        value: function unregister(name) {
             this.signals[name] = function () {
                 return null;
             };
@@ -24822,8 +25218,8 @@ var Events = exports.Events = function () {
             this.events[name].push(callback);
         }
     }, {
-        key: 'unregsiter',
-        value: function unregsiter(name, callback) {
+        key: 'unregister',
+        value: function unregister(name, callback) {
             if (!(name in this.events)) return;
 
             for (var i in this.events[name]) {
@@ -24847,7 +25243,7 @@ var Events = exports.Events = function () {
 }();
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24905,7 +25301,7 @@ var Console = function () {
 exports.default = Console;
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25106,7 +25502,7 @@ var chip = function chip() {
 		},
 
 		je: function je(operands, size) {
-			if (!_this.regs.getFlag('ZF')) _this.jump(operands[0]);
+			if (_this.regs.getFlag('ZF')) _this.jump(operands[0]);
 		},
 
 		jne: function jne(operands, size) {
@@ -25114,7 +25510,7 @@ var chip = function chip() {
 		},
 
 		jo: function jo(operands, size) {
-			if (!_this.regs.getFlag('OF')) _this.jump(operands[0]);
+			if (_this.regs.getFlag('OF')) _this.jump(operands[0]);
 		},
 
 		jno: function jno(operands, size) {
@@ -25142,7 +25538,7 @@ var chip = function chip() {
 		},
 
 		jge: function jge(operands, size) {
-			if (_this.regs.getFlag('OF') === _this.regs.getFlag('SF')) _this.jump(operands[0]);
+			if (_this.regs.getFlag('OF') === _this.regs.getFlag('SF') || _this.regs.getFlag('ZF')) _this.jump(operands[0]);
 		},
 
 		jl: function jl(operands, size) {
@@ -25380,12 +25776,6 @@ exports.default = x86;
 module.exports = x86;
 
 /***/ }),
-/* 65 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
 /* 66 */
 /***/ (function(module, exports) {
 
@@ -25393,6 +25783,12 @@ module.exports = x86;
 
 /***/ }),
 /* 67 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 68 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
