@@ -54,9 +54,8 @@ const App = ({examples}) => (
         <h2>Or load an example:</h2>
         <div className="load-buttons">
           {examples.map((name, idx) =>
-            <span>
-              <button key={name}
-                className="example"
+            <span key={name}>
+              <button className="example"
                 onClick={() => fetchAndAssemble(name)}>
                 {name}
               </button>
