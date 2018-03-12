@@ -1262,7 +1262,7 @@ function validateDivision(a, b) {
   if (!(a instanceof FixedInt) || a.size == 1) throw new FixedIntError('First operand must be instance of FixedInt with size > 1');
 
   if (b instanceof FixedInt) {
-    if (2 * b.size !== a.size) throw new FixedIntError('Dividend must be double the size of divisor. a: ' + a.size + ' b: ' + b.size);
+    if (b.size < 8 && 2 * b.size !== a.size) throw new FixedIntError('Dividend must be double the size of divisor. a: ' + a.size + ' b: ' + b.size);else if (b.size == 8 && a.size !== b.size) throw new FixedIntError('8-byte divisor requires 8-byte dividend');
   } else {
     b = new FixedInt(a.size / 2, b);
   }
@@ -24858,7 +24858,7 @@ var SCAN = {
 		printf: function printf() {
 			// TODO expect that rax is zero
 			var outString = '';
-			var argIdx = 1;
+			var idx = 1;
 
 			// TODO: could do this manually ?
 			var addr = SysV_arg(0);
@@ -24868,9 +24868,12 @@ var SCAN = {
 				var ch = fmtString.charAt(i);
 
 				if (ch == '%') {
-					throw new Error('Formatting not yet implmented');
-					var val = SysV_arg(idx);
-					switch (fmtString.charAt(i + 1)) {
+					var val = SysV_arg(idx++);
+					var fmt = void 0;
+					switch (fmt = fmtString.charAt(i + 1)) {
+						case 'l':
+							if (fmtString.charAt(i + 2) != 'd') throw new Error('Invalid format specifier ' + (fmt + fmtSTring.charAt(i + 2)));
+							i++;
 						case 'i':
 						case 'd':
 							outString += val.toString();
@@ -25349,6 +25352,19 @@ var chip = function chip() {
 		},
 
 		/******************************************************************
+   * Conversions
+   *****************************************************************/
+		cltq: function cltq(operands, size) {
+			var eax = _this.regs.read('eax');
+			_this.regs.write('edx', new _FixedInt.FixedInt(4, eax.isNegative ? -1 : 0));
+		},
+
+		cqto: function cqto(operands, size) {
+			var rax = _this.regs.read('rax');
+			_this.regs.write('rdx', new _FixedInt.FixedInt(8, rax.isNegative ? -1 : 0));
+		},
+
+		/******************************************************************
    * Arithmetic
    *****************************************************************/
 
@@ -25386,14 +25402,34 @@ var chip = function chip() {
 		},
 
 		idiv: function idiv(operands, size) {
-			throw new NotImplementedError('division not yet implemented!!!');
-
 			// This is funky for x86 // TODO
 			var src = _this.read(operands[0], size);
-			var dest = _this.read('%eax');
+			var dest = void 0,
+			    quoReg = void 0,
+			    remReg = void 0;
+
+			if (size == 1) {
+				dest = _this.regs.read('ax');
+				quoReg = 'al';
+				remReg = 'ah';
+			} else if (size == 2) {
+				dest = new _FixedInt.FixedInt(4, _FixedInt.ALU.add(_this.regs.read('ax'), _FixedInt.ALU.shl(_this.regs.read('dx'), 16)));
+				quoReg = 'ax';
+				remReg = 'dx';
+			} else if (size == 4) {
+				dest = new _FixedInt.FixedInt(8, +_this.regs.read('eax'), +_this.regs.read('edx'));
+				quoReg = 'eax';
+				remReg = 'edx';
+			} else {
+				dest = _this.regs.read('rax');
+				quoReg = 'rax';
+				remReg = 'rdx';
+			}
+
 			var result = _FixedInt.ALU.div(dest, src);
-			// updateFlags.call(this, result, size);
-			_this.write('%eax', result, size);
+
+			_this.regs.write(quoReg, result, size);
+			_this.regs.write(remReg, _FixedInt.ALU.aux, size);
 		},
 
 		adc: function adc(operands, size) {
