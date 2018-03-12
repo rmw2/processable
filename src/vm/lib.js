@@ -21,7 +21,7 @@ import {FixedInt, ALU} from '../fixed-int/FixedInt.js';
 // Hack, will fix when the FFI and lib is built out a little more
 const WORD_SIZE = 8;
 
-const EOF = '\0';
+const EOF = '';
 
 const SCAN = {
 	MATCH: 0,
@@ -158,8 +158,96 @@ export function Stdlib(io) {
 			// TODO
 		},
 
-		scanf: () => {
+		/**
+		 *
+		 */
+		labs: () => {
+			let val = SysV_arg(0);
 
+			if (val.isNegative())
+				SysV_ret(ALU.neg(val));
+			else
+				SysV_ret(val);
+		},
+
+		/**
+		 * Slightly simplified scanf that assumes buffer will match format
+		 */
+		scanf: () => {
+			let fmtString = readString(SysV_arg(0));
+
+			// Parse the format string and determine what to read
+			let sections = fmtString.split(/(%(?:[dics]))/g);
+			let nRead = 0;
+			let idx = 0;
+			let arg = 1;
+
+			const _scanf = () => {
+				// Block process and setup event handler for input
+				this.blocked = true;
+				this.signals.register('SIGIO', _scanf);
+
+				let match;
+				while (match = sections[idx]) {
+					if (match == '%d') {
+						// Read the next value
+						let val = _readInt(this.io.stdin);
+
+						if (val == '') return;  // empty buffer, wait.
+						if (val == null) break; // invalid input, break
+
+						// Write the read value to the given address
+						let addr = SysV_arg(arg++);
+						this.mem.write(addr, new FixedInt(4, parseInt(val)), 4);
+
+						nRead++;
+						idx++;
+					} else if (match == '%ld') {
+						// Read the next value
+						let val = _readInt(this.io.stdin);
+
+						if (val == '') return;  // empty buffer, wait.
+						if (val == null) break; // invalid input, break
+
+						// Write the read value to the given address
+						let addr = SysV_arg(arg++);
+						console.log(`Destination address: ${addr}`);
+						console.log(new FixedInt(8, parseInt(val)));
+						this.mem.write(new FixedInt(8, parseInt(val)), addr, 8);
+
+						nRead++;
+						idx++;
+					} else {
+						// Match each character
+						let cancel = false;
+						for (let ch of match) {
+							let next = io.stdin.peek();
+							if (next == ch) {
+								// Need a solution in case this doesn't complete
+								io.stdin.read();
+							}
+							else if (next == '') {
+								// Empty buffer, wait.
+								return;
+							} else {
+								// Mismatch, return early
+								cancel = true;
+								break;
+							}
+						}
+
+						if (cancel) break;
+						idx++;
+					}
+				}
+
+				// Allow process to resume and unregister input handler
+				this.blocked = false;
+				this.signals.unregister('SIGIO');
+				SysV_ret(nRead);
+			}
+
+			_scanf();
 		},
 
 		/**
@@ -209,12 +297,12 @@ export function Stdlib(io) {
 			_scanf();
 		},
 
-		exit: () => {
+		exit: (override) => {
 			// flush any output
 			io.stdout.flush();
 
 			// Get the return value
-			let val = SysV_arg(0);
+			let val = override || SysV_arg(0);
 			io.stdout.write(`[Process exited with status code ${+val}]`);
 			io.stdout.flush();
 
@@ -225,6 +313,24 @@ export function Stdlib(io) {
 			SysV_ret();
 		}
 	};
+}
+
+function _readInt(stdin) {
+	// Keep reading stuff
+	let str = '';
+
+	// Gobble whitespace
+	while (stdin.peek().match(/\s/))
+		stdin.read();
+
+	while (stdin.peek().match(/[0-9]/)) {
+		str += stdin.read();
+	}
+
+	// Hack to force console to block
+	if (str == '') stdin.read();
+
+	return str;
 }
 
 function _isspace(ch) {
