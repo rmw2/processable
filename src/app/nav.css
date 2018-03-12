@@ -33,6 +33,38 @@ h1.nav-name, #nav-children, #nav-children > * {
     background-color: #9da;
 }
 
+/** Mobile nav-box */
+@media screen and (max-width: 600px) {
+    #navigation {
+        right: 0;
+        top: 0;
+        padding: 1em 0 1em 0.5em;
+        background-color: inherit;
+    }
+
+    #navigation::before {
+        font-family: 'Josefin Sans', sans-serif;
+        content: "menu";
+    }
+
+    .nav-box {
+        display: block;
+        visibility: hidden;
+        height: 2em;
+        border: none;
+    }
+
+    #navigation:hover {
+        height: 8em;
+        box-shadow: 1px 1px 2px #aaa;
+        border: 1px solid #aaa;
+    }
+
+    #navigation:hover .nav-box {
+        visibility: visible;
+    }
+}
+
 /* Controls */
 #controls {
     padding: 0.5em;

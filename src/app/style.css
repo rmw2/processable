@@ -36,37 +36,6 @@ a.nostyle, a.nostyle:visited, a.nostyle:hover {
 	color: inherit;
 }
 
-/* Console */
-#console {
-	background-color: #000;
-	color: #fff;
-
-	overflow-y: scroll;
-}
-
-.console-input {
-	display: inline-block;
-	width: 80%;
-
-	resize: none;
-	border: none;
-
-	background-color: #000;
-	font-family: Courier;
-	color: #fff;
-	margin: 0;
-}
-
-.console-input:active, .console-input:focus {
-	border: none;
-	outline: none;
-}
-
-.console-line, .console-input {
-	font-size: 12pt;
-	margin: 0;
-	min-height: 1.5em;
-}
 
 /* Register stuff */
 .register {
