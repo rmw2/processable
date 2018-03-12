@@ -104,7 +104,7 @@ export function Stdlib(io) {
 		printf: () => {
 			// TODO expect that rax is zero
 			let outString = '';
-			let argIdx = 1;
+			let idx = 1;
 
 			// TODO: could do this manually ?
 			let addr = SysV_arg(0);
@@ -114,9 +114,13 @@ export function Stdlib(io) {
 				const ch = fmtString.charAt(i);
 
 				if (ch == '%') {
-					throw new Error('Formatting not yet implmented')
-					let val = SysV_arg(idx);
-					switch (fmtString.charAt(i+1)) {
+					let val = SysV_arg(idx++);
+					let fmt;
+					switch (fmt = fmtString.charAt(i+1)) {
+						case 'l':
+							if (fmtString.charAt(i+2) != 'd')
+								throw new Error(`Invalid format specifier ${fmt + fmtSTring.charAt(i+2)}`);
+							i++;
 						case 'i':
 						case 'd':
 							outString += val.toString();
