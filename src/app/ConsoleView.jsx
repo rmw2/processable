@@ -1,9 +1,11 @@
 import React from 'react';
 
-const Color = {
-  NORMAL: '#fff',
-  ERROR:  '#f99',
-  HELP:   '#99f'
+import './console.css';
+
+const Style = {
+  NORMAL: {color: '#fff'},
+  ERROR:  {color: '#f22'},
+  HELP:   {color: '#abf', fontStyle: 'italic'}
 };
 
 export default class Console extends React.Component {
@@ -36,6 +38,9 @@ export default class Console extends React.Component {
     this.props.io.stderr = {
       write: (value) => this.error(value)
     };
+
+    // Attach to the process' signal router
+    this.signals = this.props.signals;
   }
 
   /**
@@ -59,19 +64,25 @@ export default class Console extends React.Component {
     const lines = value.split('\n');
 
     for (const line of lines)
-      this.addLine(line, Color.ERROR);
+      if (line !== '') this.addLine(line, Style.ERROR);
   }
 
   /**
    * Read from the input buffer, n characters at a time, consuming them
    * @param {Number} n -- the number of characters from the input buffer to read
    */
-  read(n) {
-    if (this.inbuf == '')
-      return null;
-
+  read(n=1) {
     let read = this.inbuf.slice(0,n);
-    this.inbuf = this.inbuf.slice(n);
+
+    if (this.inbuf.length >= n) {
+      this.inbuf = this.inbuf.slice(n);
+    } else {
+      this.infbuf = '';
+
+      // Prompt for user input
+      this.setState({interactive: false});
+      this.focusInput();
+    }
 
     return read;
   }
@@ -87,31 +98,38 @@ export default class Console extends React.Component {
    * Force the buffer to flush
    */
   flush() {
-    this.addLine(this.outbuf);
-    this.outbuf = '';
+    if (this.outbuf) {
+      this.addLine(this.outbuf);
+      this.outbuf = '';
+    }
   }
 
   /**
    * Commit a line to the console history, making it uneditable
    */
-  addLine(text, color=Color.NORMAL) {
+  addLine(text, style=Style.NORMAL) {
     this.setState(({lines}) => {
       let newLines = lines.slice();
-      newLines.push({text, color});
+      newLines.push({text, style});
       return {lines: newLines, placeholder: ''};
     });
   }
 
   /**
    * Parse a line of text from the console, add it to the input buffer
-   *
+   * This corresponds to reading a line into the process' stdin
    */
   submitLine(line) {
     this.inbuf += line + '\n';
 
     this.signals.dispatch('SIGIO');
-    // TODO: Parse line and look for commands ??
-    addLine(line);
+    this.setState({interactive: true});
+
+    this.addLine(this.outbuf + line);
+    this.outbuf = '';
+
+    // Hack to make everything update mid-step
+    this.props.forceUpdate();
   }
 
   /**
@@ -124,20 +142,29 @@ export default class Console extends React.Component {
     let command = tokens[0];
 
     if (command in this.props.commands) {
-      this.props.commands[command](tokens.slice(1));
-      this.addLine(line, Color.HELP);
+      this.addLine(line, Style.NORMAL);
+      let dialog = this.props.commands[command](tokens.slice(1));
+      // Print the command text, if any
+      dialog.split('\n').map((line) => this.addLine(line, Style.HELP));
     } else {
       this.addLine(line);
+      this.addLine(`Undefined command: "${command}". Try "help"`, Style.ERROR);
     }
   }
 
   /**
-   * Super hacky way of making sure that any click in the
-   * console focuses in the input box
+   * Force the input box of the console to focus
    */
   focusInput() {
     // Eek
     this.refs.input.refs.input.focus();
+  }
+
+  /**
+   * Focus on the console on initial mount
+   */
+  componentDidMount() {
+    this.focusInput();
   }
 
   /**
@@ -161,14 +188,15 @@ export default class Console extends React.Component {
         className="container"
         onClick={this.focusInput} >
         {this.state.lines.map((line, idx) =>
-          <div className="console-line" key={idx} style={{color: line.color}}>
+          <pre className="console-line" key={idx} style={line.style}>
             {line.text}
-          </div>
+          </pre>
         )}
         <InputLine
           ref="input"
+          includePrompt={this.state.interactive}
           submitLine={this.state.interactive ? this.runCommand : this.submitLine}
-          prompt={this.state.prompt}
+          prompt={this.state.interactive ? this.state.prompt : this.outbuf}
           placeholder={this.state.placeholder} />
       </div>
     );
@@ -181,7 +209,7 @@ class InputLine extends React.Component {
 
     this.state = {
       value: ''
-    }
+    };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleKey = this.handleKey.bind(this);
@@ -204,8 +232,10 @@ class InputLine extends React.Component {
   handleKey(evt) {
     // Just handle the enter key
     if (evt.key == 'Enter') {
-      this.props.submitLine(this.props.prompt + this.state.value);
       this.setState({value: ''});
+      this.props.submitLine(
+        (this.props.includePrompt ? this.props.prompt : '') + this.state.value
+      );
     }
   }
 
