@@ -1,5 +1,5 @@
 import React from 'react';
-import { pad, escapeChar } from './decode.js';
+import { Encodings, ENC_NAMES, pad, escapeChar } from './decode.js';
 import { encStyle } from './util.js';
 
 import {Tabs, Tab, TabList, TabPanel} from 'react-tabs';
@@ -28,7 +28,8 @@ const TabbedStaticContainer = ({labeled, segments}) => {
             mem={rodata.data}
             hi={rodata.hi}
             lo={rodata.lo}
-            labelFor={labeled} />
+            labelFor={labeled}
+            defaultEncoding={Encodings.CHAR} />
         </TabPanel>
         <TabPanel>
           <StaticContainer
@@ -61,11 +62,10 @@ export class StaticContainer extends React.Component {
     let bytes;
     let groups = [];
     let labels = [];
-
     for (let addr = this.props.lo; addr < this.props.hi; addr++) {
       if (addr in this.props.labelFor) {
         // Push label
-        labels.push(this.props.labelFor[addr]);
+        labels.push({addr, label: this.props.labelFor[addr]});
 
         // Push byte group for previous label
         if (bytes !== undefined)
@@ -78,10 +78,7 @@ export class StaticContainer extends React.Component {
         bytes = [];
 
       // Add the byte to the current labeled group
-      bytes.push({
-        addr,
-        value: this.props.mem.read(addr, 1)
-      });
+      bytes.push(this.props.mem.read(addr, 1));
     }
 
     // Add the last group
@@ -94,8 +91,10 @@ export class StaticContainer extends React.Component {
           {groups[0] && groups.map((bytes, idx) =>
             <LabeledByteGroup
               key={idx}
-              bytes={bytes}
-              label={labels[idx]} />
+              bytes={new Uint8Array(bytes)}
+              label={labels[idx].label}
+              addr={labels[idx].addr}
+              encoding={this.props.defaultEncoding}/>
           )}
         </div>
       </div>
@@ -103,53 +102,69 @@ export class StaticContainer extends React.Component {
 	}
 }
 
+/**
+ *
+ */
+const Byte = ({addr, value}) => {
+  console.log(value, value.toString(16));
+  return (
+    <span className="static-byte-value">
+      {pad(value.toString(16), 2)}
+    </span>
+  );
+}
+
 class LabeledByteGroup extends React.Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      encoding: this.props.encoding || Encodings.HEX,
+    };
+
+    this.toggleDecoding = this.toggleDecoding.bind(this);
   }
 
   toggleDecoding() {
-
+    this.setState(({encoding}) => ({
+      encoding: ++encoding % Encodings.length
+    }));
   }
 
   render() {
-    let {label, bytes} = this.props;
+    let {label, bytes, addr} = this.props;
+    let {encoding} = this.state;
 
     // Decoding
     let str = '';
     for (let b of bytes) {
-      str += escapeChar(+b.value);
+      str += escapeChar(+b);
     }
 
     return (
       <div className="static-byte-group">
-        <div className="static-label">{label}:</div>
+        <div className="static-info">
+          <button className="toggle toggle-encoding-static"
+            style={encStyle[encoding]}
+            onClick={this.toggleDecoding}>{ENC_NAMES[encoding]}</button>
+          <div className="static-label">{label}:</div>
+          <div className="static-address">{addr.toString(16)}</div>
+        </div>
         <div className="static-value">
           <div className="static-bytes">
-          {bytes && bytes.map(({addr, value}, idx) =>
-            <Byte key={addr}
-              addr={addr}
-              value={+value} />
+          {Array.from(bytes).map((value, idx) =>
+            <span key={addr + idx} className="static-byte-value">
+              {pad(value.toString(16), 2)}
+            </span>
           )}
           </div>
-          <div className="static-decoded" style={encStyle['char']}>
+          <div className="static-decoded" style={encStyle[encoding]}>
             {str}
           </div>
         </div>
       </div>
     );
   }
-}
-
-/**
- *
- */
-const Byte = ({addr, value}) => {
-  return (
-    <span className="static-byte-value">
-      {pad(value.toString(16), 2)}
-    </span>
-  );
 }
 
 // /**

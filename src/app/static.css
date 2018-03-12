@@ -1,5 +1,5 @@
 .static-byte > span {
-    display: inline-block;
+    display: flex;
 }
 
 .static-byte > .byte-value {
@@ -11,19 +11,36 @@
 }
 
 /* Static stuff */
-.static-value, .static-label {
-    position: absolute;
+.static-label, .static-address, .toggle-encoding-static {
+    display: inline-block;
+    margin-right: 0.25em;
 }
 
 .static-value {
-    right: 0;
-    top: 1.5em;
+    margin-top: 0.25em;
+    position: absolute;
+}
+
+.static-bytes {
+    display: flex;
 }
 
 .static-label {
-    left: 0;
+    font-style: italic;
+}
 
-    color: #999;
+.static-address {
+    padding: 0 0.1em;
+}
+
+.toggle-encoding-static {
+    margin-top: 0.1em;
+}
+
+.static-address {
+    color: #aaa;
+/*  border: 1px solid #aaa;
+    border-radius: 0.25em; */
 }
 
 .static-decoded {
