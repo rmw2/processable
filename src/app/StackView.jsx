@@ -4,7 +4,7 @@
 import React from 'react';
 
 import { encStyle } from './util.js';
-import { Encodings, decode, pad } from './decode.js';
+import { Encodings, ENC_NAMES, decode, pad } from './decode.js';
 
 const BYTE_HEIGHT = 1.2; // em
 
@@ -118,6 +118,7 @@ class DecodeView extends React.Component {
 			<div style={style}
 				className="stack-decode"
 				onClick={this.toggleDecoding} >
+				<span className="stack-decode-encoding">{ENC_NAMES[encoding]}</span>
 				<span className="stack-decode-content"
 					dangerouslySetInnerHTML={{__html: val}} />
 			</div>
