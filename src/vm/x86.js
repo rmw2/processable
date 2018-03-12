@@ -189,7 +189,7 @@ const chip = function () {
 		},
 
 		je : (operands, size) => {
-			if (!this.regs.getFlag('ZF'))
+			if (this.regs.getFlag('ZF'))
 				this.jump(operands[0]);
 		},
 
@@ -199,7 +199,7 @@ const chip = function () {
 		},
 
 		jo : (operands, size) => {
-			if (!this.regs.getFlag('OF'))
+			if (this.regs.getFlag('OF'))
 				this.jump(operands[0]);
 		},
 
@@ -234,7 +234,7 @@ const chip = function () {
 		},
 
 		jge : (operands, size) => {
-			if (this.regs.getFlag('OF') === this.regs.getFlag('SF'))
+			if (this.regs.getFlag('OF') === this.regs.getFlag('SF') || this.regs.getFlag('ZF'))
 				this.jump(operands[0]);
 		},
 
