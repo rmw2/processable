@@ -46,6 +46,8 @@ export const Encodings = {
     length: 5
 };
 
+export const ENC_NAMES = ['hex', 'int', 'uint', 'char', 'bin'];
+
 /**
  * Decode a FixedInt object according to the specified decoding index
  */
