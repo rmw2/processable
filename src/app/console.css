@@ -1,0 +1,53 @@
+/**
+ * <div id="console">
+ *   <div class="console-line"/>
+ *   <div class="console-line"/>
+ *   ...
+ *   <div class="console-line">
+ *      <span class="console-prompt"/>
+ *      <input class="console-input"/>
+ *   </div>
+ * </div>
+ */
+
+/* Console */
+#console {
+    background-color: #000;
+    color: #fff;
+
+    overflow-y: scroll;
+}
+
+.console-line {
+    display: flex;
+    flex-direction: row;
+}
+
+.console-input {
+    display: inline-block;
+    flex-grow: 1;
+    resize: none;
+    border: none;
+
+    background-color: #000;
+    font-family: Courier;
+    color: #fff;
+
+    /* Hack town for aligning the input and prompt */
+    margin: -0.5rem 0 0 calc(0.5rem + 0.5px);
+}
+
+.console-input:active, .console-input:focus {
+    border: none;
+    outline: none;
+}
+
+.console-line, .console-input, .console-prompt {
+    font-size: 12pt;
+    min-height: 1.5em;
+}
+
+.console-input, .console-prompt {
+    display: inline-block;
+}
+
