@@ -34,6 +34,19 @@ const chip = function () {
 		},
 
 		/******************************************************************
+		 * Conversions
+		 *****************************************************************/
+		cltq : (operands, size) => {
+			let eax = this.regs.read('eax');
+			this.regs.write('edx', new FixedInt(4, (eax.isNegative) ? -1 : 0));
+		},
+
+		cqto : (operands, size) => {
+			let rax = this.regs.read('rax');
+			this.regs.write('rdx', new FixedInt(8, (rax.isNegative) ? -1 : 0));
+		},
+
+		/******************************************************************
 		 * Arithmetic
 		 *****************************************************************/
 
@@ -71,14 +84,32 @@ const chip = function () {
 		},
 
 		idiv : (operands, size) => {
-			throw new NotImplementedError('division not yet implemented!!!');
-
 			// This is funky for x86 // TODO
 			let src = this.read(operands[0], size);
-			let dest = this.read('%eax');
+			let dest, quoReg, remReg;
+
+			if (size == 1) {
+				dest = this.regs.read('ax');
+				quoReg = 'al';
+				remReg = 'ah';
+			} else if (size == 2) {
+				dest = new FixedInt(4, ALU.add(this.regs.read('ax'), ALU.shl(this.regs.read('dx'), 16)));
+				quoReg = 'ax';
+				remReg = 'dx';
+			} else if (size == 4) {
+				dest = new FixedInt(8, +this.regs.read('eax'), +this.regs.read('edx'));
+				quoReg = 'eax';
+				remReg = 'edx';
+			} else {
+				dest = this.regs.read('rax');
+				quoReg = 'rax';
+				remReg = 'rdx';
+			}
+
 			let result = ALU.div(dest, src);
-			// updateFlags.call(this, result, size);
-			this.write('%eax', result, size);
+
+			this.regs.write(quoReg, result, size);
+			this.regs.write(remReg, ALU.aux, size);
 		},
 
 		adc : (operands, size) => {
