@@ -31,6 +31,7 @@
 
 .stack-decode {
     cursor: pointer;
+    position: relative;
 
     display: flex;
     flex-direction: row;
@@ -44,7 +45,18 @@
     display: block;
     width: 100%;
     text-align: center;
+}
 
+.stack-decode-encoding {
+    top: 0.25em;
+    right: 0.25em;
+    color: #aaa;
+    position: absolute;
+    font-size: 0.5rem;
+    font-family: sans-serif;
+}
+
+.stack-decode-content, .stack-decode-encoding {
     /* prevent weird text selection */
     -webkit-touch-callout: none; /* iOS Safari */
       -webkit-user-select: none; /* Safari */
