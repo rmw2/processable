@@ -26,7 +26,7 @@ export default class Signals {
         this.signals[name] = callback;
     }
 
-    unregsiter(name) {
+    unregister(name) {
         this.signals[name] = () => null;
     }
 
@@ -52,7 +52,7 @@ export class Events {
         this.events[name].push(callback);
     }
 
-    unregsiter(name, callback) {
+    unregister(name, callback) {
         if (!(name in this.events))
             return;
 
