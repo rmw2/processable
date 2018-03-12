@@ -27,7 +27,7 @@ class Process {
         this.regs = new RegisterSet(arch.registers);
 
         // Initialize stack pointer and instruction pointer
-        this.pc = image.text.start;
+        this.pc = undefined;
         this.stackOrigin = this.mem.segments.stack.hi;
         this.regs.write('rsp', new FixedInt(arch.WORD_SIZE, this.stackOrigin));
 
@@ -140,6 +140,8 @@ class Process {
             else if (operand in this.lib) {
                 // Bridge for "standard library" calls
                 this.lib[operand]();
+            } else {
+                throw new AsmSyntaxError(`Unknown label "${operand}"`);
             }
         }
     }
@@ -152,7 +154,7 @@ class Process {
      */
     parseMemoryOperand(operand) {
         // GNARLY regular expression to match indirect memory accesses in all their forms
-        let offset = /((?:0x)?[0-9]+)?\(%([a-z1-9]+)(?:,%([a-z1-9]+))?(?:,((?:0x)?[1248]))?\)/;
+        let offset = /((?:0x)?-?[0-9]+)?\(%([a-z1-9]+)(?:,%([a-z1-9]+))?(?:,((?:0x)?[1248]))?\)/;
         let matches = operand.match(offset);
 
         if (!matches) throw new AsmSyntaxError(`Invalid address format: ${operand}`);
@@ -184,7 +186,7 @@ class Process {
      * Fetch the next instruction and execute
      */
     step(verbose=false) {
-        if (this.pc !== undefined && !this.blocked) {
+        if (this.pc && !this.blocked) {
             let pc = this.pc;
 
             // Fetch mnemonic and operands from Text section
@@ -238,7 +240,7 @@ class Process {
             interval = setInterval(() => {
                 this.step(verbose);
 
-                if (this.pc === undefined || this.breakpoints[this.pc]) {
+                if (!this.pc || this.breakpoints[this.pc]) {
                     clearInterval(interval);
                     return;
                 }
@@ -247,7 +249,7 @@ class Process {
             // Continuous execution
             do {
                 this.step();
-            } while (this.pc !== undefined && !this.breakpoints[this.pc])
+            } while (this.pc && !this.breakpoints[this.pc] && !this.blocked)
         }
 
         return this.regs.read('rax');
