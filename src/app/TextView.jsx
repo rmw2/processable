@@ -31,7 +31,11 @@ export default class TextContainer extends React.Component {
     }
 
     render() {
-        let pc = this.props.pc !== undefined ? `PC: 0x${this.props.pc.toString(16)}` : '[process terminated]';
+        let pc = (this.props.pc)
+            ? `PC: 0x${this.props.pc.toString(16)}`
+            : (this.props.pc == undefined)
+            ? '[process not started]'
+            : '[process terminated]';
 
         return (
             <div id="text" className="container">
@@ -42,7 +46,7 @@ export default class TextContainer extends React.Component {
                 </div>
             </div>
         );
-        
+
     }
 }
 
@@ -65,12 +69,16 @@ class InstructionView extends React.Component {
     }
 
     renderOperands() {
-
-        return this.props.operands.length ? this.props.operands.map((op, idx) => 
+        return this.props.operands.length ? this.props.operands.map((op, idx) =>
             <span key={idx} className="operand">{op}</span>
-        ).reduce((prev, curr) => 
+        ).reduce((prev, curr) =>
             [prev, ', ', curr]
         ) : null;
+    }
+
+    componentDidUpdate() {
+        if (this.props.isCurrent)
+            this.refs.thisinst.scrollIntoView({block: 'start', inline: 'nearest', behavior: 'smooth'});
     }
 
     render() {
@@ -88,9 +96,9 @@ class InstructionView extends React.Component {
         };
 
         return (
-            <div style={highlightStyle} className="instruction">
+            <div ref="thisinst" style={highlightStyle} className="instruction">
                 <span className="instruction-label">{this.props.label && this.props.label + ':'}</span>
-                <span className="instruction-address" 
+                <span className="instruction-address"
                     onClick={this.toggleBreakpoint}
                     style={addrStyle}>
                     {pad(this.props.address.toString(16), 2)}
