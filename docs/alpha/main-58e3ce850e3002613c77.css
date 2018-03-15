@@ -190,7 +190,6 @@
 .console-line {
     display: flex;
     flex-direction: row;
-    white-space: pre-wrap;
 }
 
 .console-input {
