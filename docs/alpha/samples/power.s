@@ -51,7 +51,7 @@ lIndex:
         .type   main,@function
 
 main:
-        
+
         ## printf("Enter the base:  ")
         movq    $cPrompt1, %rdi
         movl    $0, %eax
@@ -69,7 +69,7 @@ main:
         call    printf
 
         ## scanf("%d", &lExp)
-        movq    $cScanfFormat, %rdi        
+        movq    $cScanfFormat, %rdi
         movq    $lExp, %rsi
         movl    $0, %eax
         call    scanf
@@ -99,12 +99,12 @@ loopend1:
 
         ## printf("%ld to the %ld power is %ld.\n", lBase, lExp, lPower)
         movq    $cResult, %rdi
-        movq    lBase, %rsi        
+        movq    lBase, %rsi
         movq    lExp, %rdx
         movq    lPower, %rcx
         movl    $0, %eax
         call    printf
 
         ## return 0
-        movl    $0, %eax       
+        movl    $0, %eax
         ret
