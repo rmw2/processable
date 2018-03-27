@@ -58,14 +58,35 @@ export function decode(val, encoding) {
         case Encodings.UINT:
             return val.toString(10, false);
         case Encodings.HEX:
-            return pad(val.toString(16), 2*val.size).replace(/(.{8})/g, "$1<wbr>");
+            return pad(val.toString(16), 2*val.size);
         case Encodings.BIN:
-            return pad(val.toString(2), 8*val.size).replace(/(.{8})/g, "$1<wbr>");
+            return pad(val.toString(2), 8*val.size);
         case Encodings.CHAR:
             return (val.size === 8)
-                ? `${toPrintableCharacters(val.hi, 4, '<br/>')}${toPrintableCharacters(val.lo, 4, '<br/>')}`
-                : `${toPrintableCharacters(val.lo, val.size, '<br/>')}`;
+                ? `${toPrintableCharacters(val.hi, 4)}${toPrintableCharacters(val.lo, 4)}`
+                : `${toPrintableCharacters(val.lo, val.size)}`;
     }
+}
+
+export function format(valString, encoding, flip) {
+    switch (encoding) {
+        case Encodings.HEX:
+            return valString.replace(/(.{8})/g, "$1<wbr/>");
+        case Encodings.BIN:
+            return (flip) 
+                ? valString.match(/(.{8})/g).reverse().join('<br/>')
+                : valString.replace(/(.{8})/g, "$1<br/>");
+        case Encodings.CHAR:
+            return (flip)
+                ? valString.match((/(\\?.{1})/g)).reverse().join('<br/>')
+                : valString.replace(/(\\?.{1})/g, "$1<br/>");
+        default:
+            return valString
+    }
+}
+
+export function decodeAndFormat(val, encoding, flip) {
+    return format(decode(val, encoding), encoding, flip);
 }
 
 /**
@@ -92,6 +113,8 @@ export function escapeChar(charCode) {
         return String.fromCharCode(charCode);
 
     switch (charCode) {
+        case 0x00:
+            return '\\0';
         case 0x08:
             return '\\b';
         case 0x09:
@@ -101,7 +124,7 @@ export function escapeChar(charCode) {
         case 0x0d:
             return '\\r';
         default:
-            return `\\${charCode}`;
+            return `.`;
     }
 }
 
@@ -120,7 +143,7 @@ export function decodeFromBuffer(data, offset, size, encoding, littleEndian=true
             let str = '';
             for (let i = 0; i < size; i++) {
                 let code = data.getUint8(offset + i);
-                str += (code > 32) ? String.fromCharCode(code) : ' ';
+                str += escapeChar(code);
             }
             return `'${str}'`;
 
