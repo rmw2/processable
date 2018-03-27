@@ -311,7 +311,7 @@ export function Stdlib(io) {
 			io.stdout.flush();
 
 			// TODO: Set return value
-			this.pc = undefined;
+			this.pc = null;
 
 			// Pop return address
 			SysV_ret();
