@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactTooltip from 'react-tooltip';
 
 import NavBar from './NavBar.jsx';
 import RegisterContainer from './RegisterView.jsx';
@@ -6,41 +7,10 @@ import TextContainer from './TextView.jsx';
 import StackContainer from './StackView.jsx';
 import TabbedStaticContainer from './StaticView.jsx';
 import Console from './ConsoleView.jsx';
+import commands from './Debugger.js';
 
 import './layout.css';
 import './nav.css';
-
-/**
- * Commands that the console should respond to
- * @param {React.Component} view -- the top-level component which will
- * respond to the commands
- *
- * @this should be the process object being monitored by the component
- */
-const commands = function (view) {
-  // Get executable name excluding .s
-  const name = view.props.filename.slice(0,-2);
-
-  return {
-    run: (argv) => {
-      argv.unshift(name);
-      this.exec(argv);
-      view.forceUpdate();
-
-      return `Starting program: ${argv.join(' ')}\n  in _start() @0x${this.pc.toString(16)}`;
-    },
-    step: () => {
-      view.step();
-    },
-    continue: () => {
-      view.run();
-    },
-    restart: () => {
-      view.props.restart();
-      view.forceUpdate();
-    },
-  };
-};
 
 /**
  * @classdesc
@@ -74,8 +44,6 @@ export default class ProcessContainer extends React.Component {
   bindToProcess(p) {
     this.toggleBreakpoint = p.toggleBreakpoint.bind(p);
     this.commands = commands.call(p, this);
-    this.commands.help = () =>
-      `Available commands:\n ${Object.keys(this.commands).join('\n ')}`;
 
     // Do some preprocessing of labels and figure out which VM areas they live in
     // TODO
@@ -197,16 +165,20 @@ const ProcessControls = ({restart, step, run, blocked}) => {
     <div id="controls">
       <div className="button-box">
         {/*<div className="button-caption">restart</div>*/}
-        <button id="restart" className="control-button" onClick={restart}>&#8634;</button>
+        <button id="restart" data-tip='restart' data-delay-show='500'
+          className="control-button" onClick={restart}>&#8634;</button>
       </div>
       <div className="button-box">
         {/*<div className="button-caption">step</div>*/}
-        <button id="step" className="control-button" disabled={blocked} onClick={step}>&#8677;</button>
+        <button id="step" data-tip='step' data-delay-show='500'
+          className="control-button" disabled={blocked} onClick={step}>&#8677;</button>
       </div>
       <div className="button-box">
         {/*<div className="button-caption">continue</div>*/}
-        <button id="continue" className="control-button" disabled={blocked} onClick={run}>&#10142;</button>
+        <button id="continue" data-tip='continue' data-delay-show='500'
+          className="control-button" disabled={blocked} onClick={run}>&#10142;</button>
       </div>
+      <ReactTooltip/>
     </div>
   );
 };
