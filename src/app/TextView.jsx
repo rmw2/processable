@@ -60,6 +60,14 @@ class InstructionView extends React.Component {
         };
     }
 
+    /**
+     * Make sure that breakpoints set by the console update the view
+     */
+    componentWillReceiveProps(nextProps) {
+        let {isBreakpoint} = nextProps;
+        this.setState({isBreakpoint});
+    }
+
     toggleBreakpoint() {
         this.props.toggleBreakpoint(this.props.address);
 
