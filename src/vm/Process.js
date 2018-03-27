@@ -260,7 +260,7 @@ class Process {
      */
     toggleBreakpoint(addressOrLabel) {
         let address;
-        addressOrLabel += '';
+        addressOrLabel += ''; // coerce to string
         if (this.labels[addressOrLabel] !== undefined)
             address = this.labels[addressOrLabel];
         else
@@ -268,8 +268,9 @@ class Process {
 
         // (undefined || false) -> true, true -> false
         this.breakpoints[address] = !this.breakpoints[address];
+        return this.breakpoints[address];
     }
-f
+
     /**
      * Dump current state
      */
