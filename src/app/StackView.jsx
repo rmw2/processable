@@ -8,29 +8,122 @@ import { Encodings, ENC_NAMES, decodeAndFormat as decode, pad } from './decode.j
 
 import './stack.css';
 
+const DEFAULT_ALIGNMENT = 4;
+
+
 /**
- * A component to display view
+ * Find a value in a reverse sorted list
+ * if not found, return the negative of the first index whose
+ * value is larger
+ */
+function find(value, list) {
+	// naive implementation
+	// Todo: replace with binary search
+	for (let i = 0; i < list.length; i++) {
+		if (list[i] === value)
+			return i;
+		if (list[i] < value)
+			return -i;
+	}
+}
+
+/**
+ * A component to display the stack
  */
 export default class StackContainer extends React.Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			alignment: 4, // Alignment in bytes for display purposes
-			breaks: [],
-			growsUp: false
-		};
+			alignment: DEFAULT_ALIGNMENT,
+			breaks: [this.props.origin],
+			growsUp: true
+		}; 
+
+		this.toggleBreak = this.toggleBreak.bind(this);
 	}
 
 	/**
 	 * Update the breaks array to accomodate a potentially larger stack
 	 */
 	componentWillReceiveProps(nextProps) {
+		let breaks = this.state.breaks.slice();
+		let last;
 
+		console.log('updating breaks array');
+
+		// Remove excess 
+		while (nextProps.rsp > (last = breaks[breaks.length - 1])) {
+			let removed = breaks.pop();
+			console.log(`removed ${removed}`);
+		}
+
+		// Add necessary extras
+		while (nextProps.rsp < (last = breaks[breaks.length - 1])) {
+			if (last % 4 === 0) {
+				breaks.push(last - 4);
+			} else if (last % 4 === 2) {
+				breaks.push(last - 2);
+			} else {
+				breaks.push(last - 1);
+			}
+		}
+
+		console.log(`new breaks: ${breaks}`)
+
+		this.setState({breaks});
 	}
 
-	setAlignment(val) {
-		this.setState({alignment: val});
+	/**
+	 * Add or remove a decoding break
+	 * this is a WILD function
+	 */
+	toggleBreak(addr) {
+		let breaks = this.state.breaks.slice();
+		let idx = find(addr, breaks);
+
+		if (idx < 0) {
+			idx = -idx;
+			// Add extra breaks below if necessary
+			switch ((addr - breaks[idx]) % 8) {
+				case 3:
+				case 5:
+					breaks.splice(idx, 0, addr - 1);
+					break;
+				case 6:
+					breaks.splice(idx, 0, addr - 2);
+					break;
+				case 7:
+					breaks.splice(idx, 0, addr - 1, addr - 3);
+			}
+
+			// Add the new break
+			breaks.splice(idx, 0, addr);
+			
+			// Add extra break above if necessary
+			switch ((breaks[idx - 1] - addr) % 8) {
+				case 3:
+				case 5:
+					breaks.splice(idx, 0, addr + 1);
+					break;
+				case 6:
+					breaks.splice(idx, 0, addr + 2);
+					break;
+				case 7:
+					breaks.splice(idx, 0, addr + 3, addr + 1);
+			}
+		} else {
+			// Remove break
+			if ([1,2,4,8].indexOf(breaks[idx - 1] - breaks[idx + 1]) < 0) {
+				// Not allowed to create irregular breaks
+				return false;
+			}
+
+			breaks.splice(idx, 1);
+		}
+
+		this.setState({breaks});
+		return true;
 	}
 
 	render() {
@@ -38,43 +131,41 @@ export default class StackContainer extends React.Component {
 		const {origin, rsp, rbp, mem} = this.props;
 		let items = [];
 
-		for (let addr = origin - 1, idx = 0; addr >= rsp; addr--) {
+		for (let addr = origin - 1, idx = 1; addr >= rsp; addr--) {
 			let pointer = (addr === rsp) 
 				? '%rsp' 
 				: (addr === rbp) 
 				? '%rbp' 
 				: null;
 
-			console.log(addr, pointer, addr % alignment);
 
 			if (alignment && addr % alignment === 0) {
 				items.push({
-					value: this.props.mem.read(addr, alignment),
+					value: mem.read(addr, alignment),
 					size: alignment,
-					addr, pointer, growsUp, idx
+					addr, pointer, growsUp
 				});
-
-				// Keep track of the number of "items" on the stack
-				idx++;
 			} else if (!alignment && addr === breaks[idx]) {
-				let size = (breaks[idx-1] || origin) - breaks[idx];
+				let size = breaks[idx-1] - breaks[idx];
 
 				items.push({
-					value: this.mem.read(addr, size),
-					size, addr, pointer, growsUp, idx
+					value: mem.read(addr, size),
+					toggleBreak: this.toggleBreak,
+					size, addr, pointer, growsUp
 				});
 
-				// Keep track of the number of "items" on the stack
 				idx++;
 			}
 		}
 
 		// Grab the extras
+		// TODO
 
 		return (
 			<div id="stack" className="container">
 				<div className="container-title">stack
 					<button className="toggle" id="toggle-stack-direction"
+						data-tip={`Show stack as growing ${growsUp ? 'down' : 'up'}`}
 						onClick={() => this.setState({growsUp: !growsUp})}
 						dangerouslySetInnerHTML={{__html: growsUp ? '&uarr;' : '&darr;'}}/>
 				</div>
@@ -85,7 +176,7 @@ export default class StackContainer extends React.Component {
 							key={val}
 							className="toggle"
 							style={{backgroundColor: val == this.state.alignment ? '#eee' : '#aaa'}}
-							onClick={() => this.setAlignment(val)}>
+							onClick={() => this.setState({alignment: val})}>
 							{val ? val : '*'}
 						</button>
 					)}
@@ -94,6 +185,7 @@ export default class StackContainer extends React.Component {
 					{items.map((item) => 
 						<StackItem key={item.addr} {...item}/>
 					)}
+					<div className="stack-item" id="stack-spacer"/>
 				</div>
 			</div>
 		);
@@ -125,7 +217,7 @@ class StackItem extends React.Component {
 
 	componentDidMount() {
 		this.refs.item.scrollIntoView({
-			block: 'start', 
+			block: this.props.growsUp ? 'end' : 'start', 
 			inline: 'nearest', 
 			behavior: 'smooth'
 		});
@@ -133,7 +225,7 @@ class StackItem extends React.Component {
 
 	render() {
 		const {encoding} = this.state;
-		const {value, addr, size, pointer, growsUp} = this.props;
+		const {value, addr, size, pointer, growsUp, toggleBreak} = this.props;
 
 		// Values to display
 		const decodedValue = decode(value, encoding, growsUp);
@@ -151,6 +243,7 @@ class StackItem extends React.Component {
 						key={addr + i}
 						value={val}
 						address={addr + i}
+						toggleBreak={toggleBreak}
 						pointer={!i ? pointer : null} 
 						aligned={!i} />
 				)}
@@ -175,16 +268,8 @@ class ByteView extends React.Component {
 		super(props);
 	}
 
-	/**
-	 * Ensure that items newly pushed to the stack are scrolled into view
-	 */
-	componentDidMount() {
-		this.refs.thisbyte.scrollIntoView(false);
-	}
-
 	render() {
-		const {aligned, pointer, value, address} = this.props;
-		console.log(pointer);
+		const {aligned, pointer, value, address, toggleBreak=() => null} = this.props;
 		// Render byte's value in hex, along with pointer and address if applicable
 		return (
 			<div ref="thisbyte" className={`stack-byte ${aligned ? 'aligned' : ''}`}>
@@ -195,7 +280,7 @@ class ByteView extends React.Component {
 				) : (
 					<span className="stack-pointer" />
 				)}
-				<span className="byte-address" onClick={() => null}>
+				<span className="byte-address" onClick={() => toggleBreak(address)}>
 					{address.toString(16)}
 				</span>
 				<span className="byte-value">{pad(value.toString(16), 2)}</span>
