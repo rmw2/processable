@@ -310,7 +310,7 @@ export function Stdlib(io) {
 			if (val) {
 				io.stdout.write(`[Process exited with error code ${+val}]\n`);
 			} else {
-				io.stdout.write('[Process exited normally\n');
+				io.stdout.write('[Process exited normally]\n');
 			}
 
 			// TODO: Set return value
