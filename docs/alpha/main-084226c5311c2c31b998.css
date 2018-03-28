@@ -1,16 +1,80 @@
 /* Stack and static stuff */
 #stack-content {
-    border-top: 1px solid #000;
     position: relative;
+    display: flex;
 }
 
-#stack-bytes-raw, #stack-bytes-decoded {
-    display: inline-block;
-    vertical-align: top;
+/**********************************************************************
+ * Toggles for stack-up vs stack-down
+ *********************************************************************/
+#stack-content.up {
+    border-bottom: 1px solid #000;
+    flex-direction: column-reverse;
 }
 
-#stack-bytes-decoded {
+#stack-content.down {
+    border-top:  1px solid #000;
+    flex-direction: column;
+}
+
+.stack-raw {
+    display: flex;
+}
+
+.up .stack-raw {
+    flex-direction: column;    
+}
+
+.down .stack-pointer, 
+.down .byte-address {
+    transform: translate(0, 0.6em);
+}
+
+.up .stack-pointer,
+.up .byte-address {
+    transform: translate(0, -1em);
+}
+
+.down .stack-raw {
+    flex-direction: column-reverse;
+}
+
+.down .aligned, 
+.down .stack-byte:hover {
+    box-shadow: 0px 1px 0px rgba(0,0,0,0.2);
+}
+
+.up .aligned, 
+.up .stack-byte:hover {
+    box-shadow: 0px -1px 0px rgba(0,0,0,0.2);
+}
+
+
+/* Extra space at the edge of the stack */
+/* .up .stack-item:last-child {
+    margin-top: 4em;
+}
+
+.down .stack-item:last-child {
+    margin-bottom: 4em;
+} */
+/*********************************************************************/
+
+#toggle-stack-direction {
+    margin-left: 0.5em;
+}
+
+#stack-spacer {
+    height: 4em;
+}
+
+.stack-decode {
     width: 35%;
+}
+
+.stack-item {
+    display: flex;
+    flex-shrink: 0;
 }
 
 .stack-pointer {
@@ -24,7 +88,6 @@
 }
 
 .stack-pointer, .byte-address {
-    transform: translate(0, 0.6em);
     background-color: #fff;
     font-size: 0.75em;
 }
@@ -74,8 +137,7 @@
 .byte-value {
     background-color: #aaa;
     border-top: 1px solid #000;
-    padding: 0 0.5em;
-    height: 100%;
+    padding: 0.1em 0.5em;
 }
 
 .byte-address {
@@ -83,8 +145,13 @@
     padding: 0 0.5em;
 }
 
-.current {
+.aligned > .byte-address, .stack-byte:hover .byte-address {
     visibility: visible;
+    cursor: pointer;
+}
+
+.stack-byte:hover .byte-address {
+    color:  #aaa;
 }
 
 .button-group {
@@ -112,6 +179,7 @@
 .static-value {
     margin-top: 0.25em;
     position: absolute;
+    display: flex;
 }
 
 .static-bytes {
@@ -146,6 +214,8 @@
     background-color: #aaa;
     border: 1px solid #000;
     padding: 0 0.1em;
+    text-align: center;
+    flex-grow: 1;
 }
 
 /* Parent container for byte group */
@@ -190,6 +260,7 @@
 .console-line {
     display: flex;
     flex-direction: row;
+    white-space: pre-wrap;
 }
 
 .console-input {
@@ -575,6 +646,8 @@ a.nostyle, a.nostyle:visited, a.nostyle:hover {
 	border-radius: 0.25em;
 	cursor: pointer;
 	padding: 0 0.25em;
+	outline: none;
+	margin: 0 0.1em;
 }
 
 .toggle-register {
@@ -593,10 +666,6 @@ a.nostyle, a.nostyle:visited, a.nostyle:hover {
 /*
 .stack-byte:hover .byte-address,*/
 
-.aligned {
-	box-shadow: 0px 1px 0px rgba(0,0,0,0.2);
-}
-
 .button-group > .desc {
 	position: absolute;
 	width: 100%;
@@ -606,6 +675,13 @@ a.nostyle, a.nostyle:visited, a.nostyle:hover {
 	transform: translateY(-1em);
 }
 
+.tooltip {
+	background-color: #fff !important;
+	opacity: 1 !important;
+	border: 1px solid #000;
+	box-shadow: 1px 1px 2px #aaa;
+	font-family: 'Josefin Sans';
+}
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
