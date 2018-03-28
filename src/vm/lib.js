@@ -307,8 +307,11 @@ export function Stdlib(io) {
 
 			// Get the return value
 			let val = override || SysV_arg(0);
-			io.stdout.write(`[Process exited with status code ${+val}]`);
-			io.stdout.flush();
+			if (val) {
+				io.stdout.write(`[Process exited with error code ${+val}]\n`);
+			} else {
+				io.stdout.write('[Process exited normally\n');
+			}
 
 			// TODO: Set return value
 			this.pc = null;
