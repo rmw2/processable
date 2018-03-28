@@ -145,6 +145,7 @@ class LabeledByteGroup extends React.Component {
       <div className="static-byte-group">
         <div className="static-info">
           <button className="toggle toggle-encoding-static"
+            data-tip="toggle decoding for data at this address"
             style={encStyle[encoding]}
             onClick={this.toggleDecoding}>{ENC_NAMES[encoding]}</button>
           <div className="static-label">{label}:</div>

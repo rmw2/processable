@@ -12,6 +12,11 @@ import commands from './Debugger.js';
 import './layout.css';
 import './nav.css';
 
+const clickOffBehavior = {
+  'data-event':'mouseover',
+  'data-event-off':'click mouseout'
+};
+
 /**
  * @classdesc
  * The main component class for the debugger. Holds an inferior process
@@ -165,20 +170,25 @@ const ProcessControls = ({restart, step, run, blocked}) => {
     <div id="controls">
       <div className="button-box">
         {/*<div className="button-caption">restart</div>*/}
-        <button id="restart" data-tip='restart' data-delay-show='500'
+        <button id="restart" data-tip='restart'
           className="control-button" onClick={restart}>&#8634;</button>
       </div>
       <div className="button-box">
         {/*<div className="button-caption">step</div>*/}
-        <button id="step" data-tip='step' data-delay-show='500'
+        <button id="step" data-tip='step'
           className="control-button" disabled={blocked} onClick={step}>&#8677;</button>
       </div>
       <div className="button-box">
         {/*<div className="button-caption">continue</div>*/}
-        <button id="continue" data-tip='continue' data-delay-show='500'
+        <button id="continue" data-tip='continue'
           className="control-button" disabled={blocked} onClick={run}>&#10142;</button>
       </div>
-      <ReactTooltip/>
+      <ReactTooltip multiline
+        delayShow={500}
+        className="tooltip" 
+        type="light" 
+        effect="solid" 
+        globalEventOff="click"/>
     </div>
   );
 };

@@ -175,6 +175,10 @@ export default class StackContainer extends React.Component {
 						<button
 							key={val}
 							className="toggle"
+							data-tip={val 
+								? `Decode stack in groups of ${val} byte${val > 1 ? 's' : ''}` 
+								: 'Customize grouping of stack bytes<br/>(click on an address to edit)'
+							}
 							style={{backgroundColor: val == this.state.alignment ? '#eee' : '#aaa'}}
 							onClick={() => this.setState({alignment: val})}>
 							{val ? val : '*'}
