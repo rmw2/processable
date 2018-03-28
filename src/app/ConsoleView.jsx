@@ -29,6 +29,7 @@ export default class Console extends React.Component {
     this.focusInput = this.focusInput.bind(this);
     this.write      = this.write.bind(this);
     this.read       = this.read.bind(this);
+    this.error      = this.error.bind(this);
     this.flush      = this.flush.bind(this);
     this.runCommand = this.runCommand.bind(this);
 
@@ -36,11 +37,25 @@ export default class Console extends React.Component {
     this.props.io.stdout = this;
     this.props.io.stdin = this;
     this.props.io.stderr = {
-      write: (value) => this.error(value)
+      write: this.error
     };
 
     // Attach to the process' signal router
     this.signals = this.props.signals;
+  }
+
+  /**
+   * Make sure that a new process gets its stdio taken over
+   */
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.io != this.props.io) {
+      // Take over the process' stdio
+      nextProps.io.stdout = this;
+      nextProps.io.stdin = this;
+      nextProps.io.stderr = {
+        write: this.error
+      };
+    }
   }
 
   /**
