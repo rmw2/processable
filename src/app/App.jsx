@@ -30,12 +30,10 @@ const App = ({examples}) => (
       <section id="welcome">
         <div className="feature-text">
           Welcome to <b>processable</b>, a visual student's debugger for x86-64.
-          This is the <i>unstable, bleeding edge</i> of the application which is
-          still under active development.  Feel free to explore, but note that
-          many things are still broken.  For more info, you can check out the code
-          on <a href="http://github.com/rmw2/processable">github</a>, read my thoughts
-          about the project <a href="http://robwhitaker.xyz/blog/">here</a>,
-          or get in contact with me at rmw2<span className="at"></span>princeton.edu.
+          Please note that this is the alpha release, and there may still be bugs lurking around.
+          If you find any bugs, or have any thoughts to share, give me a shout at 
+          rmw2<span className="at"></span>princeton.edu.  If you're especially excited,
+          you can check out the code on <a href="http://github.com/rmw2/processable">github</a>.
         </div>
       </section>
       <section id="option-upload">
