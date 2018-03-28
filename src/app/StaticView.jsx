@@ -1,8 +1,10 @@
 import React from 'react';
-import { Encodings, ENC_NAMES, pad, escapeChar } from './decode.js';
+
+import { FixedInt } from '../fixed-int/FixedInt.js';
+import { Encodings, ENC_NAMES, pad, escapeChar, decode } from './decode.js';
 import { encStyle } from './util.js';
 
-import {Tabs, Tab, TabList, TabPanel} from 'react-tabs';
+import { Tabs, Tab, TabList, TabPanel } from 'react-tabs';
 
 const PRINTABLE = 33;
 
@@ -106,7 +108,6 @@ export class StaticContainer extends React.Component {
  *
  */
 const Byte = ({addr, value}) => {
-  console.log(value, value.toString(16));
   return (
     <span className="static-byte-value">
       {pad(value.toString(16), 2)}
@@ -127,18 +128,34 @@ class LabeledByteGroup extends React.Component {
 
   toggleDecoding() {
     this.setState(({encoding}) => ({
-      encoding: ++encoding % Encodings.length
+      // Skip binary because there's no room
+      encoding: ++encoding % (Encodings.length - 1)
     }));
   }
 
   render() {
     let {label, bytes, addr} = this.props;
     let {encoding} = this.state;
+    let length = bytes.byteLength;
+    let byteArray = Array.from(bytes);
 
     // Decoding
-    let str = '';
-    for (let b of bytes) {
-      str += escapeChar(+b);
+    let decoded = [];
+    let chunksize = length;
+    if (encoding === Encodings.CHAR) {
+      decoded.push(byteArray.map((c)=> escapeChar(+c)).join(''));
+    } else {
+      // Calculate chunk size
+      switch (length % 8) {
+        case 0: chunksize = 8; break;
+        case 4: chunksize = 4; break;
+        case 2: chunksize = 2; break;
+        default: chunksize = 1;
+      }
+      let view = new DataView(bytes.buffer);
+      for (let i = 0; i < length / chunksize; i++) {
+        decoded.push(decode(new FixedInt(chunksize, view, i*chunksize), encoding));
+      }
     }
 
     return (
@@ -152,16 +169,20 @@ class LabeledByteGroup extends React.Component {
           <div className="static-address">{addr.toString(16)}</div>
         </div>
         <div className="static-value">
-          <div className="static-bytes">
-          {Array.from(bytes).map((value, idx) =>
-            <span key={addr + idx} className="static-byte-value">
-              {pad(value.toString(16), 2)}
-            </span>
-          )}
+        {decoded.map((chunk, i) => (
+          <div className="static-chunk">
+            <div className="static-bytes">
+            {byteArray.slice(chunksize * i, chunksize *(i+1)).map((value, idx) =>
+              <span key={addr + idx} className="static-byte-value">
+                {pad(value.toString(16), 2)}
+              </span>
+            )}
+            </div>
+            <div className="static-decoded" style={encStyle[encoding]}>
+                {chunk}
+            </div>
           </div>
-          <div className="static-decoded" style={encStyle[encoding]}>
-            {str}
-          </div>
+        ))}
         </div>
       </div>
     );

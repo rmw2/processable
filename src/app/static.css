@@ -19,6 +19,7 @@
 .static-value {
     margin-top: 0.25em;
     position: absolute;
+    display: flex;
 }
 
 .static-bytes {
@@ -53,6 +54,8 @@
     background-color: #aaa;
     border: 1px solid #000;
     padding: 0 0.1em;
+    text-align: center;
+    flex-grow: 1;
 }
 
 /* Parent container for byte group */
