@@ -228,8 +228,6 @@ export function Stdlib(io) {
 
 						// Write the read value to the given address
 						let addr = SysV_arg(arg++);
-						console.log(`Destination address: ${addr}`);
-						console.log(new FixedInt(8, parseInt(val)));
 						this.mem.write(new FixedInt(8, parseInt(val)), addr, 8);
 
 						nRead++;

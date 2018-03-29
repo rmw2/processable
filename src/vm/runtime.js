@@ -48,7 +48,7 @@ export function exec(argv) {
     let arglengths = argv.map((arg) => arg.length + 1);
 
     // Total length of argv array
-    let bytes_argv = arglengths.reduce((total, next) => total + next);
+    let bytes_argv = QWORD * Math.ceil(arglengths.reduce((total, next) => total + next) / QWORD);
 
     // One 8-byte pointer per argument, plus a null
     let bytes_pointers = (arglengths.length + 1) * QWORD;
