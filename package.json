@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "axios": "^0.18.0",
     "promise": "8.0.1",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
@@ -11,7 +12,7 @@
   },
   "scripts": {
     "start": "webpack-dev-server",
-    "build": "webpack --config webpack.config.production.js --progress --colors",
+    "build": "webpack --config webpack.production.config.js --progress --colors",
     "watch": "webpack --config webpack.config.js --progress --colors --watch",
     "test": "jest --coverage"
   },

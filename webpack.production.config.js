@@ -34,7 +34,7 @@ module.exports = Object.assign(dev, {
       filename: '[name]-[hash].css'
     }),
     new WebpackCleanupPlugin(),
-    new webpack.optimize.UglifyJSPlugin({     
+    new webpack.optimize.UglifyJsPlugin({     
       compress: {
         warnings: false,
         comparisons: false,
