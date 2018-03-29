@@ -159,7 +159,20 @@ export function Stdlib(io) {
 		},
 
 		getchar: () => {
-			// TODO
+			const _getchar = () => {
+				this.blocked = true;
+				this.signals.register('SIGIO', _getchar);
+
+				let ch = io.stdin.read();
+				console.log(`read: ${ch}`);
+				if (ch === '') return;
+
+				this.blocked = false;
+				this.signals.unregister('SIGIO');
+				SysV_ret(ch.charCodeAt(0));
+			}
+
+			_getchar();
 		},
 
 		/**

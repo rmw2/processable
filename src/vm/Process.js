@@ -11,7 +11,7 @@ import { Stdlib } from './lib.js';
 import { exec } from './runtime.js';
 import Signals from './Signals.js';
 import Console from './IO.js';
-import x86 from './x86.js';
+import x86, { WORD_SIZE } from './x86.js';
 
 class AsmSyntaxError extends Error {
     constructor(message) {
@@ -67,20 +67,39 @@ class Process {
      * The operand is a string defining a register, immediate, or memory
      * address as the information source
      */
-    read(operand, size=4) {
+    read(operand, size=WORD_SIZE) {
         // Immediate Operand
         if (operand.startsWith('$')) {
             let val, label;
             if (isNaN(val = parseInt(label = operand.slice(1)))) {
-                val = this.labels[label];
-                if (val !== undefined) {
-                    return new FixedInt(size, val);
+                if ((val = this.labels[label]) !== undefined) {
+                    // Immediate label value (address)
+                    return new FixedInt(WORD_SIZE, val);
+                } else if (val = /'(\\?.)'/.exec(label)) {
+                    // Ascii character
+                    switch (val[1]) {
+                        case '\\n':
+                            return new FixedInt(size, 0x0a);
+                        case '\\t':
+                            return new FixedInt(size, 0x09);
+                        case '\\r':
+                            return new FixedInt(size, 0x0d);
+                        case '\\b':
+                            return new FixedInt(size, 0x08);
+                        default:
+                            return new FixedInt(size, val[1].charCodeAt(0));
+                    }
                 } else {
                     throw new AsmSyntaxError(`Label ${name} undefined`);
                 }
             }
-
+            // console.log(`Reading ${size}-byte immediate ${val}`);
+            // console.log(new FixedInt(size, val));
             return new FixedInt(size, val);
+        }
+
+        if (this.labels[operand]) {
+            return this.mem.read(this.labels[operand], size);
         }
 
         // Register operand
@@ -101,6 +120,8 @@ class Process {
      * a memory address
      */
     write(operand, value, size) {
+        // console.log(`writing ${value} to label: ${operand} = ${this.labels[operand]}`);
+
         // Immediate Operand
         if (operand.startsWith('$')) {
             throw new AsmSyntaxError(`Cannot write to an immediate operand: ${operand}`);
@@ -115,7 +136,8 @@ class Process {
         // Label operand
         if (this.labels[operand] !== undefined) {
             let address = this.labels[operand];
-            this.mem.write(address, value);
+            this.mem.write(value, address, size);
+            return;
         }
 
         // Memory operand
@@ -201,7 +223,7 @@ class Process {
 
             if (verbose) {
                 // Print stack pointer and operand values after operation
-                console.log('\t-----');
+                // console.log('\t-----');
                 this.print(pc, false, true);
             }
         }
@@ -280,18 +302,18 @@ class Process {
 
         // Output address and instruction to execute
         if (showPC && this.pc !== undefined)
-            console.log(`0x${pc.toString(16)}: ${mnemonic}\t${operands.join(', ')}`);
+            // console.log(`0x${pc.toString(16)}: ${mnemonic}\t${operands.join(', ')}`);
 
         // Output stack pointer and operand values before operation
         if (showStack && operands.indexOf('%rsp') == -1)
-            console.log(`\t%rsp:\t0x${this.regs.read('rsp').val().toString(16)}`);
+            // console.log(`\t%rsp:\t0x${this.regs.read('rsp').val().toString(16)}`);
 
         // Print operands and values
         for (let i in operands) {
             let op = operands[i];
             if (op.startsWith('$')) continue;
             try {
-                console.log(`\t${op}:\t${this.read(op, size)}`);
+                // console.log(`\t${op}:\t${this.read(op, size)}`);
             } catch (e) {
                 // Hack in case we can't actually read this operand
                 if (e.name !== 'AsmSyntaxError')

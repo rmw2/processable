@@ -33,7 +33,7 @@ export default class TextContainer extends React.Component {
     render() {
         let pc = (this.props.pc)
             ? `PC: 0x${this.props.pc.toString(16)}`
-            : (this.props.pc == undefined)
+            : (this.props.pc === undefined)
             ? '[process not started]'
             : '[process terminated]';
 

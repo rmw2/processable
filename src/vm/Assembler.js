@@ -44,6 +44,9 @@ class Assembly {
 		this.rodata = {};
 		this.rodataSz = 0;
 
+		// Keep track of .equ directives
+		this.equ = {};
+
 		// Start assembling if a string was provided
 		if (asm !== undefined)
 			this.assemble(asm);
@@ -105,6 +108,11 @@ class Assembly {
 				continue;
 			}
 
+			// Handle equ directives
+			if (tokens[0] === '.equ') {
+				this.equ[tokens[1]] = tokens[2];
+				continue;
+			}
 
 			// Handle the line in the context of the current section
 			switch (section) {
@@ -113,6 +121,14 @@ class Assembly {
 					// (maybe do something with .loc or .cfi_* in the future)
 					if (tokens[0].startsWith('.'))
 						continue;
+					// Replace .equs
+					// VERY inefficient, this could be much smarter
+					tokens = tokens.map((t) => {
+						for (let equ of Object.keys(this.equ))
+							t = t.replace(equ, this.equ[equ]);
+						return t;
+					});
+
 					// Save instruction
 					this.instructions[this.linenum] = tokens;
 					this.nInstructions++;

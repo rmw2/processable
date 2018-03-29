@@ -1,6 +1,6 @@
 import {FixedInt, ALU} from '../fixed-int/FixedInt.js';
 
-const WORD_SIZE = 8;
+export const WORD_SIZE = 8;
 
 const chip = function () {
 	let mnems = {
@@ -46,6 +46,36 @@ const chip = function () {
 			this.regs.write('rdx', new FixedInt(8, (rax.isNegative) ? -1 : 0));
 		},
 
+		movsb : (operands, size) => {
+			let src = this.read(operands[0], 1);
+			this.write(operands[1], src.toSize(size, true), size);
+		},
+
+		movsw : (operands, size) => {
+			let src = this.read(operands[0], 2);
+			this.write(operands[1], src.toSize(size, true), size);
+		},
+
+		movsl : (operands, size) => {
+			let src = this.read(operands[0], 4);
+			this.write(operands[1], src.toSize(size, true), size);
+		},
+
+		movzb : (operands, size) => {
+			let src = this.read(operands[0], 1);
+			this.write(operands[1], src.toSize(size), size);
+		},
+
+		movzw : (operands, size) => {
+			let src = this.read(operands[0], 2);
+			this.write(operands[1], src.toSize(size), size);
+		},
+
+		movzl : (operands, size) => {
+			let src = this.read(operands[0], 4);
+			this.write(operands[1], src.toSize(size), size);
+		},
+
 		/******************************************************************
 		 * Arithmetic
 		 *****************************************************************/
@@ -54,6 +84,8 @@ const chip = function () {
 			let src = this.read(operands[0], size);
 			let dest = this.read(operands[1], size);
 			let result = ALU.add(src, dest);
+			console.log(src, dest, result);
+
 			// Update flags
 			this.regs.setFlag('CF', ALU.CF);
 			this.regs.setFlag('OF', ALU.OF);
@@ -77,9 +109,18 @@ const chip = function () {
 
 		imul : (operands, size) => {
 			let src = this.read(operands[0], size);
+			// Fill in unspecified second operand
+			operands[1] = operands[1]
+				|| (size === 8 && '%rax')
+				|| (size === 4 && '%eax')
+				|| (size === 2 && '%ax')
+				|| (size === 1 && '%al');
+
 			let dest = this.read(operands[1], size);
 			let result = ALU.mul(dest, src);
+
 			// updateFlags.call(this, result, size);
+			// TODO: write the thing
 			this.write(operands[1], result, size);
 		},
 

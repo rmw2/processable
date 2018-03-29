@@ -12,12 +12,10 @@ import './home.css';
 
 // Names of sample files
 const examples = [
+  'hello.s',
+  'uppercase.s',
   'euclid.s',
   'euclidopt.s',
-  'hello.s',
-  'fibonacci.s',
-  'uppercase.s',
-  'power.s'
 ];
 
 /**

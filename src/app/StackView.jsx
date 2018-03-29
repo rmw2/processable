@@ -50,12 +50,10 @@ export default class StackContainer extends React.Component {
 		let breaks = this.state.breaks.slice();
 		let last;
 
-		console.log('updating breaks array');
 
 		// Remove excess 
 		while (nextProps.rsp > (last = breaks[breaks.length - 1])) {
 			let removed = breaks.pop();
-			console.log(`removed ${removed}`);
 		}
 
 		// Add necessary extras
@@ -68,8 +66,6 @@ export default class StackContainer extends React.Component {
 				breaks.push(last - 1);
 			}
 		}
-
-		console.log(`new breaks: ${breaks}`)
 
 		this.setState({breaks});
 	}
