@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import axios from 'axios';
 import ProcessContainer from './ProcessView.jsx';
 import NavBar from './NavBar.jsx';
 import { Assembly } from '../vm/Assembler.js';
@@ -86,18 +87,11 @@ function loadText(text, filename='') {
  *
  */
 function fetchAndAssemble(name) {
-  let client = new XMLHttpRequest();
-  client.open('GET', `samples/${name}`);
-
-  client.onreadystatechange = () => {
-    // Gotta wait for it to actually read, then unbind the handler
-    if (client.responseText) {
-      loadText(client.responseText, name);
-      client.onreadystatechange = null;
-    }
-  }
-
-  client.send();
+  axios.get(`samples/${name}`).then((response) => {
+    loadText(response.data, name);
+  }).catch((error) => {
+    alert(`File ${name} not found on server`);
+  });
 }
 
 /**
@@ -105,11 +99,9 @@ function fetchAndAssemble(name) {
  *
  */
 function uploadAndAssemble(event) {
-  console.log(`Uploading file`)
   let reader = new FileReader();
   reader.onload = () => loadText(reader.result);
   reader.readAsText(event.target.files[0]);
-  console.log(event.target.value);
 }
 
 // Render the chooser

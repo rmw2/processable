@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "webpack-dev-server",
-    "build": "webpack --config webpack.config.js --progress --colors",
+    "build": "webpack --config webpack.config.production.js --progress --colors",
     "watch": "webpack --config webpack.config.js --progress --colors --watch",
     "test": "jest --coverage"
   },
