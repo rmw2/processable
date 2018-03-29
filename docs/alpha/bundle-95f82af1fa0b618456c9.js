@@ -2491,6 +2491,14 @@ var NavBar = function NavBar(_ref) {
         "div",
         { className: "nav-box",
           onClick: function onClick() {
+            return window.open('https://goo.gl/forms/TzxutG6qZeBoBgmL2', '_blank');
+          } },
+        "feedback"
+      ),
+      _react2.default.createElement(
+        "div",
+        { className: "nav-box",
+          onClick: function onClick() {
             return window.location.href = 'http://github.com/rmw2/processable';
           } },
         "github"
