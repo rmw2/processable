@@ -2776,7 +2776,7 @@ __webpack_require__(87);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Names of sample files
-var examples = ['euclid.s', 'euclidopt.s', 'hello.s', 'fibonacci.s', 'uppercase.s', 'power.s'];
+var examples = ['hello.s', 'uppercase.s', 'euclid.s', 'euclidopt.s'];
 
 /**
  * The main application
@@ -22808,7 +22808,7 @@ var TextContainer = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            var pc = this.props.pc ? 'PC: 0x' + this.props.pc.toString(16) : this.props.pc == undefined ? '[process not started]' : '[process terminated]';
+            var pc = this.props.pc ? 'PC: 0x' + this.props.pc.toString(16) : this.props.pc === undefined ? '[process not started]' : '[process terminated]';
 
             return _react2.default.createElement(
                 'div',
@@ -23024,12 +23024,9 @@ var StackContainer = function (_React$Component) {
 			var breaks = this.state.breaks.slice();
 			var last = void 0;
 
-			console.log('updating breaks array');
-
 			// Remove excess 
 			while (nextProps.rsp > (last = breaks[breaks.length - 1])) {
 				var removed = breaks.pop();
-				console.log('removed ' + removed);
 			}
 
 			// Add necessary extras
@@ -23042,8 +23039,6 @@ var StackContainer = function (_React$Component) {
 					breaks.push(last - 1);
 				}
 			}
-
-			console.log('new breaks: ' + breaks);
 
 			this.setState({ breaks: breaks });
 		}
@@ -25710,6 +25705,9 @@ var Assembly = function () {
 		this.rodata = {};
 		this.rodataSz = 0;
 
+		// Keep track of .equ directives
+		this.equ = {};
+
 		// Start assembling if a string was provided
 		if (asm !== undefined) this.assemble(asm);
 	}
@@ -25738,6 +25736,8 @@ var Assembly = function () {
 	}, {
 		key: 'assemble',
 		value: function assemble(asm) {
+			var _this = this;
+
 			var lines = asm.split('\n');
 			var section = 'text';
 
@@ -25787,12 +25787,49 @@ var Assembly = function () {
 						continue;
 					}
 
+					// Handle equ directives
+					if (tokens[0] === '.equ') {
+						this.equ[tokens[1]] = tokens[2];
+						continue;
+					}
+
 					// Handle the line in the context of the current section
 					switch (section) {
 						case 'text':
 							// Skip directives in text section
 							// (maybe do something with .loc or .cfi_* in the future)
 							if (tokens[0].startsWith('.')) continue;
+							// Replace .equs
+							// VERY inefficient, this could be much smarter
+							tokens = tokens.map(function (t) {
+								var _iteratorNormalCompletion2 = true;
+								var _didIteratorError2 = false;
+								var _iteratorError2 = undefined;
+
+								try {
+									for (var _iterator2 = Object.keys(_this.equ)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+										var equ = _step2.value;
+
+										t = t.replace(equ, _this.equ[equ]);
+									}
+								} catch (err) {
+									_didIteratorError2 = true;
+									_iteratorError2 = err;
+								} finally {
+									try {
+										if (!_iteratorNormalCompletion2 && _iterator2.return) {
+											_iterator2.return();
+										}
+									} finally {
+										if (_didIteratorError2) {
+											throw _iteratorError2;
+										}
+									}
+								}
+
+								return t;
+							});
+
 							// Save instruction
 							this.instructions[this.linenum] = tokens;
 							this.nInstructions++;
@@ -25876,13 +25913,13 @@ var Assembly = function () {
 
 			// Write the runtime to the image
 			this.labels['_start'] = addr;
-			var _iteratorNormalCompletion2 = true;
-			var _didIteratorError2 = false;
-			var _iteratorError2 = undefined;
+			var _iteratorNormalCompletion3 = true;
+			var _didIteratorError3 = false;
+			var _iteratorError3 = undefined;
 
 			try {
-				for (var _iterator2 = runtime[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-					var inst = _step2.value;
+				for (var _iterator3 = runtime[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+					var inst = _step3.value;
 
 					image.text.addresses.push(addr);
 					image.text.contents.push(inst);
@@ -25891,16 +25928,16 @@ var Assembly = function () {
 
 				// Write text to image
 			} catch (err) {
-				_didIteratorError2 = true;
-				_iteratorError2 = err;
+				_didIteratorError3 = true;
+				_iteratorError3 = err;
 			} finally {
 				try {
-					if (!_iteratorNormalCompletion2 && _iterator2.return) {
-						_iterator2.return();
+					if (!_iteratorNormalCompletion3 && _iterator3.return) {
+						_iterator3.return();
 					}
 				} finally {
-					if (_didIteratorError2) {
-						throw _iteratorError2;
+					if (_didIteratorError3) {
+						throw _iteratorError3;
 					}
 				}
 			}
@@ -25951,13 +25988,13 @@ var Assembly = function () {
 				var item = data[linenum];
 				//console.log(`allocating ${item.type}: ${item.value}`);
 				// Write text to an ArrayBuffer
-				var _iteratorNormalCompletion3 = true;
-				var _didIteratorError3 = false;
-				var _iteratorError3 = undefined;
+				var _iteratorNormalCompletion4 = true;
+				var _didIteratorError4 = false;
+				var _iteratorError4 = undefined;
 
 				try {
-					for (var _iterator3 = item.value[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-						var val = _step3.value;
+					for (var _iterator4 = item.value[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+						var val = _step4.value;
 
 						// Convert string to charCode
 						if (typeof val == 'string') {
@@ -25972,16 +26009,16 @@ var Assembly = function () {
 						addr += item.size;
 					}
 				} catch (err) {
-					_didIteratorError3 = true;
-					_iteratorError3 = err;
+					_didIteratorError4 = true;
+					_iteratorError4 = err;
 				} finally {
 					try {
-						if (!_iteratorNormalCompletion3 && _iterator3.return) {
-							_iterator3.return();
+						if (!_iteratorNormalCompletion4 && _iterator4.return) {
+							_iterator4.return();
 						}
 					} finally {
-						if (_didIteratorError3) {
-							throw _iteratorError3;
+						if (_didIteratorError4) {
+							throw _iteratorError4;
 						}
 					}
 				}
@@ -26296,22 +26333,41 @@ var Process = function () {
     _createClass(Process, [{
         key: 'read',
         value: function read(operand) {
-            var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+            var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _x11.WORD_SIZE;
 
             // Immediate Operand
             if (operand.startsWith('$')) {
                 var val = void 0,
                     label = void 0;
                 if (isNaN(val = parseInt(label = operand.slice(1)))) {
-                    val = this.labels[label];
-                    if (val !== undefined) {
-                        return new _FixedInt.FixedInt(size, val);
+                    if ((val = this.labels[label]) !== undefined) {
+                        // Immediate label value (address)
+                        return new _FixedInt.FixedInt(_x11.WORD_SIZE, val);
+                    } else if (val = /'(\\?.)'/.exec(label)) {
+                        // Ascii character
+                        switch (val[1]) {
+                            case '\\n':
+                                return new _FixedInt.FixedInt(size, 0x0a);
+                            case '\\t':
+                                return new _FixedInt.FixedInt(size, 0x09);
+                            case '\\r':
+                                return new _FixedInt.FixedInt(size, 0x0d);
+                            case '\\b':
+                                return new _FixedInt.FixedInt(size, 0x08);
+                            default:
+                                return new _FixedInt.FixedInt(size, val[1].charCodeAt(0));
+                        }
                     } else {
                         throw new AsmSyntaxError('Label ' + name + ' undefined');
                     }
                 }
-
+                // console.log(`Reading ${size}-byte immediate ${val}`);
+                // console.log(new FixedInt(size, val));
                 return new _FixedInt.FixedInt(size, val);
+            }
+
+            if (this.labels[operand]) {
+                return this.mem.read(this.labels[operand], size);
             }
 
             // Register operand
@@ -26335,6 +26391,8 @@ var Process = function () {
     }, {
         key: 'write',
         value: function write(operand, value, size) {
+            // console.log(`writing ${value} to label: ${operand} = ${this.labels[operand]}`);
+
             // Immediate Operand
             if (operand.startsWith('$')) {
                 throw new AsmSyntaxError('Cannot write to an immediate operand: ' + operand);
@@ -26349,7 +26407,8 @@ var Process = function () {
             // Label operand
             if (this.labels[operand] !== undefined) {
                 var _address = this.labels[operand];
-                this.mem.write(_address, value);
+                this.mem.write(value, _address, size);
+                return;
             }
 
             // Memory operand
@@ -26450,7 +26509,7 @@ var Process = function () {
 
                 if (verbose) {
                     // Print stack pointer and operand values after operation
-                    console.log('\t-----');
+                    // console.log('\t-----');
                     this.print(pc, false, true);
                 }
             }
@@ -26556,22 +26615,24 @@ var Process = function () {
             // Output address and instruction to execute
 
 
-            if (showPC && this.pc !== undefined) console.log('0x' + pc.toString(16) + ': ' + mnemonic + '\t' + operands.join(', '));
+            if (showPC && this.pc !== undefined)
+                // console.log(`0x${pc.toString(16)}: ${mnemonic}\t${operands.join(', ')}`);
 
-            // Output stack pointer and operand values before operation
-            if (showStack && operands.indexOf('%rsp') == -1) console.log('\t%rsp:\t0x' + this.regs.read('rsp').val().toString(16));
+                // Output stack pointer and operand values before operation
+                if (showStack && operands.indexOf('%rsp') == -1)
+                    // console.log(`\t%rsp:\t0x${this.regs.read('rsp').val().toString(16)}`);
 
-            // Print operands and values
-            for (var i in operands) {
-                var op = operands[i];
-                if (op.startsWith('$')) continue;
-                try {
-                    console.log('\t' + op + ':\t' + this.read(op, size));
-                } catch (e) {
-                    // Hack in case we can't actually read this operand
-                    if (e.name !== 'AsmSyntaxError') throw e;
-                }
-            }
+                    // Print operands and values
+                    for (var i in operands) {
+                        var op = operands[i];
+                        if (op.startsWith('$')) continue;
+                        try {
+                            // console.log(`\t${op}:\t${this.read(op, size)}`);
+                        } catch (e) {
+                            // Hack in case we can't actually read this operand
+                            if (e.name !== 'AsmSyntaxError') throw e;
+                        }
+                    }
         }
     }]);
 
@@ -27320,7 +27381,20 @@ var SCAN = {
 		},
 
 		getchar: function getchar() {
-			// TODO
+			var _getchar = function _getchar() {
+				_this.blocked = true;
+				_this.signals.register('SIGIO', _getchar);
+
+				var ch = io.stdin.read();
+				console.log('read: ' + ch);
+				if (ch === '') return;
+
+				_this.blocked = false;
+				_this.signals.unregister('SIGIO');
+				SysV_ret(ch.charCodeAt(0));
+			};
+
+			_getchar();
 		},
 
 		/**
@@ -27724,10 +27798,11 @@ exports.default = Console;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+exports.WORD_SIZE = undefined;
 
 var _FixedInt = __webpack_require__(3);
 
-var WORD_SIZE = 8;
+var WORD_SIZE = exports.WORD_SIZE = 8;
 
 var chip = function chip() {
 	var _this = this;
@@ -27775,6 +27850,36 @@ var chip = function chip() {
 			_this.regs.write('rdx', new _FixedInt.FixedInt(8, rax.isNegative ? -1 : 0));
 		},
 
+		movsb: function movsb(operands, size) {
+			var src = _this.read(operands[0], 1);
+			_this.write(operands[1], src.toSize(size, true), size);
+		},
+
+		movsw: function movsw(operands, size) {
+			var src = _this.read(operands[0], 2);
+			_this.write(operands[1], src.toSize(size, true), size);
+		},
+
+		movsl: function movsl(operands, size) {
+			var src = _this.read(operands[0], 4);
+			_this.write(operands[1], src.toSize(size, true), size);
+		},
+
+		movzb: function movzb(operands, size) {
+			var src = _this.read(operands[0], 1);
+			_this.write(operands[1], src.toSize(size), size);
+		},
+
+		movzw: function movzw(operands, size) {
+			var src = _this.read(operands[0], 2);
+			_this.write(operands[1], src.toSize(size), size);
+		},
+
+		movzl: function movzl(operands, size) {
+			var src = _this.read(operands[0], 4);
+			_this.write(operands[1], src.toSize(size), size);
+		},
+
 		/******************************************************************
    * Arithmetic
    *****************************************************************/
@@ -27783,6 +27888,8 @@ var chip = function chip() {
 			var src = _this.read(operands[0], size);
 			var dest = _this.read(operands[1], size);
 			var result = _FixedInt.ALU.add(src, dest);
+			console.log(src, dest, result);
+
 			// Update flags
 			_this.regs.setFlag('CF', _FixedInt.ALU.CF);
 			_this.regs.setFlag('OF', _FixedInt.ALU.OF);
@@ -27806,9 +27913,14 @@ var chip = function chip() {
 
 		imul: function imul(operands, size) {
 			var src = _this.read(operands[0], size);
+			// Fill in unspecified second operand
+			operands[1] = operands[1] || size === 8 && '%rax' || size === 4 && '%eax' || size === 2 && '%ax' || size === 1 && '%al';
+
 			var dest = _this.read(operands[1], size);
 			var result = _FixedInt.ALU.mul(dest, src);
+
 			// updateFlags.call(this, result, size);
+			// TODO: write the thing
 			_this.write(operands[1], result, size);
 		},
 
