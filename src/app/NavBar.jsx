@@ -11,8 +11,8 @@ const NavBar = ({children}) => {
         {children}
       </div>
       <div id="navigation">
-        <div className="nav-box">help</div>
-        <div className="nav-box">about</div>
+        {/*<div className="nav-box">help</div>
+        <div className="nav-box">about</div>*/}
         <div className="nav-box"
           onClick={() => window.location.href = 'http://github.com/rmw2/processable'}>github</div>
       </div>
