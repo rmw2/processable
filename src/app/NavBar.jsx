@@ -14,6 +14,8 @@ const NavBar = ({children}) => {
         {/*<div className="nav-box">help</div>
         <div className="nav-box">about</div>*/}
         <div className="nav-box"
+          onClick={() => window.open('https://goo.gl/forms/TzxutG6qZeBoBgmL2', '_blank')}>feedback</div>
+        <div className="nav-box"
           onClick={() => window.location.href = 'http://github.com/rmw2/processable'}>github</div>
       </div>
     </nav>
