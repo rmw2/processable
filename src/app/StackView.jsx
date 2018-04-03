@@ -216,11 +216,13 @@ class StackItem extends React.Component {
 	}
 
 	componentDidMount() {
-		this.refs.item.scrollIntoView({
-			block: this.props.growsUp ? 'end' : 'start', 
-			inline: 'nearest', 
-			behavior: 'smooth'
-		});
+		if (this.props.pointer === '%rsp') {
+			this.refs.item.scrollIntoView({
+				block: this.props.growsUp ? 'end' : 'start', 
+				inline: 'nearest', 
+				behavior: 'smooth'
+			});
+		}
 	}
 
 	render() {

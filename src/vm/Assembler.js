@@ -89,7 +89,9 @@ class Assembly {
 			// Parse label and identify with linenum (and remove from instruction)
 			if (tokens[0] && tokens[0].endsWith(':')) {
 				// TODO: ignore compiler-generated labels
-				this.labelFor[this.linenum] = tokens.shift().slice(0,-1);
+				// Use a list of labels for each line number, in case there are multiple
+				this.labelFor[this.linenum] = this.labelFor[this.linenum] || [];
+				this.labelFor[this.linenum].push(tokens.shift().slice(0,-1));
 			}
 
 			// Remove empty tokens
@@ -201,7 +203,9 @@ class Assembly {
 		for (const linenum in this.instructions) {
 			// Convert line number to label
 			if (linenum in this.labelFor) {
-				this.labels[this.labelFor[linenum]] = addr;
+				for (let label of this.labelFor[linenum]) {
+					this.labels[label] = addr;
+				}
 			}
 
 			image.text.addresses.push(addr);
@@ -234,8 +238,11 @@ class Assembly {
 
 		for (const linenum in data) {
 			// Convert line number to label
-			if (this.labelFor[linenum] !== undefined)
-				this.labels[this.labelFor[linenum]] = addr;
+			if (this.labelFor[linenum] !== undefined) {
+				for (let label of this.labelFor[linenum]) {
+					this.labels[label] = addr;
+				}
+			}
 
 			let item = data[linenum];
 			//console.log(`allocating ${item.type}: ${item.value}`);

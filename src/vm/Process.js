@@ -34,8 +34,10 @@ class Process {
         // Save the labels and reverse the label mapping
         this.labels = labels;
         this.labeled = {};
-        for (let label in this.labels)
-            this.labeled[this.labels[label]] = label;
+        for (let label in this.labels) {
+            this.labeled[this.labels[label]] = this.labeled[this.labels[label]] || [];
+            this.labeled[this.labels[label]].push(label);
+        }
 
         // Object containing handlers indexed by instruction
         this.chip = arch.chip.call(this);
