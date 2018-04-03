@@ -164,7 +164,6 @@ export function Stdlib(io) {
 				this.signals.register('SIGIO', _getchar);
 
 				let ch = io.stdin.read();
-				console.log(`read: ${ch}`);
 				if (ch === '') return;
 
 				this.blocked = false;
@@ -265,51 +264,10 @@ export function Stdlib(io) {
 			_scanf();
 		},
 
-		/**
-		 *
-		 */
-		scanf_real: () => {
-			throw new Error('not implemented');
-
-			let fmtString = readString(SysV_arg(0));
-
-			// Parse the format string and determine what to read
-			let sections = fmtString.split(/(%(?:[dics]))/g);
-
-			// State of the parser, which segment are we reading
-			let iSection = 0;
-			let iChar = 0;
-			let nRead = 0;
-
-			// Define the actual handler asynchonously
-			const _scanf = () => {
-				let ch;
-				let s = sections[iSection];
-
-				// Block process and setup event handler for input
-				this.blocked = true;
-				this.signals.register('SIGIO', _scanf);
-
-				// Keep reading stuff
-				while ((ch = io.stdin.read()) !== EOF) {
-					// Nothing in the buffer, wait for next interrupt
-					if (ch === null)
-						return;
-
-					// Handle beginning of next section
-					if (iChar == null) {
-
-					}
-				}
-
-				// Allow process to resume and unregister input handler
-				this.blocked = false;
-				this.signals.unregister('SIGIO');
-				SysV_ret(nRead);
-			};
-
-			// Call the asynchronous _scanf
-			_scanf();
+		isspace() {
+			let ch = +SysV_arg(0);
+			let is = [9, 10, 11, 12, 13, 32, 133, 160].indexOf(ch) > 0;
+			SysV_ret(is ? 1 : 0);
 		},
 
 		exit: (override) => {
