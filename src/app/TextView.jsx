@@ -105,7 +105,7 @@ class InstructionView extends React.Component {
 
         return (
             <div ref="thisinst" style={highlightStyle} className="instruction">
-                <span className="instruction-label">{this.props.label && this.props.label + ':'}</span>
+                <span className="instruction-label">{this.props.label && this.props.label.join(': ') + ':'}</span>
                 <span className="instruction-address"
                     onClick={this.toggleBreakpoint}
                     style={addrStyle}>

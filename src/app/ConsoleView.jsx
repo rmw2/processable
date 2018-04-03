@@ -88,17 +88,14 @@ export default class Console extends React.Component {
    */
   read(n=1) {
     let read = this.inbuf.slice(0,n);
-
     if (this.inbuf.length >= n) {
       this.inbuf = this.inbuf.slice(n);
     } else {
-      this.infbuf = '';
-
+      this.inbuf = '';
       // Prompt for user input
       this.setState({interactive: false});
       this.focusInput();
     }
-
     return read;
   }
 
