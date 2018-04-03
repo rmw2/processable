@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTooltip from 'react-tooltip';
 
 import NavBar from './NavBar.jsx';
+import AboutPage from './About.jsx';
 import RegisterContainer from './RegisterView.jsx';
 import TextContainer from './TextView.jsx';
 import StackContainer from './StackView.jsx';
@@ -11,11 +12,6 @@ import commands from './Debugger.js';
 
 import './layout.css';
 import './nav.css';
-
-const clickOffBehavior = {
-  'data-event':'mouseover',
-  'data-event-off':'click mouseout'
-};
 
 /**
  * @classdesc
@@ -28,6 +24,10 @@ const clickOffBehavior = {
 export default class ProcessContainer extends React.Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      about: false
+    }
 
     this.step = this.step.bind(this);
     this.run = this.run.bind(this);
@@ -118,6 +118,7 @@ export default class ProcessContainer extends React.Component {
 
   render() {
     let p = this.props.process;
+    let {about} = this.state;
 
     let controls = {
       step: this.step,
@@ -128,9 +129,8 @@ export default class ProcessContainer extends React.Component {
 
     return (
       <div id="app">
-        <NavBar >
+        <NavBar showAbout={() => this.setState({about: !about})}>
           <ProcessControls {...controls} />
-          {/*<div className="filename">{this.props.filename}</div>*/}
         </NavBar>
         <main className="process">
           <TextContainer
@@ -157,6 +157,7 @@ export default class ProcessContainer extends React.Component {
             rsp={+p.regs.read('rsp')}
             rbp={+p.regs.read('rbp')} />
         </main>
+        {about && <AboutPage close={() => this.setState({about: false})}/>}
       </div>
     );
   }

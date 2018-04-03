@@ -28,6 +28,10 @@ module.exports = {
           presets: ['env', 'react']
         }
       },
+      {
+        test: /\.md$/,
+        use: 'raw-loader'
+      }
     ]
   },
   devServer: {
