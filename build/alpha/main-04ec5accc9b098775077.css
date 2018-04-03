@@ -1,4 +1,58 @@
-/* Stack and static stuff */
+#about {
+	position: absolute;
+	top: 3em;
+	height: calc(100% - 3em);
+	padding: 2em 10%;
+
+	z-index: 9;
+	background-color: rgba(255,255,255,0.98);
+	overflow-y: scroll;
+
+	font-family: 'Raleway', sans-serif;
+}
+
+#close-button {
+	position: fixed;
+	cursor: pointer;
+	font-size: 2em;
+	color: #aaa;
+	background-color: transparent;
+	border: none;
+	top: 3rem;
+	right: 1rem;
+}
+
+#close-button:hover {
+	color: #000;
+}
+
+#about a {
+	color: #000;
+	font-weight: bold;
+}
+
+#about p {
+	margin-bottom: 0.5em;
+}
+
+#about h1, #about h2, #about h3 {
+	font-family: 'Josefin Sans', sans-serif;
+	margin: 1rem 0;
+}
+
+#about code {
+	font-weight: bold;
+	font-size: 1.25em;
+}
+
+#about ul {
+	margin: 0.5em 0;
+	list-style: circle inside;
+}
+#about li {
+	margin-left: 1em;
+	margin-bottom: 0.5em;
+}/* Stack and static stuff */
 #stack-content {
     position: relative;
     display: flex;
@@ -699,7 +753,6 @@ time, mark, audio, video {
     margin: 0;
     padding: 0;
     border: 0;
-    font-size: 100%;
     vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */

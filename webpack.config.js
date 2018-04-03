@@ -8,7 +8,7 @@ const WebpackCleanupPlugin = require('webpack-cleanup-plugin');
 module.exports = {
   entry: './src/app/App.jsx',
   output: {
-    path: path.resolve('docs/alpha'),
+    path: path.resolve('build/alpha'),
     filename: 'bundle-[hash].js'
   },
   module: {
