@@ -81,12 +81,14 @@
 
 .down .stack-pointer, 
 .down .byte-address {
-    transform: translate(0, 0.6em);
+    -webkit-transform: translate(0, 0.6em);
+            transform: translate(0, 0.6em);
 }
 
 .up .stack-pointer,
 .up .byte-address {
-    transform: translate(0, -1em);
+    -webkit-transform: translate(0, -1em);
+            transform: translate(0, -1em);
 }
 
 .down .stack-raw {
@@ -177,8 +179,7 @@
 .stack-decode-content, .stack-decode-encoding {
     /* prevent weird text selection */
     -webkit-touch-callout: none; /* iOS Safari */
-      -webkit-user-select: none; /* Safari */
-       -khtml-user-select: none; /* Konqueror HTML */
+      -webkit-user-select: none; /* Safari */ /* Konqueror HTML */
          -moz-user-select: none; /* Firefox */
           -ms-user-select: none; /* Internet Explorer/Edge */
               user-select: none; /* Non-prefixed version, currently
@@ -292,6 +293,111 @@
     border: 1px solid #aaa;
     border-top: none;
     border-radius: 0 0  0.5em 0.5em;
+}.heap-chunk {
+	background-color: #eee;
+	border-right: 1px solid #000;
+	height: 100%;
+}
+
+#heap-full {
+	margin: 2em 2em;
+	height: 3em;
+	width: calc(100% - 4em);
+
+	display: flex;
+	position: relative;
+}
+
+#heap-detail-window {
+	height: 100%;
+	background-color: transparent;
+	position: absolute;
+	cursor: move;
+
+	border: 2px solid #000;
+	border-left: 4px solid #000;
+	border-right: 4px solid #000;
+}
+
+#heap-detail-start {
+	bottom: -1.5em;
+	left: -3em;
+}
+
+#heap-detail-end {
+	bottom: -1.5em;
+	right: -3em;
+}
+
+.heap-address {
+	position: absolute;
+	font-family: courier;
+	font-size: 0.75em;
+}
+
+#heap-start {
+	left: 0;
+	top: -1em;
+}
+
+#heap-brk {
+	right: 0;
+	top: -1em;
+}
+
+/**
+ *
+ */
+#heap-detail, .heap-raw {
+	font-family: courier;
+
+	display: flex;
+}
+
+#heap-detail {
+	overflow-x: scroll;
+	margin: 0 1em;
+	height: 8em;
+}
+
+.heap-decode {
+	position: relative;
+    display: flex;
+	height: 6em;
+	font-size: 0.9em;
+
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+
+	cursor: pointer;    
+}
+
+.heap-decode-content, .heap-decode-encoding {
+    /* prevent weird text selection */
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */ /* Konqueror HTML */
+         -moz-user-select: none; /* Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                      supported by Chrome and Opera */
+}
+
+.heap-decode-encoding {
+	position: absolute;
+	font-size: 0.5em;
+	top: 0.25em;
+	right: 0.25em;
+}
+
+.heap-byte, .heap-decode {
+	border-right: 1px solid #000;
+}
+
+.heap-byte > .byte-value {
+	padding: 0;
 }/**
  * <div id="console">
  *   <div class="console-line"/>
@@ -372,11 +478,12 @@ main.process {
 
     grid-template-columns: auto;
     grid-template-columns: 1fr 485px 1fr;
-    grid-template-rows: 50% 50%;
+    grid-template-rows: 50% 50% 0%;
 
     grid-template-areas:
         "text console stack"
-        "static registers stack";
+        "static registers stack"
+        "heap heap heap";
 
     z-index:  1;
 }
@@ -427,6 +534,49 @@ main.process {
     grid-column: 2 / 2; */
 }
 
+#heap {
+    grid-area: heap;
+    display: none;
+}
+
+.with-heap #heap {
+    display: flex;
+}
+
+/********************************
+ * Heapy things 
+ ********************************/
+
+#heap-toggle {
+    position: absolute;
+    cursor: pointer;
+    outline: none;
+    bottom: 0;
+    left: 3em;
+
+    font-family: courier;
+    font-weight: bold;
+    font-size: 1em;
+
+    background-color: #fff;
+    border: 1px solid #000;
+    border-bottom: none;
+    border-radius: 0.25em 0.25em 0 0;
+}
+
+.with-heap #heap-toggle {
+    bottom: calc(50% - 1.5em);
+}
+
+main.process.with-heap {
+    grid-template-rows: 25% 25% 50%;
+    -webkit-animation: grid-template-rows 300ms ease;
+            animation: grid-template-rows 300ms ease;
+}
+
+/***
+ * Containery things
+ */
 .container {
     display: flex;
     flex-direction: column;
@@ -558,7 +708,8 @@ h1.nav-name, #nav-children, #nav-children > * {
 
 .button-caption {
     font-size: 0.5em;
-    transform: translateY(-0.5em);
+    -webkit-transform: translateY(-0.5em);
+            transform: translateY(-0.5em);
 }
 
 /* Filename box */
@@ -727,7 +878,8 @@ a.nostyle, a.nostyle:visited, a.nostyle:hover {
 	text-align: center;
 	font-size: 0.5em;
 	font-family: 'Josefin Sans', sans-serif;
-	transform: translateY(-1em);
+	-webkit-transform: translateY(-1em);
+	        transform: translateY(-1em);
 }
 
 .tooltip {
