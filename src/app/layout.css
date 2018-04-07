@@ -24,11 +24,12 @@ main.process {
 
     grid-template-columns: auto;
     grid-template-columns: 1fr 485px 1fr;
-    grid-template-rows: 50% 50%;
+    grid-template-rows: 50% 50% 0%;
 
     grid-template-areas:
         "text console stack"
-        "static registers stack";
+        "static registers stack"
+        "heap heap heap";
 
     z-index:  1;
 }
@@ -79,6 +80,48 @@ main.process {
     grid-column: 2 / 2; */
 }
 
+#heap {
+    grid-area: heap;
+    display: none;
+}
+
+.with-heap #heap {
+    display: flex;
+}
+
+/********************************
+ * Heapy things 
+ ********************************/
+
+#heap-toggle {
+    position: absolute;
+    cursor: pointer;
+    outline: none;
+    bottom: 0;
+    left: 3em;
+
+    font-family: courier;
+    font-weight: bold;
+    font-size: 1em;
+
+    background-color: #fff;
+    border: 1px solid #000;
+    border-bottom: none;
+    border-radius: 0.25em 0.25em 0 0;
+}
+
+.with-heap #heap-toggle {
+    bottom: calc(50% - 1.5em);
+}
+
+main.process.with-heap {
+    grid-template-rows: 25% 25% 50%;
+    animation: grid-template-rows 300ms ease;
+}
+
+/***
+ * Containery things
+ */
 .container {
     display: flex;
     flex-direction: column;

@@ -7,6 +7,7 @@ import RegisterContainer from './RegisterView.jsx';
 import TextContainer from './TextView.jsx';
 import StackContainer from './StackView.jsx';
 import TabbedStaticContainer from './StaticView.jsx';
+import Heap from './Heap.jsx';
 import Console from './ConsoleView.jsx';
 import commands from './Debugger.js';
 
@@ -26,7 +27,8 @@ export default class ProcessContainer extends React.Component {
     super(props);
 
     this.state = {
-      about: false
+      about: false,
+      showHeap: false,
     }
 
     this.step = this.step.bind(this);
@@ -118,7 +120,7 @@ export default class ProcessContainer extends React.Component {
 
   render() {
     let p = this.props.process;
-    let {about} = this.state;
+    let {about, showHeap} = this.state;
 
     let controls = {
       step: this.step,
@@ -132,30 +134,37 @@ export default class ProcessContainer extends React.Component {
         <NavBar showAbout={() => this.setState({about: !about})}>
           <ProcessControls {...controls} />
         </NavBar>
-        <main className="process">
+        <main className={`process ${showHeap ? 'with-heap' : ''}`}>
           <TextContainer
             pc={p.pc}
             text={p.mem.segments.text.data}
             labels={p.labeled}
             breakpoints={p.breakpoints}
             toggleBreakpoint={this.toggleBreakpoint} />
-          <RegisterContainer
-            regs={p.regs}
-            flags={p.regs.flags} />
           <TabbedStaticContainer
             segments={p.mem.segments}
-            labeled={p.labeled} />
+            labeled={p.labeled}/>
           <Console
             ref="console"
             forceUpdate={this.forceUpdate.bind(this)}
             io={p.io}
             signals={p.signals}
             commands={this.commands} />
+          <RegisterContainer
+            regs={p.regs}
+            flags={p.regs.flags} />
           <StackContainer
             mem={p.mem.segments.stack.data}
             origin={p.stackOrigin}
             rsp={+p.regs.read('rsp')}
             rbp={+p.regs.read('rbp')} />
+          <button id="heap-toggle"
+            onClick={() => this.setState({showHeap: !showHeap})}>heap</button>
+          <Heap
+            show={showHeap}
+            heap={p.mem.segments.heap.data}
+            start={p.mem.segments.heap.lo}
+            brk={p.mem.segments.heap.hi} />
         </main>
         {about && <AboutPage close={() => this.setState({about: false})}/>}
       </div>
