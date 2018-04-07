@@ -99,12 +99,16 @@ class HeapDetail extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.detail != this.props.detail)
-      this.items[(nextProps.detail - this.props.start) / CHUNK_SIZE].refs.item.scrollIntoView({
+    if (nextProps.detail != this.props.detail) {
+      let idx = (nextProps.detail - this.props.start) / CHUNK_SIZE;
+      // Clamp index to bounds of items array
+      idx = (idx < 0) ? 0 : (idx >= this.items.length) ? this.items.length - 1 : idx;
+      this.items[idx].refs.item.scrollIntoView({
         block: 'start', 
         inline: 'start', 
         behavior: 'smooth'
       });
+    }
   }
 
   /**
