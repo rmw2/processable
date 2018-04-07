@@ -15,6 +15,11 @@ A subset of the C standard library has been implemented with javascript function
 - `scanf` (%s, %d, %ld, %x)
 - `getchar`
 - `putchar`
+- `brk`
+- `sbrk`
+- `malloc` (very minimal implementation, simply wraps brk)
+- `free` (also minimal, does nothing)
+- `atoi`
 - `abs`
 - `labs`
 - `exit`

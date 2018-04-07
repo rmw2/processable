@@ -74,8 +74,8 @@ export function format(valString, encoding, flip) {
             return valString.replace(/(.{8})/g, "$1<wbr/>");
         case Encodings.BIN:
             return (flip) 
-                ? valString.match(/(.{8})/g).reverse().join('<br/>')
-                : valString.replace(/(.{8})/g, "$1<br/>");
+                ? valString.match(/(.{8})/g).reverse().join('<wbr/>')
+                : valString.replace(/(.{8})/g, "$1<wbr/>");
         case Encodings.CHAR:
             return (flip)
                 ? valString.match((/(\\?.{1})/g)).reverse().join('<br/>')

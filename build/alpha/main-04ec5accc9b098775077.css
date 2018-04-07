@@ -1,0 +1,878 @@
+#about {
+	position: absolute;
+	top: 3em;
+	height: calc(100% - 3em);
+	padding: 2em 10%;
+
+	z-index: 9;
+	background-color: rgba(255,255,255,0.98);
+	overflow-y: scroll;
+
+	font-family: 'Raleway', sans-serif;
+}
+
+#close-button {
+	position: fixed;
+	cursor: pointer;
+	font-size: 2em;
+	color: #aaa;
+	background-color: transparent;
+	border: none;
+	top: 3rem;
+	right: 1rem;
+}
+
+#close-button:hover {
+	color: #000;
+}
+
+#about a {
+	color: #000;
+	font-weight: bold;
+}
+
+#about p {
+	margin-bottom: 0.5em;
+}
+
+#about h1, #about h2, #about h3 {
+	font-family: 'Josefin Sans', sans-serif;
+	margin: 1rem 0;
+}
+
+#about code {
+	font-weight: bold;
+	font-size: 1.25em;
+}
+
+#about ul {
+	margin: 0.5em 0;
+	list-style: circle inside;
+}
+#about li {
+	margin-left: 1em;
+	margin-bottom: 0.5em;
+}/* Stack and static stuff */
+#stack-content {
+    position: relative;
+    display: flex;
+}
+
+/**********************************************************************
+ * Toggles for stack-up vs stack-down
+ *********************************************************************/
+#stack-content.up {
+    border-bottom: 1px solid #000;
+    flex-direction: column-reverse;
+}
+
+#stack-content.down {
+    border-top:  1px solid #000;
+    flex-direction: column;
+}
+
+.stack-raw {
+    display: flex;
+}
+
+.up .stack-raw {
+    flex-direction: column;    
+}
+
+.down .stack-pointer, 
+.down .byte-address {
+    transform: translate(0, 0.6em);
+}
+
+.up .stack-pointer,
+.up .byte-address {
+    transform: translate(0, -1em);
+}
+
+.down .stack-raw {
+    flex-direction: column-reverse;
+}
+
+.down .aligned, 
+.down .stack-byte:hover {
+    box-shadow: 0px 1px 0px rgba(0,0,0,0.2);
+}
+
+.up .aligned, 
+.up .stack-byte:hover {
+    box-shadow: 0px -1px 0px rgba(0,0,0,0.2);
+}
+
+
+/* Extra space at the edge of the stack */
+/* .up .stack-item:last-child {
+    margin-top: 4em;
+}
+
+.down .stack-item:last-child {
+    margin-bottom: 4em;
+} */
+/*********************************************************************/
+
+#toggle-stack-direction {
+    margin-left: 0.5em;
+    background-color: #fff;
+}
+
+#stack-spacer {
+    height: 4em;
+}
+
+.stack-decode {
+    width: 35%;
+}
+
+.stack-item {
+    display: flex;
+    flex-shrink: 0;
+}
+
+.stack-pointer {
+    width: 5em;
+    padding-right: 0.5em;
+    text-align: right;
+
+    font-weight: bold;
+    overflow-x: visible;
+    color: #d00;
+}
+
+.stack-pointer, .byte-address {
+    background-color: #fff;
+    font-size: 0.75em;
+}
+
+.stack-decode {
+    cursor: pointer;
+    position: relative;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.stack-decode-content {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.stack-decode-encoding {
+    top: 0.25em;
+    right: 0.25em;
+    color: #aaa;
+    position: absolute;
+    font-size: 0.5rem;
+    font-family: sans-serif;
+}
+
+.stack-decode-content, .stack-decode-encoding {
+    /* prevent weird text selection */
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                      supported by Chrome and Opera */
+}
+
+.stack-byte > span {
+    display: inline-block;
+}
+
+.byte-value {
+    background-color: #aaa;
+    border-top: 1px solid #000;
+    padding: 0.1em 0.5em;
+}
+
+.byte-address {
+    visibility: hidden;
+    padding: 0 0.5em;
+}
+
+.aligned > .byte-address, .stack-byte:hover .byte-address {
+    visibility: visible;
+    cursor: pointer;
+}
+
+.stack-byte:hover .byte-address {
+    color:  #aaa;
+}
+
+.button-group {
+    position: absolute;
+    right: 10%;
+}
+.static-byte > span {
+    display: flex;
+}
+
+.static-byte > .byte-value {
+    height: 1.2em;
+}
+
+.static-byte:hover .byte-address {
+    visibility: visible;
+}
+
+/* Static stuff */
+.static-label, .static-address, .toggle-encoding-static {
+    display: inline-block;
+    margin-right: 0.25em;
+}
+
+.static-value {
+    margin-top: 0.25em;
+    position: absolute;
+    display: flex;
+}
+
+.static-bytes {
+    display: flex;
+}
+
+.static-label {
+    font-style: italic;
+}
+
+.static-address {
+    padding: 0 0.1em;
+}
+
+.toggle-encoding-static {
+    margin-top: 0.1em;
+}
+
+.static-address {
+    color: #aaa;
+/*  border: 1px solid #aaa;
+    border-radius: 0.25em; */
+}
+
+.static-decoded {
+    text-align: center;
+    border: 1px solid #000;
+    padding: 0.1em 0;
+}
+
+.static-byte-value {
+    background-color: #aaa;
+    border: 1px solid #000;
+    padding: 0 0.1em;
+    text-align: center;
+    flex-grow: 1;
+}
+
+/* Parent container for byte group */
+.static-byte-group {
+    width: 100%;
+    min-height: 5em;
+
+    position: relative;
+}
+
+.tab {
+    height: 2em;
+    padding: 0.5em;
+    cursor: pointer;
+}
+
+.tab-selected {
+    font-weight: bold;
+    border: 1px solid #aaa;
+    border-top: none;
+    border-radius: 0 0  0.5em 0.5em;
+}/**
+ * <div id="console">
+ *   <div class="console-line"/>
+ *   <div class="console-line"/>
+ *   ...
+ *   <div class="console-line">
+ *      <span class="console-prompt"/>
+ *      <input class="console-input"/>
+ *   </div>
+ * </div>
+ */
+
+/* Console */
+#console {
+    background-color: #000;
+    color: #fff;
+
+    overflow-y: scroll;
+}
+
+.console-line {
+    display: flex;
+    flex-direction: row;
+    white-space: pre-wrap;
+}
+
+.console-input {
+    display: inline-block;
+    flex-grow: 1;
+    resize: none;
+    border: none;
+
+    background-color: #000;
+    font-family: Courier;
+    color: #fff;
+
+    /* Hack town for aligning the input and prompt */
+    margin: -0.5rem 0 0 calc(0.5rem + 0.5px);
+}
+
+.console-input:active, .console-input:focus {
+    border: none;
+    outline: none;
+}
+
+.console-line, .console-input, .console-prompt {
+    font-size: 12pt;
+    min-height: 1.5em;
+}
+
+.console-input, .console-prompt {
+    display: inline-block;
+}
+
+/* Nav bar, lives above everything and is fixed */
+nav {
+    position: fixed;
+    width:  100%;
+    top: 0;
+    height: 3em;
+    background-color: #dfd;
+
+    border-bottom: 1px solid #aaa;
+    box-shadow: 1px 1px 1px #aaa;
+    z-index: 10;
+}
+
+@media screen and (max-width: 600px) {
+    height: 4em;
+}
+
+/************************************************/
+
+main.process {
+    display: grid;
+    justify-items: stretch;
+    align-items: stretch;
+
+    grid-template-columns: auto;
+    grid-template-columns: 1fr 485px 1fr;
+    grid-template-rows: 50% 50%;
+
+    grid-template-areas:
+        "text console stack"
+        "static registers stack";
+
+    z-index:  1;
+}
+
+@media screen and (max-width: 600px) {
+    main.process {
+        grid-template-columns: 100%;
+        grid-template-rows: 3em 1fr 1fr 1fr 1fr;
+
+        grid-template-areas:
+            "console"
+            "text"
+            "static"
+            "registers"
+            "stack";
+    }
+}
+
+#registers {
+    grid-area: registers;
+/*     grid-row: 2 / 3;
+    grid-column: 2 / 2; */
+}
+
+#text {
+    grid-area: text;
+/*     grid-row: 1 / 1;
+    grid-column: 1 / 1; */
+}
+
+#stack {
+    grid-area: stack;
+/*     grid-row: 1 / 3;
+    grid-column: 3 / 3; */
+}
+
+#static {
+    grid-area: static;
+/*     grid-row: 2 / 2;
+    grid-column: 1 / 1; */
+
+    padding-top: 0;
+}
+
+#console {
+    grid-area: console;
+/*     grid-row: 1 / 2;
+    grid-column: 2 / 2; */
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    padding: 1em;
+    border: 1px solid #aaa;
+    /*border-radius: 1em;*/
+
+    font-family: courier;
+}
+
+.container-title {
+    font-weight: bold;
+    height: 1em;
+    display: inline-block;
+    padding: 0 0.5em;
+}
+
+.content {
+    overflow-y: scroll;
+
+    height: calc(100% - 1.75em);
+    margin-top: 0.75em;
+}
+
+.react-tabs {
+    overflow-y: scroll;
+    height: 100%;
+}/* General navbar styles */
+h1.nav-name {
+    height: 100%;
+    margin-left: 5%;
+    padding: 0.5em;
+    font-size: 1.5em;
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+h1.nav-name, #nav-children, #nav-children > * {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#navigation {
+    position: absolute;
+    right: 1em;
+    top: 0;
+    height: 100%;
+}
+
+.nav-box {
+    display: inline-block;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+
+    height: 100%;
+    padding: 1em;
+    border-left: 1px solid #aaa;
+}
+
+.nav-box:hover {
+    background-color: #9da;
+}
+
+/** Mobile nav-box */
+@media screen and (max-width: 600px) {
+    #navigation {
+        right: 0;
+        top: 0;
+        padding: 1em 0 1em 0.5em;
+        background-color: inherit;
+    }
+
+    #navigation::before {
+        font-family: 'Josefin Sans', sans-serif;
+        content: "menu";
+    }
+
+    .nav-box {
+        display: block;
+        visibility: hidden;
+        height: 2em;
+        border: none;
+    }
+
+    #navigation:hover {
+        height: 8em;
+        box-shadow: 1px 1px 2px #aaa;
+        border: 1px solid #aaa;
+    }
+
+    #navigation:hover .nav-box {
+        visibility: visible;
+    }
+}
+
+/* Controls */
+#controls {
+    padding: 0.5em;
+    margin: 0 1em;
+}
+
+.control-button {
+    background-color: #fff;
+
+    height: 1.5em;
+    border-radius: 0.25em;
+    border: 1px solid #000;
+    font-size: 16pt;
+
+    cursor: pointer;
+    outline: none;
+}
+
+.control-button:active {
+    background-color: #fa2;
+}
+
+.control-button:disabled, .control-button:disabled:active {
+    cursor: default;
+    background-color: #ddd;
+}
+
+.button-box {
+    display: inline-block;
+    vertical-align: top;
+    margin: 0 0.5em;
+}
+
+.button-caption {
+    font-size: 0.5em;
+    transform: translateY(-0.5em);
+}
+
+/* Filename box */
+div.filename {
+    font-family: 'Josefin Sans', sans-serif;
+    padding: 0.25em;
+    margin: 0.75em;
+    border-radius: 0.25em;
+    /* border: 1px solid #000; */
+
+    background-color: #000;
+    color: #fff;
+}* {
+	box-sizing: border-box;
+}
+
+/* Nav bar, lives above everything and is fixed */
+nav {
+    position: fixed;
+    width:  100%;
+    top: 0;
+    height: 3em;
+    background-color: #dfd;
+
+    border-bottom: 1px solid #aaa;
+    box-shadow: 1px 1px 1px #aaa;
+    z-index: 10;
+}
+
+main {
+    margin-top: 3em;
+    height: calc(100% - 3em);
+}
+
+@media screen and (max-width: 800px) {
+	.container {
+		width: calc(100% - 4em);
+	}
+}
+
+/* Neat hack to hide my email address but display it aight */
+span.at:after {
+	content: '@';
+}
+
+a.nostyle, a.nostyle:visited, a.nostyle:hover {
+	text-decoration: none;
+	color: inherit;
+}
+
+
+/* Register stuff */
+.register {
+	float: left;
+	width: calc(100% - 2em);
+	padding: 0.1em 0.5em;
+	margin: 0.1em 0.5em;
+
+	background-color: #eee;
+	border-radius: 0.25em;
+	position: relative;
+	min-height: 1em;
+
+	clear: both;
+}
+
+.register-value {
+	float: right;
+	margin-right: 3em;
+	text-align: right;
+	word-wrap: break-word;
+}
+
+#register-flags {
+	position: absolute;
+	top: 1em;
+	right: 2em;
+}
+
+.register-flag {
+	padding: 0.25em;
+	margin: 0 0.25em;
+
+	border: 1px solid #000;
+	border-radius: 0.25em;
+}
+
+/* Instruction stuff */
+.pc {
+	position: absolute;
+	right: 1em;
+	top: 1em;
+}
+
+.instruction {
+	padding: 0.1em 0;
+	border-radius: 0.25em;
+	font-size: 10pt;
+}
+
+.instruction-label,
+.instruction-operand,
+.instruction-mnemonic,
+.instruction-address {
+	display: inline-block;
+}
+
+.instruction-label {
+	font-style: italic;
+	font-size: 0.8em;
+	text-align: right;
+	padding-right: 0.5em;
+	width: 15%;
+}
+
+.instruction-address {
+	color: #999;
+	margin: 0 0.5em;
+	padding: 0 0.25em;
+	cursor: pointer;
+	border: 1px solid #fff;
+    border-radius: 0.25em;
+}
+
+.instruction-mnemonic {
+	width: 20%;
+}
+
+.instruction-operand {
+	width: 60%;
+}
+
+.current {
+	background: #ddd;
+	font-weight: bold;
+}
+
+.toggle {
+	border: 1px solid #000;
+	border-radius: 0.25em;
+	cursor: pointer;
+	padding: 0 0.25em;
+	outline: none;
+	margin: 0 0.1em;
+}
+
+.toggle-register {
+	font-weight: bold;
+	color: #fff;
+	position: absolute;
+	top: 0;
+}
+
+.toggle-encoding {
+	right: 1em;
+	position: absolute;
+	top: 0;
+}
+
+/*
+.stack-byte:hover .byte-address,*/
+
+.button-group > .desc {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	font-size: 0.5em;
+	font-family: 'Josefin Sans', sans-serif;
+	transform: translateY(-1em);
+}
+
+.tooltip {
+	background-color: #fff !important;
+	opacity: 1 !important;
+	border: 1px solid #000;
+	box-shadow: 1px 1px 2px #aaa;
+	font-family: 'Josefin Sans';
+}
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1;
+}
+ol, ul {
+    list-style: none;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}/* LAYOUT */
+main.home {
+    display: grid;
+    grid-template-rows: 20% 1fr;
+    grid-template-columns: 1fr 1fr;
+    grid-row-gap: 2em;
+
+    padding: 2em;
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+section#welcome {
+    grid-column: 1 / 3;
+    grid-row: 1 / 2;
+}
+
+section#option-upload {
+    text-align:  center;
+    grid-column:  1 / 2;
+    grid-row: 2 / 3;
+}
+
+section#option-example {
+    text-align: center;
+    grid-column:  2 / 3;
+    grid-row: 2 / 3;
+}
+
+div.load-buttons {
+    display: flex;
+    margin:  1em;
+    justify-content: center;
+}
+
+div.feature-text {
+    width: 60%;
+    margin: auto;
+    padding: 1em;
+    border: 1px solid #aaa;
+    border-radius: 0.25em;
+    box-shadow: 1px 1px 1px #aaa;
+}
+
+input.file {
+    /* hide this element */
+    height: 1px;
+    width: 1px;
+    z-index: -1;
+    opacity: 0;
+    overflow: hidden;
+}
+
+label.file, button.example {
+    /* show this element instead */
+    border-radius: 0.5em;
+    background-color: #EEE;
+    border: 1px solid #000;
+
+    padding: 0.5em;
+    margin: 0 0.5em;
+
+    font-size: 1em;
+    text-align: center;
+    cursor: pointer;
+}
+
+.file:active, button.example:active {
+    background-color: #999;
+}
+
+
+/* Modal window on load */
+.modal {
+    position: fixed;
+
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    z-index: 100;
+    padding: 10% 25%;
+
+    font-family: courier;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    padding: 2em;
+    background-color: #fff;
+    border-radius: 0.25em;
+    box-shadow: 1px 1px 2px #eee;
+    height: 20em;
+}
+
+.modal-content > div {
+    text-align: center;
+    margin: 2em 0;
+}

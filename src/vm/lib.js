@@ -23,10 +23,6 @@ const WORD_SIZE = 8;
 
 const EOF = '';
 
-const SCAN = {
-	MATCH: 0,
-}
-
 /**
  * The library of C functions
  *
@@ -175,15 +171,69 @@ export function Stdlib(io) {
 		},
 
 		/**
-		 *
+		 * Long absolute value
 		 */
 		labs: () => {
 			let val = SysV_arg(0);
 
-			if (val.isNegative())
+			if (val.isNegative()) {
 				SysV_ret(ALU.neg(val));
-			else
+			} else {
 				SysV_ret(val);
+			}
+		},
+
+		/**
+		 * Set the program break
+		 */
+		brk: () => {
+			let addr = +SysV_arg(0);
+			let brk = this.mem.brk(addr);
+
+			SysV_ret(brk);
+		},
+
+		/**
+		 * Increase the program break
+		 */
+		sbrk: () => {
+			let incr = +SysV_arg(0);
+			let oldbrk = this.mem.sbrk(incr);
+
+			SysV_ret(oldbrk);
+		},
+
+		/**
+		 * Minimal malloc implementation, call sbrk and return the new chunk
+		 */
+		malloc: () => {
+			let size = +SysV_arg(0);
+
+			let ptr = this.mem.sbrk(size);
+			SysV_ret(ptr);
+		},
+
+		/**
+		 * Minimal free implementation: do nothing
+		 */
+		free: () => {
+			SysV_ret();
+		},
+
+		realloc: () => {
+			// TODO
+		},
+
+		/**************************************************************
+		 * String parsing and manipulation functions
+		 *************************************************************/
+		atoi: () => {
+			let str = readString(SysV_arg(0));
+			SysV_ret(parseInt(str));
+		},
+
+		strtol: () => {
+			// TODO
 		},
 
 		/**

@@ -138,7 +138,7 @@ class Assembly {
 				case 'data':
 				case 'rodata':
 				case 'bss':
-					let item = alloc(tokens);
+					let item = this.alloc(tokens);
 					if (item !== undefined) {
 						this[section][this.linenum] = item;
 						this[`${section}Sz`] += item.size * item.value.length;
@@ -152,6 +152,99 @@ class Assembly {
 			this.linenum += 1;
 		}
 		return this;
+	}
+
+	/**
+	 * Parse an assembly static memory allocation
+	 * @param {String[]} tokens -- an Array of string tokens parsed from a line of assembly
+	 * @returns {Object} a description of the allocated memory
+	 */
+	alloc(tokens) {
+		let str;
+		switch (tokens[0]) {
+			case ".ascii":
+				// remove quotes
+				str = unescapeWhitespace(tokens[1].slice(1, -1));
+
+				return {
+					type:  '.ascii',
+					size:  1,
+					value: str
+				};
+			case ".string":
+			case ".asciz":
+				str = unescapeWhitespace(tokens[1].slice(1, -1));
+
+				return {
+					type:  '.asciz',
+					size:  1,
+					value: str + '\0'
+				};
+			case ".byte":
+				return {
+					type:  '.byte',
+					size:  1,
+					value: tokens.slice(1).map(val => parseInt(val))
+				};
+			case ".comm":
+				// This one is weird, it affects the labels as well
+				this.labelFor[this.linenum] = this.labelFor[this.linenum] || [];
+				this.labelFor[this.linenum].push(tokens[1]);
+				let size = parseInt(tokens[2]);
+				return {
+					type: '.comm',
+					size: 1,
+					value: (new Array(size)).map(_ => 0)
+				};
+			case ".double":
+				return {
+					type:  '.double',
+					size:  8,
+					value: tokens.slice(1).map(val => parseFloat(val))
+				};
+			case ".int":
+			case ".long":
+				return {
+					type:  '.int',
+					size:  4,
+					value: tokens.slice(1).map(val => parseInt(val))
+				};
+			case ".octa":
+				return {
+					type:  '.octa',
+					size:  16,
+					value: tokens.slice(1).map(val => parseInt(val))
+				};
+			case ".quad":
+				return {
+					type:  '.quad',
+					size:  8,
+					value: tokens.slice(1).map(val => parseInt(val))
+				};
+			case ".single":
+				return {
+					type:  '.single',
+					size:  4,
+					value: tokens.slice(1).map(val => parseFloat(val))
+				};
+			case ".short":
+			case ".word":
+				return {
+					type:  '.word',
+					size:  2,
+					value: tokens.slice(1).map(val => parseInt(val))
+				};
+			case ".skip":
+			case ".zero":
+				let val = tokens[2] ? parseInt(tokens[2]) : 0;
+				return {
+					type:  '.skip',
+					size:  1,
+					value: (new Array(parseInt(tokens[1]))).map(_ => val)
+				};
+		}
+
+		return undefined;
 	}
 
 	/**
@@ -264,89 +357,6 @@ class Assembly {
 
 		return addr;
 	}
-}
-
-/**
- * Parse an assembly static memory allocation
- * @param {String[]} tokens -- an Array of string tokens parsed from a line of assembly
- * @returns {Object} a description of the allocated memory
- */
-function alloc(tokens) {
-	let str;
-	switch (tokens[0]) {
-		case ".ascii":
-			// remove quotes
-			str = unescapeWhitespace(tokens[1].slice(1, -1));
-
-			return {
-				type:  '.ascii',
-				size:  1,
-				value: str
-			};
-		case ".string":
-		case ".asciz":
-			str = unescapeWhitespace(tokens[1].slice(1, -1));
-
-			return {
-				type:  '.asciz',
-				size:  1,
-				value: str + '\0'
-			};
-		case ".byte":
-			return {
-				type:  '.byte',
-				size:  1,
-				value: tokens.slice(1).map(val => parseInt(val))
-			};
-		case ".double":
-			return {
-				type:  '.double',
-				size:  8,
-				value: tokens.slice(1).map(val => parseFloat(val))
-			};
-		case ".int":
-		case ".long":
-			return {
-				type:  '.int',
-				size:  4,
-				value: tokens.slice(1).map(val => parseInt(val))
-			};
-		case ".octa":
-			return {
-				type:  '.octa',
-				size:  16,
-				value: tokens.slice(1).map(val => parseInt(val))
-			};
-		case ".quad":
-			return {
-				type:  '.quad',
-				size:  8,
-				value: tokens.slice(1).map(val => parseInt(val))
-			};
-		case ".single":
-			return {
-				type:  '.single',
-				size:  4,
-				value: tokens.slice(1).map(val => parseFloat(val))
-			};
-		case ".short":
-		case ".word":
-			return {
-				type:  '.word',
-				size:  2,
-				value: tokens.slice(1).map(val => parseInt(val))
-			};
-		case ".skip":
-		case ".zero":
-			let val = tokens[2] ? parseInt(tokens[2]) : 0;
-			return {
-				type:  '.skip',
-				size:  1,
-				value: (new Array(parseInt(tokens[1]))).map(_ => val)
-			};
-	}
-
-	return undefined;
 }
 
 function unescapeWhitespace(str) {

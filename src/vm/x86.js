@@ -331,12 +331,12 @@ const chip = function () {
 		},
 
 		jcxz : (operands, size) => {
-			if (this.regs.read('cx') === 0)
+			if (+this.regs.read('cx') === 0)
 				this.jump(operands[0]);
 		},
 
 		jecxz : (operands, size) => {
-			if (this.regs.read('ecx') === 0)
+			if (+this.regs.read('ecx') === 0)
 				this.jump(operands[0]);
 		},
 
