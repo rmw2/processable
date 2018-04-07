@@ -29,6 +29,17 @@ export class InvalidAccess extends Error {
 }
 
 /**
+ * Check if the address is within limit of the current lo
+ *
+ * @param {Number} addr -- the out of bounds address beign accessed
+ * @returns {boolean} whether or not the memory segment can resize to accomodate addr
+ * @this is a Memory segment
+ */
+function resizeDown(addr, limit=0x80) {
+    return addr >= this.lo - limit;
+}
+
+/**
  * @classdesc
  * An object to represent byte-addressable memory
  * Implemented by creating a dataview on a
@@ -38,7 +49,7 @@ export class MemorySegment {
 	 * @constructor
 	 * @returns {MemorySegment} a new MemorySegment object
 	 */
-	constructor(hiAddr, sizeOrData = 1024, name='') { //, resizable = false) {
+	constructor(hiAddr, sizeOrData = 1024, name='', canResize = () => false) {
 		if (sizeOrData instanceof ArrayBuffer) {
 			// Instantiate memory from preexisting arraybuffer
 			this.buf = new ArrayBuffer(sizeOrData.byteLength);
@@ -66,7 +77,7 @@ export class MemorySegment {
 		this.name = name;
 
 		// Can the memory resize?
-		// this.resizable = resizable
+		this.canResize = canResize;
 
 		// 4-byte addresses that corresponds to the beginning and end of the array
 		// Accesses outside of this range will throw a segmentation fault
@@ -79,22 +90,27 @@ export class MemorySegment {
 	 * ArrayBuffer into the top or bottom half of the new one depending
 	 * on whether addr is above or below the currently mapped address space.
 	 */
-	// resize(addr) {
-	// 	// Double the size of the buffer
-	// 	this.buf = ArrayBuffer.transfer(this.buf, 2*this.size);
+	resize(addr) {
+		// Double the size of the buffer until it fits
+        while (this.loAddr > addr || addr > this.hiAddr) {
+            let oldBytes = new Uint8Array(this.buf);
+            let newBytes = new Uint8Array(new ArrayBuffer(2 * this.size));
 
-	// 	if (addr < this.loAddr) {
-	// 		// Move the contents into the second half of the buffer
-	// 		let tmpView = new Uint8Array(this.buf);
-	// 		tmpView.copyWithin(this.size, 0);
-	// 		this.loAddr -= this.size;
-	// 	} else {
-	// 		// First half of the buffer is already correct
-	// 		this.hiAddr += this.size;
-	// 	}
-
-	// 	this.size *= 2;
-	// }
+    		if (addr < this.loAddr) {
+                // Fill the first half of the buffer
+                newBytes.set(oldBytes);
+    			this.loAddr -= this.size;
+    		} else {
+    			// Fill in the second half of the buffer
+                newBytes.set(oldBytes, this.size);
+    			this.hiAddr += this.size;
+    		}
+            
+            this.buf = newBytes.buffer;
+            this.mem = new DataView(this.buf);
+    		this.size *= 2;
+        }
+	}
 
 	/**
 	 * Verify that a requested address is currently mapped by the memory
@@ -110,16 +126,23 @@ export class MemorySegment {
 
 		// Throw a segfault for accessing memory above current range
 		// Otherwise resize
-		if (addr + size > this.hiAddr)
-			throw new SegFault(addr.toString(16), `Reading ${size} bytes of section ${this.name}.`
-                + ` [0x${this.loAddr.toString(16)}, ${this.hiAddr.toString(16)}]`);
+		if (addr + size > this.hiAddr) {
+            if (this.canResize(addr)) {
+                this.resize(addr);
+            } else {
+    			throw new SegFault(addr.toString(16), `Reading ${size} bytes of section ${this.name}.`
+                    + ` [0x${this.loAddr.toString(16)}, ${this.hiAddr.toString(16)}]`);
+            }
+        }
 
 		else if (addr < this.loAddr) {
             // Perhaps add support for resizing at some point
-			// if (this.resizable)
-			// 	   this.resize(addr);
-			throw new SegFault(addr.toString(16), `Reading ${size} bytes of section ${this.name}.`
-                + ` [0x${this.loAddr.toString(16)}, ${this.hiAddr.toString(16)}]`);
+			if (this.canResize(addr)) {
+                this.resize(addr);
+            } else {
+    			throw new SegFault(addr.toString(16), `Reading ${size} bytes of section ${this.name}.`
+                    + ` [0x${this.loAddr.toString(16)}, ${this.hiAddr.toString(16)}]`);
+            }
 		}
 
 		return (this.hiAddr - addr - size);
@@ -238,13 +261,13 @@ export default class Memory {
 
     	// TODO: fix/replace with better solution
     	const STACK_SIZE = 1024;
-    	const HEAP_SIZE = 1024;
+    	const HEAP_SIZE = 8;
 
     	// Initialize Stack and Heap segments
     	this.segments.stack = {
     		hi: stackOrigin,
     		lo: stackOrigin - STACK_SIZE,
-    		data: new MemorySegment(stackOrigin, STACK_SIZE, 'stack')
+    		data: new MemorySegment(stackOrigin, STACK_SIZE, 'stack', resizeDown)
     	};
 
     	// Compute end of static sections
@@ -300,6 +323,38 @@ export default class Memory {
             }
 
     	this.getSegment(addr).write(value, addr);
+    }
+
+    /**
+     * Set the program break to addr, provided addr > heap.lo
+     * @returns {Number} the new program break
+     */
+    brk(addr) {
+        let {heap} = this.segments;
+
+        // Resize if necessary
+        if (addr >= heap.lo) {
+            heap.data.resize(addr);
+            heap.hi = addr;
+        }
+
+        return heap.hi;
+    }
+
+    /**
+     * Increase the program break by incr
+     * @returns {Number} the old program break
+     */
+    sbrk(incr) {
+        let {heap} = this.segments;
+        let oldhi = heap.hi;
+
+        if (incr >= 0) {
+            heap.data.resize(heap.hi + incr);
+            heap.hi += incr;
+        }
+
+        return oldhi;
     }
 
     /**
