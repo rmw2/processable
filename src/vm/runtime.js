@@ -39,7 +39,7 @@ const crt0 = [
  *     --|    argv    |
  *        ------------
  *       |    argc    |
- *        ------------
+ * rsp->  ------------
  *
  */
 export function exec(argv) {
